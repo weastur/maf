@@ -32,3 +32,8 @@ linters-settings:
       - T any
       - w http.ResponseWriter
       - r *http.Request
+  forbidigo:
+    forbid:
+      - ^print(ln)?$
+    exclude-godoc-examples: true
+    analyze-types: true
