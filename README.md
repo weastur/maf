@@ -1,0 +1,2 @@
+# maf
+MySQL auto failover
