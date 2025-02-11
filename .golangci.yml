@@ -1,0 +1,34 @@
+---
+run:
+  modules-download-mode: readonly
+linters:
+  enable-all: true
+  disable:
+    - exportloopref
+    - gochecknoinits
+    - gochecknoglobals
+
+linters-settings:
+  depguard:
+    rules:
+      main:
+        list-mode: strict
+        allow:
+          - $gostd
+          - github.com/weastur
+          - github.com/spf13/cobra
+          - github.com/spf13/viper
+        deny:
+          - pkg: "math/rand$"
+            desc: use math/rand/v2
+  exhaustruct:
+    exclude:
+      - '.+/cobra\.Command$'
+  varnamelen:
+    ignore-decls:
+      - t testing.T
+      - e error
+      - i int
+      - T any
+      - w http.ResponseWriter
+      - r *http.Request

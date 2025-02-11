@@ -1,2 +1,3 @@
 # maf
+
 MySQL auto failover
