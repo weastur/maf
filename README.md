@@ -1,4 +1,4 @@
-# maf
+# WIP: maf
 
 [![codecov](https://codecov.io/gh/weastur/maf/graph/badge.svg?token=QANQ7BIQY9)](https://codecov.io/gh/weastur/maf)
 [![Build and test](https://github.com/weastur/maf/actions/workflows/build-and-test.yaml/badge.svg)](https://github.com/weastur/maf/actions/workflows/build-and-test.yaml)
