@@ -1,5 +1,6 @@
 # maf
 
+[![Build and test](https://github.com/weastur/maf/actions/workflows/build-and-test.yaml/badge.svg)](https://github.com/weastur/maf/actions/workflows/build-and-test.yaml)
 [![golangci-lint](https://github.com/weastur/maf/actions/workflows/golangci-lint.yaml/badge.svg)](https://github.com/weastur/maf/actions/workflows/golangci-lint.yaml)
 [![gitlint](https://github.com/weastur/maf/actions/workflows/gitlint.yaml/badge.svg)](https://github.com/weastur/maf/actions/workflows/gitlint.yaml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/weastur/maf/main.svg)](https://results.pre-commit.ci/latest/github/weastur/maf/main)
