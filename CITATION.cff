@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "MySQL auto failover"
+version: "v0.0.0"
+type: software
+authors:
+  - family-names: "Sapezhka"
+    given-names: "Pavel"
+doi: 10.5281/zenodo.1234
+date-released: 2025-02-12
+url: "https://github.com/weastur/maf"
+repository-code: "https://github.com/weastur/maf"
+abstract: >-
+  MySQL auto failover is a high-availability solution for MySQL written in Go.
+  It is designed to rule out the need for manual intervention in case of a
+  failure of the primary node.
+keywords:
+  - go
+  - mysql
+  - high-availability
+  - failover
+license: MPL-2.0

@@ -7,7 +7,7 @@ ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 build: ## Build the binary
 	mkdir -p $(BIN_DIR)
-	go build -ldflags "-X github.com/weastur/maf/cmd.version=0.0.0-dev" -gcflags=all="-N -l" -o $(BIN_DIR)/$(BINARY_NAME)
+	go build -ldflags "-X github.com/weastur/maf/cmd.version=v0.0.0-dev" -gcflags=all="-N -l" -o $(BIN_DIR)/$(BINARY_NAME)
 
 clean: ## Cleanup
 	rm -rf $(BIN_DIR)
