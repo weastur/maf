@@ -3,6 +3,7 @@
 
 BINARY_NAME=maf
 BIN_DIR=./bin
+DIST_DIR=./dist
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 build: ## Build the binary
@@ -10,6 +11,7 @@ build: ## Build the binary
 	go build -ldflags "-X github.com/weastur/maf/cmd.version=v0.0.0-dev" -gcflags=all="-N -l" -o $(BIN_DIR)/$(BINARY_NAME)
 
 clean: ## Cleanup
+	rm -rf $(DIST_DIR)
 	rm -rf $(BIN_DIR)
 
 tests: unit-tests ## Run all tests

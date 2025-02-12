@@ -26,3 +26,5 @@ go.work.sum
 
 /bin/
 /coverage.txt
+# Added by goreleaser init:
+dist/
