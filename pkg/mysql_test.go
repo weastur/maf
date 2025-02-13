@@ -1,4 +1,4 @@
-package mysql_test
+package mysql
 
 import (
 	"testing"
@@ -6,4 +6,5 @@ import (
 
 func TestMySQL(t *testing.T) {
 	t.Log("Testing MySQL")
+	Foo()
 }
