@@ -23,7 +23,7 @@ unit-tests-cov: ## Run unit tests with coverage
 	go test -v -coverpkg=./pkg -coverprofile=coverage.txt ./...
 
 version: ## Create new version. Bump, tag, commit, create tag
-	@bump-my-version bump $(filter-out $@,$(MAKECMDGOALS))
+	@bump-my-version bump --verbose $(filter-out $@,$(MAKECMDGOALS))
 
 %:
 	@:
