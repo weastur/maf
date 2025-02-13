@@ -1,0 +1,20 @@
+---
+name: docs
+on:
+  push:
+    branches: [main]
+    paths: [docs/**, .github/workflows/publish-wiki.yml]
+concurrency:
+  group: docs
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: spenserblack/actions-wiki@v0.3.0
+        with:
+          path: docs
