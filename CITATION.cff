@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "MySQL auto failover"
-version: "v0.0.0"
+version: "v0.0.1-dev0"
 type: software
 authors:
     - family-names: "Sapezhka"
