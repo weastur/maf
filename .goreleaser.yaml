@@ -24,6 +24,7 @@ dockers:
   - image_templates:
       - "weastur/maf:{{ .Tag }}-amd64"
     use: buildx
+    skip_push: true
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
@@ -38,6 +39,7 @@ dockers:
   - image_templates:
       - "weastur/maf:{{ .Tag }}-arm64"
     use: buildx
+    skip_push: true
     build_flag_templates:
       - "--pull"
       - "--platform=linux/arm64"
