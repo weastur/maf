@@ -19,9 +19,9 @@ examples and usage of using your application. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(_ *cobra.Command, _ []string) {
+		fmt.Println(viper.AllSettings())
+	},
 }
 
 func Execute() {
@@ -37,6 +37,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.maf.yaml)")
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	_ = viper.BindPFlag("toggle", rootCmd.Flags().Lookup("toggle"))
 }
 
 func initConfig() {
@@ -46,6 +47,7 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
+		viper.AddConfigPath(".")
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".maf")
