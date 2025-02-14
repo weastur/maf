@@ -15,7 +15,7 @@ indent_style = space
 [*.go]
 indent_style = tab
 
-[{*.yaml, *.yml, *.json, *.cff}]
+[*.{yaml,yml,json,cff}]
 indent_size = 2
 
 [Makefile]
