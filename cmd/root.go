@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"github.com/weastur/maf/pkg/config"
 )
 
 var cfgFile string
@@ -20,7 +20,8 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(_ *cobra.Command, _ []string) {
-		fmt.Println(viper.AllSettings())
+		cfg := config.Get()
+		fmt.Println(cfg.Viper().AllSettings())
 	},
 }
 
@@ -34,28 +35,15 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
+	cfg := config.Get()
+
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.maf.yaml)")
 
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	_ = viper.BindPFlag("toggle", rootCmd.Flags().Lookup("toggle"))
+	_ = cfg.Viper().BindPFlag("toggle", rootCmd.Flags().Lookup("toggle"))
 }
 
 func initConfig() {
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		home, err := os.UserHomeDir()
-		cobra.CheckErr(err)
-
-		viper.AddConfigPath(".")
-		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(".maf")
-	}
-
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
-	}
+	cfg := config.Get()
+	cobra.CheckErr(cfg.Init(cfgFile))
 }

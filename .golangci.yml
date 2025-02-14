@@ -8,6 +8,7 @@ linters:
     - gochecknoinits
     - gochecknoglobals
     - testpackage
+    - ireturn
 
 linters-settings:
   depguard:
