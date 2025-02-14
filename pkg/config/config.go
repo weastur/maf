@@ -13,19 +13,18 @@ var configInstance Config
 type Config interface {
 	Init(cfgFileName string) error
 	Viper() *viper.Viper
-	Validate() error
 }
 
 type config struct {
 	viperInstance *viper.Viper
-	validators    []Validator
+	validators    []validator
 }
 
 func Get() Config {
 	if configInstance == nil {
 		configInstance = &config{
 			viperInstance: viper.New(),
-			validators: []Validator{
+			validators: []validator{
 				&exampleValidator{},
 			},
 		}
@@ -55,14 +54,14 @@ func (c *config) Init(cfgFileName string) error {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	return c.Validate()
+	return c.validate()
 }
 
 func (c *config) Viper() *viper.Viper {
 	return c.viperInstance
 }
 
-func (c *config) Validate() error {
+func (c *config) validate() error {
 	errs := make([]error, len(c.validators))
 
 	for i, validator := range c.validators {
