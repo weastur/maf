@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -12,17 +13,21 @@ var configInstance Config
 type Config interface {
 	Init(cfgFileName string) error
 	Viper() *viper.Viper
-	// Validate() error
+	Validate() error
 }
 
 type config struct {
 	viperInstance *viper.Viper
+	validators    []Validator
 }
 
 func Get() Config {
 	if configInstance == nil {
 		configInstance = &config{
 			viperInstance: viper.New(),
+			validators: []Validator{
+				&exampleValidator{},
+			},
 		}
 	}
 
@@ -50,9 +55,24 @@ func (c *config) Init(cfgFileName string) error {
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	return nil
+	return c.Validate()
 }
 
 func (c *config) Viper() *viper.Viper {
 	return c.viperInstance
+}
+
+func (c *config) Validate() error {
+	errs := make([]error, len(c.validators))
+
+	for i, validator := range c.validators {
+		errs[i] = validator.Validate()
+	}
+
+	err := errors.Join(errs...)
+	if err != nil {
+		return fmt.Errorf("config validation failed: %w", err)
+	}
+
+	return nil
 }
