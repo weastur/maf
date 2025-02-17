@@ -31,3 +31,4 @@ dist/
 
 .maf.yaml
 /man
+/build/completions
