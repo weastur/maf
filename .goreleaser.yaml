@@ -7,6 +7,12 @@ before:
   hooks:
     - make clean
     - go mod tidy
+    - make build
+    - ./build/scripts/completions.sh
+    - ./build/scripts/manpages.sh
+
+metadata:
+  mod_timestamp: "{{ .CommitTimestamp }}"
 
 builds:
   - env:
@@ -69,12 +75,48 @@ archives:
     format_overrides:
       - goos: windows
         formats: ["zip"]
+    builds_info:
+      group: root
+      owner: root
+      mtime: "{{ .CommitDate }}"
     files:
-      - README.md
-      - LICENSE
-      - SECURITY.md
-      - AUTHORS
-      - docs/*
+      - src: README.md
+        info:
+          owner: root
+          group: root
+          mtime: "{{ .CommitDate }}"
+      - src: LICENSE
+        info:
+          owner: root
+          group: root
+          mtime: "{{ .CommitDate }}"
+      - src: SECURITY.md
+        info:
+          owner: root
+          group: root
+          mtime: "{{ .CommitDate }}"
+      - src: AUTHORS
+        info:
+          owner: root
+          group: root
+          mtime: "{{ .CommitDate }}"
+      - src: docs/*
+        info:
+          owner: root
+          group: root
+          mtime: "{{ .CommitDate }}"
+      - src: build/completions/*
+        dst: completions
+        info:
+          owner: root
+          group: root
+          mtime: "{{ .CommitDate }}"
+      - src: build/manpages/*
+        dst: manpages
+        info:
+          owner: root
+          group: root
+          mtime: "{{ .CommitDate }}"
 
 nfpms:
   - maintainer: Pavel Sapezhka <me@weastur.com>
@@ -84,12 +126,49 @@ nfpms:
       failure of the primary node.
     homepage: https://github.com/weastur/maf
     license: MPL-2.0
+    bindir: /usr/bin
+    section: utils
+    mtime: "{{ .CommitDate }}"
+    contents:
+      - src: ./build/completions/maf.bash
+        dst: /usr/share/bash-completion/completions/maf
+        file_info:
+          mode: 0644
+          mtime: "{{ .CommitDate }}"
+      - src: ./build/completions/maf.fish
+        dst: /usr/share/fish/vendor_completions.d/maf.fish
+        file_info:
+          mode: 0644
+          mtime: "{{ .CommitDate }}"
+      - src: ./build/completions/maf.zsh
+        dst: /usr/share/zsh/vendor-completions/_maf
+        file_info:
+          mode: 0644
+          mtime: "{{ .CommitDate }}"
+      - src: ./build/manpages/*.gz
+        dst: /usr/share/man/man1/
+        file_info:
+          mode: 0644
+          mtime: "{{ .CommitDate }}"
+      - src: ./LICENSE
+        dst: /usr/share/doc/maf/copyright
+        file_info:
+          mode: 0644
+          mtime: "{{ .CommitDate }}"
+      - src: ./docs/*
+        dst: /usr/share/doc/maf/
+        file_info:
+          mode: 0644
+          mtime: "{{ .CommitDate }}"
     formats:
       - deb
       - rpm
       - apk
     rpm:
       summary: MySQL auto failover
+    deb:
+      lintian_overrides:
+        - statically-linked-binary
 
 changelog:
   use: github-native
