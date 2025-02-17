@@ -28,4 +28,6 @@ go.work.sum
 /coverage.txt
 # Added by goreleaser init:
 dist/
+
 .maf.yaml
+/man

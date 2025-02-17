@@ -4,11 +4,12 @@ run:
 linters:
   enable-all: true
   disable:
+    - exhaustruct
     - exportloopref
-    - gochecknoinits
     - gochecknoglobals
-    - testpackage
+    - gochecknoinits
     - ireturn
+    - testpackage
 
 linters-settings:
   depguard:
@@ -23,9 +24,6 @@ linters-settings:
         deny:
           - pkg: "math/rand$"
             desc: use math/rand/v2
-  exhaustruct:
-    exclude:
-      - '.+/cobra\.Command$'
   varnamelen:
     ignore-decls:
       - t testing.T
