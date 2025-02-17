@@ -31,5 +31,6 @@ dist/
 
 .maf.yaml
 /man
+/mafdoc
 /build/completions
 /build/manpages
