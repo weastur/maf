@@ -1,0 +1,15 @@
+[Unit]
+Description=Run payload script
+After=network.target
+
+[Service]
+ExecStart=/opt/payload.py --host=mysql-1.lxd --password={{ payload_password }} --table=test_{{ server_id }}
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+User=root
+
+[Install]
+WantedBy=multi-user.target

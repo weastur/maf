@@ -34,3 +34,4 @@ dist/
 /mafdoc
 /build/completions
 /build/manpages
+/.ansible

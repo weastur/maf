@@ -1,0 +1,163 @@
+---
+- name: Install and configure MySQL with replication
+  hosts: all
+  become: true
+  tasks:
+    - name: Set root password
+      ansible.builtin.debconf:
+        name: mysql-server-8.0
+        question: mysql-server/root_password
+        value: "{{ root_password }}"
+        vtype: password
+
+    - name: Set root password again
+      ansible.builtin.debconf:
+        name: mysql-server-8.0
+        question: mysql-server/root_password_again
+        value: "{{ root_password }}"
+        vtype: password
+
+    - name: Do not start on boot
+      ansible.builtin.debconf:
+        name: mysql-server-8.0
+        question: mysql-server/start_on_boot
+        value: 'false'
+        vtype: boolean
+
+    - name: Install MySQL
+      ansible.builtin.apt:
+        name: mysql-server
+        state: present
+
+    - name: Install Python client
+      ansible.builtin.apt:
+        name: python3-pymysql
+        state: present
+
+    - name: Configure MySQL
+      ansible.builtin.template:
+        src: mysqld.cnf.j2
+        dest: /etc/mysql/mysql.conf.d/mysqld.cnf
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart MySQL
+
+    - name: Configure MySQL client
+      ansible.builtin.template:
+        src: my.cnf.j2
+        dest: /root/.my.cnf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Start MySQL service
+      ansible.builtin.systemd_service:
+        name: mysql
+        state: started
+        enabled: true
+
+    - name: Create replication user
+      community.mysql.mysql_user:
+        name: "{{ replication_user }}"
+        plugin: caching_sha2_password
+        plugin_auth_string: "{{ replication_password }}"
+        salt: ooSh7kohniasieYee3Oh
+        host: "%"
+        priv: "*.*:REPLICATION SLAVE,CONNECTION_ADMIN,BACKUP_ADMIN,CLONE_ADMIN"
+        session_vars:
+          sql_log_bin: 0
+        column_case_sensitive: true
+        login_password: "{{ root_password }}"
+        state: present
+
+  handlers:
+    - name: Restart MySQL
+      ansible.builtin.systemd_service:
+        name: mysql
+        state: restarted
+
+- name: Configure replication
+  hosts: mysql-2
+  become: true
+  tasks:
+    - name: Stop replica
+      community.mysql.mysql_replication:
+        mode: stopreplica
+        login_password: "{{ root_password }}"
+
+    - name: Reset replica
+      community.mysql.mysql_replication:
+        mode: resetreplicaall
+        login_password: "{{ root_password }}"
+
+    - name: Setup replica
+      community.mysql.mysql_replication:
+        mode: changereplication
+        login_password: "{{ root_password }}"
+        primary_host: mysql-1.lxd
+        primary_port: 3306
+        primary_user: "{{ replication_user }}"
+        primary_password: "{{ replication_password }}"
+        primary_ssl: true
+        primary_auto_position: true
+
+    - name: Start replica
+      community.mysql.mysql_replication:
+        mode: startreplica
+        login_password: "{{ root_password }}"
+
+- name: Configure test payload
+  hosts: all
+  become: true
+  tasks:
+    - name: Create a new database with name 'test'
+      when: inventory_hostname == 'mysql-1'
+      community.mysql.mysql_db:
+        name: test
+        login_password: "{{ root_password }}"
+        state: present
+
+    - name: Create payload user
+      when: inventory_hostname == 'mysql-1'
+      community.mysql.mysql_user:
+        name: "{{ payload_user }}"
+        plugin: caching_sha2_password
+        plugin_auth_string: "{{ payload_password }}"
+        salt: ooSh7kohniasieYee3Oh
+        host: "%"
+        priv: "test.*:ALL"
+        column_case_sensitive: true
+        login_password: "{{ root_password }}"
+        state: present
+
+    - name: Install payload script
+      ansible.builtin.copy:
+        src: payload.py
+        dest: /opt/payload.py
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Create systemd service file for payload
+      ansible.builtin.template:
+        src: payload.service.j2
+        dest: /etc/systemd/system/payload.service
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart payload
+
+    - name: Enable and start payload service
+      ansible.builtin.systemd_service:
+        name: payload
+        daemon_reexec: true
+        enabled: true
+        state: started
+
+  handlers:
+    - name: Restart payload
+      ansible.builtin.systemd_service:
+        name: payload
+        state: restarted
+        daemon_reexec: true
