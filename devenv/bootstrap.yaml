@@ -78,7 +78,7 @@
         state: restarted
 
 - name: Configure replication
-  hosts: mysql-2
+  hosts: maf-node-2
   become: true
   tasks:
     - name: Stop replica
@@ -95,7 +95,7 @@
       community.mysql.mysql_replication:
         mode: changereplication
         login_password: "{{ root_password }}"
-        primary_host: mysql-1.lxd
+        primary_host: maf-node-1.lxd
         primary_port: 3306
         primary_user: "{{ replication_user }}"
         primary_password: "{{ replication_password }}"
@@ -112,14 +112,14 @@
   become: true
   tasks:
     - name: Create a new database with name 'test'
-      when: inventory_hostname == 'mysql-1'
+      when: inventory_hostname == 'maf-node-1'
       community.mysql.mysql_db:
         name: test
         login_password: "{{ root_password }}"
         state: present
 
     - name: Create payload user
-      when: inventory_hostname == 'mysql-1'
+      when: inventory_hostname == 'maf-node-1'
       community.mysql.mysql_user:
         name: "{{ payload_user }}"
         plugin: caching_sha2_password

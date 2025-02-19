@@ -10,11 +10,11 @@ all:
     replication_password: replica
     payload_user: payload
     payload_password: payload
-mysql:
+maf:
   hosts:
-    mysql-1:
-      ansible_host: mysql-1.lxd
+    maf-node-1:
+      ansible_host: maf-node-1.lxd
       server_id: 1
-    mysql-2:
-      ansible_host: mysql-2.lxd
+    maf-node-2:
+      ansible_host: maf-node-2.lxd
       server_id: 2
