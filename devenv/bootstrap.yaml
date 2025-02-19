@@ -3,6 +3,11 @@
   hosts: all
   become: true
   tasks:
+    - name: Wait for cloud-init to complete
+      ansible.builtin.wait_for:
+        path: /var/lib/cloud/instance/boot-finished
+        timeout: 600
+
     - name: Set root password
       ansible.builtin.debconf:
         name: mysql-server-8.0
