@@ -86,15 +86,22 @@
   hosts: maf-node-2
   become: true
   tasks:
+    - name: Get replica status
+      community.mysql.mysql_replication:
+        login_password: "{{ root_password }}"
+      register: replica_status
+
     - name: Stop replica
       community.mysql.mysql_replication:
         mode: stopreplica
         login_password: "{{ root_password }}"
+      when: not replica_status.Is_Replica
 
     - name: Reset replica
       community.mysql.mysql_replication:
         mode: resetreplicaall
         login_password: "{{ root_password }}"
+      when: not replica_status.Is_Replica
 
     - name: Setup replica
       community.mysql.mysql_replication:
@@ -106,11 +113,13 @@
         primary_password: "{{ replication_password }}"
         primary_ssl: true
         primary_auto_position: true
+      when: not replica_status.Is_Replica
 
     - name: Start replica
       community.mysql.mysql_replication:
         mode: startreplica
         login_password: "{{ root_password }}"
+      when: not replica_status.Is_Replica
 
 - name: Deploy consul
   hosts: all
