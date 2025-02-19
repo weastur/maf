@@ -170,10 +170,34 @@
         enabled: true
         state: started
 
+    - name: Configure systemd-resolved
+      block:
+        - name: Create /etc/systemd/resolved.conf.d directory
+          ansible.builtin.file:
+            path: /etc/systemd/resolved.conf.d
+            state: directory
+            mode: '0755'
+
+        - name: Create /etc/systemd/resolved.conf.d/consul.conf
+          ansible.builtin.copy:
+            dest: /etc/systemd/resolved.conf.d/consul.conf
+            content: |
+              [Resolve]
+              DNS=127.0.0.1:8600
+              DNSSEC=false
+              Domains=~consul
+            mode: '0644'
+          notify: Restart systemd-resolved
+
   handlers:
     - name: Restart consul
       ansible.builtin.systemd_service:
         name: consul
+        state: restarted
+
+    - name: Restart systemd-resolved
+      ansible.builtin.systemd_service:
+        name: systemd-resolved
         state: restarted
 
 - name: Configure test payload
