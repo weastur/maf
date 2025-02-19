@@ -10,6 +10,7 @@ all:
     replication_password: replica
     payload_user: payload
     payload_password: payload
+    consul_version: "1.20.3"
 maf:
   hosts:
     maf-node-1:

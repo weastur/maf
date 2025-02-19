@@ -1,0 +1,12 @@
+datacenter = "dc-1"
+data_dir = "/opt/consul"
+client_addr = "0.0.0.0"
+server = true
+bind_addr = "0.0.0.0"
+bootstrap_expect=2
+retry_join = ["maf-node-1.lxd", "maf-node-2.lxd"]
+node_name = "{{ ansible_hostname }}"
+
+ui_config {
+  enabled = true
+}
