@@ -40,3 +40,8 @@ linters-settings:
   paralleltest:
     ignore-missing: true
     ignore-missing-subtests: true
+  errcheck:
+    disable-default-exclusions: true
+    exclude-functions:
+      - (*github.com/spf13/viper.Viper).BindPFlag
+      - (*github.com/spf13/cobra.Command).MarkFlagFilename
