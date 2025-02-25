@@ -1,17 +1,9 @@
-package cmd
+package cmd //nolint:dupl
 
 import (
-	"time"
-
 	"github.com/spf13/cobra"
 	"github.com/weastur/maf/pkg/agent"
 	"github.com/weastur/maf/pkg/config"
-)
-
-const (
-	defaultHTTPReadTimeout  = 5 * time.Second
-	defaultHTTPWriteTimeout = 5 * time.Second
-	defaultHTTPIdleTimeout  = 60 * time.Second
 )
 
 var agentCmd = &cobra.Command{
