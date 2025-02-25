@@ -2,8 +2,10 @@ package agent
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/weastur/maf/pkg/utils"
 )
 
 type Agent interface {
@@ -11,21 +13,35 @@ type Agent interface {
 }
 
 type agent struct {
-	addr           string
-	certFile       string
-	keyFile        string
-	clientCertFile string
+	addr             string
+	certFile         string
+	keyFile          string
+	clientCertFile   string
+	httpReadTimeout  time.Duration
+	httpWriteTimeout time.Duration
+	httpIdleTimeout  time.Duration
 }
 
 var agentInstance Agent
 
-func Get(addr, certFile, keyFile, clientCertFile string) Agent {
+func Get(
+	addr string,
+	certFile string,
+	keyFile string,
+	clientCertFile string,
+	httpReadTimeout time.Duration,
+	httpWriteTimeout time.Duration,
+	httpIdleTimeout time.Duration,
+) Agent {
 	if agentInstance == nil {
 		agentInstance = &agent{
-			addr:           addr,
-			certFile:       certFile,
-			keyFile:        keyFile,
-			clientCertFile: clientCertFile,
+			addr:             addr,
+			certFile:         certFile,
+			keyFile:          keyFile,
+			clientCertFile:   clientCertFile,
+			httpReadTimeout:  httpReadTimeout,
+			httpWriteTimeout: httpWriteTimeout,
+			httpIdleTimeout:  httpIdleTimeout,
 		}
 	}
 
@@ -35,7 +51,12 @@ func Get(addr, certFile, keyFile, clientCertFile string) Agent {
 func (a *agent) Run() error {
 	app := fiber.New(
 		fiber.Config{
-			AppName:               "maf-agent",
+			AppName:               "maf-agent " + utils.AppVersion(),
+			ServerHeader:          "maf-agent/" + utils.AppVersion(),
+			RequestMethods:        []string{fiber.MethodGet},
+			ReadTimeout:           a.httpReadTimeout,
+			WriteTimeout:          a.httpWriteTimeout,
+			IdleTimeout:           a.httpIdleTimeout,
 			DisableStartupMessage: true,
 		},
 	)
