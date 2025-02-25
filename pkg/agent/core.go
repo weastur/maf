@@ -33,7 +33,12 @@ func Get(addr, certFile, keyFile, clientCertFile string) Agent {
 }
 
 func (a *agent) Run() error {
-	app := fiber.New()
+	app := fiber.New(
+		fiber.Config{
+			AppName:               "maf-agent",
+			DisableStartupMessage: true,
+		},
+	)
 
 	switch {
 	case a.clientCertFile != "":
