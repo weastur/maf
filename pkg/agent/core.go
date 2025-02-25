@@ -2,10 +2,15 @@ package agent
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/weastur/maf/pkg/utils"
+
+	SYS "syscall"
+
+	DEATH "github.com/vrecan/death/v3"
 )
 
 type Agent interface {
@@ -60,21 +65,31 @@ func (a *agent) Run() error {
 			DisableStartupMessage: true,
 		},
 	)
+	app.Hooks().OnShutdown(func() error {
+		fmt.Println("Shutting down agent handler")
 
-	switch {
-	case a.clientCertFile != "":
-		if err := app.ListenMutualTLS(a.addr, a.certFile, a.keyFile, a.clientCertFile); err != nil {
-			return fmt.Errorf("failed to listen with mutual TLS: %w", err)
+		return nil
+	})
+
+	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
+	wg := sync.WaitGroup{}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		if err := utils.RunFiberApp(app, a.addr, a.certFile, a.keyFile, a.clientCertFile); err != nil {
+			fmt.Println(err)
 		}
-	case a.certFile != "" && a.keyFile != "":
-		if err := app.ListenTLS(a.addr, a.certFile, a.keyFile); err != nil {
-			return fmt.Errorf("failed to listen with TLS: %w", err)
+	}()
+
+	death.WaitForDeathWithFunc(func() {
+		if err := app.ShutdownWithTimeout(utils.AppShutdownTimeout); err != nil {
+			fmt.Println(err)
 		}
-	default:
-		if err := app.Listen(a.addr); err != nil {
-			return fmt.Errorf("failed to listen: %w", err)
-		}
-	}
+
+		wg.Wait()
+	})
 
 	return nil
 }
