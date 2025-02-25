@@ -58,7 +58,7 @@ func (s *server) Run() error {
 		fiber.Config{
 			AppName:               "maf-server " + utils.AppVersion(),
 			ServerHeader:          "maf-server/" + utils.AppVersion(),
-			RequestMethods:        []string{fiber.MethodGet},
+			RequestMethods:        []string{fiber.MethodGet, fiber.MethodHead},
 			ReadTimeout:           s.httpReadTimeout,
 			WriteTimeout:          s.httpWriteTimeout,
 			IdleTimeout:           s.httpIdleTimeout,
@@ -70,6 +70,7 @@ func (s *server) Run() error {
 
 		return nil
 	})
+	utils.ConfigureMetrics(app)
 
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
 	wg := sync.WaitGroup{}
