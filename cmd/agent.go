@@ -1,9 +1,8 @@
-package cmd //nolint:dupl
+package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	"github.com/weastur/maf/pkg/agent"
 	"github.com/weastur/maf/pkg/config"
 )
 
@@ -14,8 +13,15 @@ var agentCmd = &cobra.Command{
 It is designed to run on the same host as the MySQL instance.`,
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive
 		viper := config.Get().Viper()
-		fmt.Println(viper.GetString("agent.addr"))
-		fmt.Println(viper.IsSet("agent.cert_file"))
+
+		addr := viper.GetString("agent.addr")
+		certFile := viper.GetString("agent.cert_file")
+		keyFile := viper.GetString("agent.key_file")
+		clientCertFile := viper.GetString("agent.client_cert_file")
+
+		agent := agent.Get(addr, certFile, keyFile, clientCertFile)
+
+		cobra.CheckErr(agent.Run())
 	},
 }
 

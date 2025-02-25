@@ -25,7 +25,7 @@ func Get() Config {
 		configInstance = &config{
 			viperInstance: viper.New(),
 			validators: []validator{
-				&exampleValidator{},
+				&validatorMutualTLSMisconfig{},
 			},
 		}
 	}
@@ -65,7 +65,7 @@ func (c *config) validate() error {
 	errs := make([]error, len(c.validators))
 
 	for i, validator := range c.validators {
-		errs[i] = validator.Validate()
+		errs[i] = validator.Validate(c.viperInstance)
 	}
 
 	err := errors.Join(errs...)

@@ -3,6 +3,7 @@ module github.com/weastur/maf
 go 1.23.6
 
 require (
+	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.19.0
 )
@@ -11,7 +12,6 @@ require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/gofiber/fiber/v2 v2.52.6 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

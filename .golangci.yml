@@ -21,6 +21,7 @@ linters-settings:
           - github.com/weastur
           - github.com/spf13/cobra
           - github.com/spf13/viper
+          - github.com/gofiber/fiber/v2
         deny:
           - pkg: "math/rand$"
             desc: use math/rand/v2

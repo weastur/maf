@@ -1,13 +1,26 @@
 package config
 
-// var errExampleValidator = errors.New("example validation error")
+import (
+	"errors"
+
+	"github.com/spf13/viper"
+)
 
 type validator interface {
-	Validate() error
+	Validate(v *viper.Viper) error
 }
 
-type exampleValidator struct{}
+type validatorMutualTLSMisconfig struct{}
 
-func (v *exampleValidator) Validate() error {
+var errMutualTLSMisconfig = errors.New(
+	"mTLS misconfiguration. Both cert-file and key-file must be set with the client-cert-file",
+)
+
+func (v *validatorMutualTLSMisconfig) Validate(viperInstance *viper.Viper) error {
+	if viperInstance.IsSet("agent.client_cert_file") &&
+		!(viperInstance.IsSet("agent.cert_file") && viperInstance.IsSet("agent.key_file")) {
+		return errMutualTLSMisconfig
+	}
+
 	return nil
 }
