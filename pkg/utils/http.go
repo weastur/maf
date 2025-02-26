@@ -30,3 +30,7 @@ func RunFiberApp(app *fiber.App, addr string, certFile string, keyFile string, c
 
 	return nil
 }
+
+func HTTPVersionHandler(c *fiber.Ctx) error {
+	return c.SendString(AppVersion())
+}

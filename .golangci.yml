@@ -54,3 +54,8 @@ linters-settings:
     allow-cuddle-with-calls:
       - Done
       - Add
+issues:
+  exclude-rules:
+    - path: http.go
+      linters:
+        - wrapcheck

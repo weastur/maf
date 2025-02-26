@@ -70,6 +70,7 @@ func (s *server) Run() error {
 
 		return nil
 	})
+	app.Get("/version", utils.HTTPVersionHandler)
 	utils.ConfigureMetrics(app)
 
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
