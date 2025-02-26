@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/weastur/maf/pkg/utils"
 	httpUtils "github.com/weastur/maf/pkg/utils/http"
 )
@@ -21,6 +22,7 @@ func (s *server) configureFiberApp() {
 			DisableStartupMessage: true,
 		},
 	)
+	s.fiberApp.Use(compress.New())
 	s.fiberApp.Hooks().OnShutdown(func() error {
 		fmt.Println("Shutting down server handler")
 
