@@ -56,6 +56,6 @@ linters-settings:
       - Add
 issues:
   exclude-rules:
-    - path: http.go
+    - path: (response|http).go
       linters:
         - wrapcheck

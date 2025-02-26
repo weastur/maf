@@ -1,4 +1,4 @@
-package utils
+package http
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func RunFiberApp(app *fiber.App, addr string, certFile string, keyFile string, clientCertFile string) error {
+func Listen(app *fiber.App, addr string, certFile string, keyFile string, clientCertFile string) error {
 	switch {
 	case clientCertFile != "":
 		fmt.Printf("Listening with mutual TLS on %s\n", addr)
@@ -31,6 +31,18 @@ func RunFiberApp(app *fiber.App, addr string, certFile string, keyFile string, c
 	return nil
 }
 
-func HTTPVersionHandler(c *fiber.Ctx) error {
-	return c.SendString(AppVersion())
+func APIGroup(app *fiber.App) fiber.Router {
+	return app.Group("/api", func(c *fiber.Ctx) error {
+		c.Accepts("application/json")
+
+		return c.Next()
+	})
+}
+
+func APIVersionGroup(api fiber.Router, version string) fiber.Router {
+	return api.Group("/"+version, func(c *fiber.Ctx) error {
+		c.Set("X-API-Version", version)
+
+		return c.Next()
+	})
 }

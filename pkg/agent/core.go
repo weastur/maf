@@ -1,12 +1,10 @@
 package agent
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/weastur/maf/pkg/utils"
 
 	SYS "syscall"
 
@@ -25,6 +23,7 @@ type agent struct {
 	httpReadTimeout  time.Duration
 	httpWriteTimeout time.Duration
 	httpIdleTimeout  time.Duration
+	fiberApp         *fiber.App
 }
 
 var agentInstance Agent
@@ -54,41 +53,14 @@ func Get(
 }
 
 func (a *agent) Run() error {
-	app := fiber.New(
-		fiber.Config{
-			AppName:               "maf-agent " + utils.AppVersion(),
-			ServerHeader:          "maf-agent/" + utils.AppVersion(),
-			RequestMethods:        []string{fiber.MethodGet, fiber.MethodHead},
-			ReadTimeout:           a.httpReadTimeout,
-			WriteTimeout:          a.httpWriteTimeout,
-			IdleTimeout:           a.httpIdleTimeout,
-			DisableStartupMessage: true,
-		},
-	)
-	app.Hooks().OnShutdown(func() error {
-		fmt.Println("Shutting down agent handler")
-
-		return nil
-	})
-	app.Get("/version", utils.HTTPVersionHandler)
-	utils.ConfigureMetrics(app)
-
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
 	wg := sync.WaitGroup{}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		if err := utils.RunFiberApp(app, a.addr, a.certFile, a.keyFile, a.clientCertFile); err != nil {
-			fmt.Println(err)
-		}
-	}()
+	a.configureFiberApp()
+	a.runFiberApp(&wg)
 
 	death.WaitForDeathWithFunc(func() {
-		if err := app.ShutdownWithTimeout(utils.AppShutdownTimeout); err != nil {
-			fmt.Println(err)
-		}
+		a.shutdownFiberApp()
 
 		wg.Wait()
 	})
