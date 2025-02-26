@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/compress"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 )
 
 func Listen(app *fiber.App, addr string, certFile string, keyFile string, clientCertFile string) error {
@@ -45,4 +47,9 @@ func APIVersionGroup(api fiber.Router, version string) fiber.Router {
 
 		return c.Next()
 	})
+}
+
+func AttachGenericMiddlewares(app *fiber.App) {
+	app.Use(compress.New())
+	app.Use(requestid.New())
 }
