@@ -21,7 +21,7 @@ func (a *agent) configureFiberApp() {
 			DisableStartupMessage: true,
 		},
 	)
-	httpUtils.AttachGenericMiddlewares(a.fiberApp)
+	httpUtils.AttachGenericMiddlewares(a.fiberApp, a)
 	a.fiberApp.Hooks().OnShutdown(func() error {
 		fmt.Println("Shutting down agent handler")
 

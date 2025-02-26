@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 )
@@ -56,11 +57,15 @@ func APIVersionGroup(api fiber.Router, version string) fiber.Router {
 	})
 }
 
-func AttachGenericMiddlewares(app *fiber.App) {
+func AttachGenericMiddlewares(app *fiber.App, healthchecker Healthchecker) {
 	app.Use(compress.New())
 	app.Use(requestid.New())
 	app.Use(limiter.New(limiter.Config{
 		Max:        defaultRateLimit,
 		Expiration: defaultRateLimitExpiration,
+	}))
+	app.Use(healthcheck.New(healthcheck.Config{
+		LivenessProbe:  healthchecker.IsLive,
+		ReadinessProbe: healthchecker.IsReady,
 	}))
 }

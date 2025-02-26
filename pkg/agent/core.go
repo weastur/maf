@@ -13,6 +13,8 @@ import (
 
 type Agent interface {
 	Run() error
+	IsLive(c *fiber.Ctx) bool
+	IsReady(c *fiber.Ctx) bool
 }
 
 type agent struct {
@@ -50,6 +52,14 @@ func Get(
 	}
 
 	return agentInstance
+}
+
+func (a *agent) IsLive(_ *fiber.Ctx) bool {
+	return true
+}
+
+func (a *agent) IsReady(_ *fiber.Ctx) bool {
+	return true
 }
 
 func (a *agent) Run() error {

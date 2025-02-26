@@ -13,6 +13,8 @@ import (
 
 type Server interface {
 	Run() error
+	IsLive(c *fiber.Ctx) bool
+	IsReady(c *fiber.Ctx) bool
 }
 
 type server struct {
@@ -50,6 +52,14 @@ func Get(
 	}
 
 	return serverInstance
+}
+
+func (s *server) IsLive(_ *fiber.Ctx) bool {
+	return true
+}
+
+func (s *server) IsReady(_ *fiber.Ctx) bool {
+	return true
 }
 
 func (s *server) Run() error {
