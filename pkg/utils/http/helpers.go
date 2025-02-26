@@ -2,10 +2,17 @@ package http
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+)
+
+const (
+	defaultRateLimit           = 100
+	defaultRateLimitExpiration = 30 * time.Second
 )
 
 func Listen(app *fiber.App, addr string, certFile string, keyFile string, clientCertFile string) error {
@@ -52,4 +59,8 @@ func APIVersionGroup(api fiber.Router, version string) fiber.Router {
 func AttachGenericMiddlewares(app *fiber.App) {
 	app.Use(compress.New())
 	app.Use(requestid.New())
+	app.Use(limiter.New(limiter.Config{
+		Max:        defaultRateLimit,
+		Expiration: defaultRateLimitExpiration,
+	}))
 }
