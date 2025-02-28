@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/weastur/maf/pkg/server/http/api/v1alpha"
 	"github.com/weastur/maf/pkg/utils"
 	httpUtils "github.com/weastur/maf/pkg/utils/http"
 )
@@ -30,9 +31,7 @@ func (s *server) configureFiberApp() {
 
 	api := httpUtils.APIGroup(s.fiberApp)
 
-	v1alpha := httpUtils.APIVersionGroup(api, "v1alpha")
-
-	v1alpha.Get("/version", httpUtils.VersionHandler)
+	v1alpha.Get().Router(api)
 }
 
 func (s *server) runFiberApp(wg *sync.WaitGroup) {

@@ -14,6 +14,7 @@ import (
 const (
 	defaultRateLimit           = 100
 	defaultRateLimitExpiration = 30 * time.Second
+	APIPrefix                  = "/api"
 )
 
 func Listen(app *fiber.App, addr string, certFile string, keyFile string, clientCertFile string) error {
@@ -42,7 +43,7 @@ func Listen(app *fiber.App, addr string, certFile string, keyFile string, client
 }
 
 func APIGroup(app *fiber.App) fiber.Router {
-	return app.Group("/api", func(c *fiber.Ctx) error {
+	return app.Group(APIPrefix, func(c *fiber.Ctx) error {
 		c.Accepts("application/json")
 
 		return c.Next()
