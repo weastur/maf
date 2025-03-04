@@ -11,7 +11,7 @@ import (
 // @Summary      Return version
 // @Description  Return the version of running app. Not the API version, but the application
 // @Tags         aux
-// @Success      200 {object} Response{data=Version} "Version"
+// @Success      200 {object} Response{Data=Version} "Version"
 // @Router       /version [get]
 // @Header       all {string} X-Request-ID "UUID of the request"
 // @Header       all {string} X-API-Version "API version, e.g. v1alpha"

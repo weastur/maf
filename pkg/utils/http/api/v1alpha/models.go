@@ -15,7 +15,7 @@ type Response struct {
 	// Any data
 	Data any `json:"data"`
 	// Error message. If status is not success, this field must be filled by a string with error message
-	Error error `example:"null" json:"error"`
+	Error error `example:"null" json:"error" swaggertype:"string"`
 } // @Name Response
 
 // Version
