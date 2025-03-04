@@ -33,7 +33,7 @@ version: ## Create new version. Bump, tag, commit, create tag
 	@bump-my-version bump --verbose $(filter-out $@,$(MAKECMDGOALS))
 
 go-build-deps: ## Install go deps to build the project
-	@go mod download
+	@go install github.com/swaggo/swag/cmd/swag@latest
 
 %:
 	@:
