@@ -72,3 +72,7 @@ func (api *v1alpha) Prefix() string {
 func (api *v1alpha) Version() string {
 	return api.version
 }
+
+func (api *v1alpha) ErrorHandler(c *fiber.Ctx, err error) error {
+	return v1alphaUtils.ErrorHandler(c, err)
+}

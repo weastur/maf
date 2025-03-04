@@ -9,6 +9,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+
+	apiUtils "github.com/weastur/maf/pkg/utils/http/api"
 )
 
 const (
@@ -69,4 +71,13 @@ func AttachGenericMiddlewares(app *fiber.App, healthchecker Healthchecker) {
 		LivenessProbe:  healthchecker.IsLive,
 		ReadinessProbe: healthchecker.IsReady,
 	}))
+}
+
+func ErrorHandler(c *fiber.Ctx, err error) error {
+	apiInstance, ok := c.UserContext().Value(apiUtils.UserContextKey("apiInstance")).(apiUtils.API)
+	if ok {
+		return apiInstance.ErrorHandler(c, err)
+	}
+
+	return fiber.DefaultErrorHandler(c, err)
 }

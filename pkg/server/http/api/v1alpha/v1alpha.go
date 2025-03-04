@@ -1,6 +1,8 @@
 package v1alpha
 
 import (
+	"context"
+
 	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 	httpUtils "github.com/weastur/maf/pkg/utils/http"
@@ -58,6 +60,13 @@ func (api *v1alpha) Router(topRouter fiber.Router) fiber.Router {
 		CacheAge: 0,
 	}))
 
+	router.Use(func(c *fiber.Ctx) error {
+		ctxKey := apiUtils.UserContextKey("apiInstance")
+		ctx := context.WithValue(context.Background(), ctxKey, api)
+		c.SetUserContext(ctx)
+
+		return c.Next()
+	})
 	router.Use(v1alphaUtils.AuthMiddleware())
 
 	router.Get("/version", v1alphaUtils.VersionHandler)
@@ -71,4 +80,8 @@ func (api *v1alpha) Prefix() string {
 
 func (api *v1alpha) Version() string {
 	return api.version
+}
+
+func (api *v1alpha) ErrorHandler(c *fiber.Ctx, err error) error {
+	return v1alphaUtils.ErrorHandler(c, err)
 }

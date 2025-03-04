@@ -21,3 +21,7 @@ import (
 func VersionHandler(c *fiber.Ctx) error {
 	return WrapResponse(c, StatusSuccess, &Version{Version: utils.AppVersion()}, nil)
 }
+
+func ErrorHandler(c *fiber.Ctx, err error) error {
+	return WrapResponse(c, StatusError, nil, err)
+}

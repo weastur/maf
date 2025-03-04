@@ -20,6 +20,7 @@ func (a *agent) configureFiberApp() {
 			WriteTimeout:          a.httpWriteTimeout,
 			IdleTimeout:           a.httpIdleTimeout,
 			DisableStartupMessage: true,
+			ErrorHandler:          httpUtils.ErrorHandler,
 		},
 	)
 	httpUtils.AttachGenericMiddlewares(a.fiberApp, a)
