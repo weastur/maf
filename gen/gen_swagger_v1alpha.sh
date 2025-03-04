@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 FILE="$GOFILE"
 HEADER_FILE=$(mktemp)
@@ -21,5 +21,3 @@ fi
 
 sed -i "/\/\/ @COMMON_HEADERS_PLACEHOLDER/r $HEADER_FILE" "$FILE"
 sed -i "/\/\/ @COMMON_HEADERS_PLACEHOLDER/d" "$FILE"
-
-echo "Updated common headers in $FILE"

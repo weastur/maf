@@ -7,19 +7,20 @@ DIST_DIR=./dist
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 build: generate swagger ## Build the binary
-	mkdir -p $(BIN_DIR)
+	@mkdir -p $(BIN_DIR)
 	CGO_ENABLED=0 go build -tags netgo,static_build,osusergo,feature -ldflags "-extldflags "-static" -X github.com/weastur/maf/pkg/utils.version=v0.0.0-dev" -gcflags=all="-N -l" -o $(BIN_DIR)/$(BINARY_NAME)
 
 generate: ## Generate code
-	PATH=$(ROOT_DIR)/gen:$(PATH) go generate ./...
+	@PATH=$(ROOT_DIR)/gen:$(PATH)
+	@go generate ./...
 
 swagger: ## Generate swagger docs
-	swag init --generalInfo v1alpha.go --dir pkg/agent/http/api/v1alpha,pkg/utils/http --output pkg/agent/http/api/v1alpha --outputTypes json
-	swag init --generalInfo v1alpha.go --dir pkg/server/http/api/v1alpha,pkg/utils/http --output pkg/server/http/api/v1alpha --outputTypes json
+	@swag init --quiet --generalInfo v1alpha.go --dir pkg/agent/http/api/v1alpha,pkg/utils/http --output pkg/agent/http/api/v1alpha --outputTypes json
+	@swag init --quiet --generalInfo v1alpha.go --dir pkg/server/http/api/v1alpha,pkg/utils/http --output pkg/server/http/api/v1alpha --outputTypes json
 
 clean: ## Cleanup
-	rm -rf $(DIST_DIR)
-	rm -rf $(BIN_DIR)
+	@rm -rf $(DIST_DIR)
+	@rm -rf $(BIN_DIR)
 
 tests: unit-tests ## Run all tests
 
