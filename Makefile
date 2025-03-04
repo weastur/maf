@@ -1,4 +1,4 @@
-.PHONY: help build clean tests unit-tests unit-tests-cov version swagger
+.PHONY: help build clean tests unit-tests unit-tests-cov version swagger go-build-deps
 .DEFAULT_GOAL := help
 
 BINARY_NAME=maf
@@ -6,7 +6,7 @@ BIN_DIR=./bin
 DIST_DIR=./dist
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-build: generate swagger ## Build the binary
+build: generate swagger go-build-deps ## Build the binary
 	@mkdir -p $(BIN_DIR)
 	CGO_ENABLED=0 go build -tags netgo,static_build,osusergo,feature -ldflags "-extldflags "-static" -X github.com/weastur/maf/pkg/utils.version=v0.0.0-dev" -gcflags=all="-N -l" -o $(BIN_DIR)/$(BINARY_NAME)
 
@@ -32,6 +32,9 @@ unit-tests-cov: ## Run unit tests with coverage
 
 version: ## Create new version. Bump, tag, commit, create tag
 	@bump-my-version bump --verbose $(filter-out $@,$(MAKECMDGOALS))
+
+go-build-deps: ## Install go deps to build the project
+	@go mod download
 
 %:
 	@:
