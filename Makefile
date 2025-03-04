@@ -11,8 +11,7 @@ build: generate swagger go-build-deps ## Build the binary
 	CGO_ENABLED=0 go build -tags netgo,static_build,osusergo,feature -ldflags "-extldflags "-static" -X github.com/weastur/maf/pkg/utils.version=v0.0.0-dev" -gcflags=all="-N -l" -o $(BIN_DIR)/$(BINARY_NAME)
 
 generate: ## Generate code
-	@PATH=$(ROOT_DIR)/gen:$(PATH)
-	@go generate ./...
+	@PATH=$(ROOT_DIR)/gen:$(PATH) go generate ./...
 
 swagger: ## Generate swagger docs
 	@swag init --quiet --generalInfo v1alpha.go --dir pkg/agent/http/api/v1alpha,pkg/utils/http --output pkg/agent/http/api/v1alpha --outputTypes json
