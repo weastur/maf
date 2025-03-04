@@ -12,6 +12,7 @@ linters:
     - tenv
     - gci
     - godot
+    - wrapcheck
 
 linters-settings:
   depguard:
@@ -56,8 +57,3 @@ linters-settings:
     allow-cuddle-with-calls:
       - Done
       - Add
-issues:
-  exclude-rules:
-    - path: (response|http).go
-      linters:
-        - wrapcheck

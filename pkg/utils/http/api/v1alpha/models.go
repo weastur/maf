@@ -43,3 +43,22 @@ func (rs Status) String() string {
 func (rs Status) MarshalJSON() ([]byte, error) {
 	return json.Marshal(rs.String()) //nolint:wrapcheck
 }
+
+func (r Response) MarshalJSON() ([]byte, error) {
+	type Alias Response
+
+	var errMsg *string
+
+	if r.Error != nil {
+		msg := r.Error.Error()
+		errMsg = &msg
+	}
+
+	return json.Marshal(&struct {
+		Error *string `json:"error"`
+		*Alias
+	}{
+		Error: errMsg,
+		Alias: (*Alias)(&r),
+	})
+}

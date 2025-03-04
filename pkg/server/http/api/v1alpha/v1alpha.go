@@ -41,8 +41,12 @@ func Get() apiUtils.API {
 // @accept json
 // @produce json
 // @schemes http https
-// externalDocs.description Find out more about MAF on GitHub
-// externalDocs.url https://github.com/weastur/maf/wiki
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-Auth-Token
+// @description API key for the server. For now, only 'root' is allowed
+// @externalDocs.description Find out more about MAF on GitHub
+// @externalDocs.url https://github.com/weastur/maf/wiki
 func (api *v1alpha) Router(topRouter fiber.Router) fiber.Router {
 	router := httpUtils.APIVersionGroup(topRouter, api.version)
 
@@ -53,6 +57,8 @@ func (api *v1alpha) Router(topRouter fiber.Router) fiber.Router {
 		Path:     "docs",
 		CacheAge: 0,
 	}))
+
+	router.Use(v1alphaUtils.AuthMiddleware())
 
 	router.Get("/version", v1alphaUtils.VersionHandler)
 
