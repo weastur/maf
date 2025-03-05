@@ -6,6 +6,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	loggingUtils "github.com/weastur/maf/pkg/utils/logging"
+
 	SYS "syscall"
 
 	DEATH "github.com/vrecan/death/v3"
@@ -68,6 +70,7 @@ func (a *agent) Run() error {
 
 	a.configureFiberApp()
 	a.runFiberApp(&wg)
+	loggingUtils.ConfigureLogging()
 
 	death.WaitForDeathWithFunc(func() {
 		a.shutdownFiberApp()

@@ -25,7 +25,7 @@ func (a *agent) configureFiberApp() {
 	)
 	httpUtils.AttachGenericMiddlewares(a.fiberApp, a)
 	a.fiberApp.Hooks().OnShutdown(func() error {
-		fmt.Println("Shutting down agent handler")
+		fmt.Println("Shutting down agent handler") // TODO: logging
 
 		return nil
 	})
@@ -41,13 +41,13 @@ func (a *agent) runFiberApp(wg *sync.WaitGroup) {
 		defer wg.Done()
 
 		if err := httpUtils.Listen(a.fiberApp, a.addr, a.certFile, a.keyFile, a.clientCertFile); err != nil {
-			fmt.Println(err)
+			fmt.Println(err) // TODO: logging
 		}
 	}()
 }
 
 func (a *agent) shutdownFiberApp() {
 	if err := a.fiberApp.ShutdownWithTimeout(utils.AppShutdownTimeout); err != nil {
-		fmt.Println(err)
+		fmt.Println(err) // TODO: logging
 	}
 }
