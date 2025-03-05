@@ -28,6 +28,7 @@ linters-settings:
           - github.com/vrecan/death/v3
           - github.com/VictoriaMetrics/metrics
           - github.com/gofiber/contrib/swagger
+          - github.com/rs/zerolog
         deny:
           - pkg: "math/rand$"
             desc: use math/rand/v2
