@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/rs/zerolog/log"
 
 	apiUtils "github.com/weastur/maf/pkg/utils/http/api"
 )
@@ -22,22 +23,22 @@ const (
 func Listen(app *fiber.App, addr string, certFile string, keyFile string, clientCertFile string) error {
 	switch {
 	case clientCertFile != "":
-		fmt.Printf("Listening with mutual TLS on %s\n", addr) // TODO: logging
+		log.Info().Msgf("Listening with mutual TLS on %s", addr)
 
 		if err := app.ListenMutualTLS(addr, certFile, keyFile, clientCertFile); err != nil {
-			return fmt.Errorf("failed to listen with mutual TLS: %w", err) // TODO: logging
+			return fmt.Errorf("failed to listen with mutual TLS: %w", err)
 		}
 	case certFile != "" && keyFile != "":
-		fmt.Printf("Listening with TLS on %s\n", addr) // TODO: logging
+		log.Info().Msgf("Listening with TLS on %s", addr)
 
 		if err := app.ListenTLS(addr, certFile, keyFile); err != nil {
-			return fmt.Errorf("failed to listen with TLS: %w", err) // TODO: logging
+			return fmt.Errorf("failed to listen with TLS: %w", err)
 		}
 	default:
-		fmt.Printf("Listening on %s\n", addr) // TODO: logging
+		log.Info().Msgf("Listening on %s", addr)
 
 		if err := app.Listen(addr); err != nil {
-			return fmt.Errorf("failed to listen: %w", err) // TODO: logging
+			return fmt.Errorf("failed to listen: %w", err)
 		}
 	}
 

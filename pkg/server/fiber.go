@@ -1,10 +1,10 @@
 package server
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
 	"github.com/weastur/maf/pkg/server/http/api/v1alpha"
 	"github.com/weastur/maf/pkg/utils"
 	httpUtils "github.com/weastur/maf/pkg/utils/http"
@@ -25,7 +25,7 @@ func (s *server) configureFiberApp() {
 	)
 	httpUtils.AttachGenericMiddlewares(s.fiberApp, s)
 	s.fiberApp.Hooks().OnShutdown(func() error {
-		fmt.Println("Shutting down server handler") // TODO: logging
+		log.Info().Msg("Shutting down server handler")
 
 		return nil
 	})
@@ -41,13 +41,13 @@ func (s *server) runFiberApp(wg *sync.WaitGroup) {
 		defer wg.Done()
 
 		if err := httpUtils.Listen(s.fiberApp, s.addr, s.certFile, s.keyFile, s.clientCertFile); err != nil {
-			fmt.Println(err) // TODO: logging
+			log.Error().Err(err).Msg("failed to listen")
 		}
 	}()
 }
 
 func (s *server) shutdownFiberApp() {
 	if err := s.fiberApp.ShutdownWithTimeout(utils.AppShutdownTimeout); err != nil {
-		fmt.Println(err) // TODO: logging
+		log.Error().Err(err).Msg("failed to shutdown fiber app")
 	}
 }
