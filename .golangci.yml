@@ -13,6 +13,8 @@ linters:
     - gci
     - godot
     - wrapcheck
+    - reassign
+    - godox
 
 linters-settings:
   depguard:
