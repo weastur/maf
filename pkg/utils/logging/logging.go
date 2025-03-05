@@ -17,7 +17,6 @@ func ConfigureLogging(level string) error {
 	zerolog.MessageFieldName = "m"
 	zerolog.LevelFieldName = "l"
 	zerolog.ErrorFieldName = "e"
-	zerolog.CallerFieldName = "c"
 	zerolog.DisableSampling(true)
 
 	zLevel, err := zerolog.ParseLevel(level)
