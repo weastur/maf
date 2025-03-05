@@ -24,9 +24,11 @@ var errLogLevelMisconfig = errors.New(
 )
 
 func (v *validatorMutualTLSMisconfig) Validate(viperInstance *viper.Viper) error {
-	if viperInstance.IsSet("agent.client_cert_file") &&
-		!(viperInstance.IsSet("agent.cert_file") && viperInstance.IsSet("agent.key_file")) {
-		return errMutualTLSMisconfig
+	for _, key := range []string{"agent", "server"} {
+		if viperInstance.IsSet(key+".client_cert_file") &&
+			!(viperInstance.IsSet(key+".cert_file") && viperInstance.IsSet(key+".key_file")) {
+			return errMutualTLSMisconfig
+		}
 	}
 
 	return nil
