@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/spf13/cobra"
 
 	loggingUtils "github.com/weastur/maf/pkg/utils/logging"
 
@@ -24,6 +25,7 @@ type agent struct {
 	certFile         string
 	keyFile          string
 	clientCertFile   string
+	logLevel         string
 	httpReadTimeout  time.Duration
 	httpWriteTimeout time.Duration
 	httpIdleTimeout  time.Duration
@@ -37,6 +39,7 @@ func Get(
 	certFile string,
 	keyFile string,
 	clientCertFile string,
+	logLevel string,
 	httpReadTimeout time.Duration,
 	httpWriteTimeout time.Duration,
 	httpIdleTimeout time.Duration,
@@ -47,6 +50,7 @@ func Get(
 			certFile:         certFile,
 			keyFile:          keyFile,
 			clientCertFile:   clientCertFile,
+			logLevel:         logLevel,
 			httpReadTimeout:  httpReadTimeout,
 			httpWriteTimeout: httpWriteTimeout,
 			httpIdleTimeout:  httpIdleTimeout,
@@ -70,7 +74,7 @@ func (a *agent) Run() error {
 
 	a.configureFiberApp()
 	a.runFiberApp(&wg)
-	loggingUtils.ConfigureLogging()
+	cobra.CheckErr(loggingUtils.ConfigureLogging(a.logLevel))
 
 	death.WaitForDeathWithFunc(func() {
 		a.shutdownFiberApp()

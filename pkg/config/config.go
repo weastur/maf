@@ -26,6 +26,7 @@ func Get() Config {
 			viperInstance: viper.New(),
 			validators: []validator{
 				&validatorMutualTLSMisconfig{},
+				&validatorLogLevel{},
 			},
 		}
 	}
