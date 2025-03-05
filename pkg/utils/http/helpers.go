@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	apiUtils "github.com/weastur/maf/pkg/utils/http/api"
@@ -66,6 +67,7 @@ func AttachGenericMiddlewares(app *fiber.App, healthchecker Healthchecker) {
 	app.Use(fiberzerolog.New(fiberzerolog.Config{
 		Logger: &log.Logger,
 		Fields: []string{"requestId", "ip", "method", "path", "status", "latency"},
+		Levels: []zerolog.Level{zerolog.ErrorLevel, zerolog.ErrorLevel, zerolog.DebugLevel},
 	}))
 	app.Use(compress.New())
 	app.Use(requestid.New())
