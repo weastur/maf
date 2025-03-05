@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gofiber/contrib/fiberzerolog"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
@@ -62,6 +63,10 @@ func APIVersionGroup(api fiber.Router, version string) fiber.Router {
 }
 
 func AttachGenericMiddlewares(app *fiber.App, healthchecker Healthchecker) {
+	app.Use(fiberzerolog.New(fiberzerolog.Config{
+		Logger: &log.Logger,
+		Fields: []string{"requestId", "ip", "method", "path", "status", "latency"},
+	}))
 	app.Use(compress.New())
 	app.Use(requestid.New())
 	app.Use(limiter.New(limiter.Config{

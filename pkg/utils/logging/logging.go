@@ -18,10 +18,6 @@ func ConfigureLogging(level string, pretty bool) error {
 	zerolog.DurationFieldUnit = time.Millisecond
 	zerolog.DurationFieldInteger = true
 	zerolog.FloatingPointPrecision = 3
-	zerolog.TimestampFieldName = "t"
-	zerolog.MessageFieldName = "m"
-	zerolog.LevelFieldName = "l"
-	zerolog.ErrorFieldName = "e"
 	zerolog.DisableSampling(true)
 
 	zLevel, err := zerolog.ParseLevel(level)

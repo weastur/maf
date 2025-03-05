@@ -31,6 +31,7 @@ linters-settings:
           - github.com/VictoriaMetrics/metrics
           - github.com/gofiber/contrib/swagger
           - github.com/rs/zerolog
+          - github.com/gofiber/contrib/fiberzerolog
         deny:
           - pkg: "math/rand$"
             desc: use math/rand/v2
