@@ -19,11 +19,22 @@ It is designed to run on a separate host.`,
 		keyFile := viper.GetString("server.key_file")
 		clientCertFile := viper.GetString("server.client_cert_file")
 		logLevel := viper.GetString("server.log.level")
+		logPretty := viper.GetBool("server.log.pretty")
 		readTimeout := viper.GetDuration("server.http_read_timeout")
 		writeTimeout := viper.GetDuration("server.http_write_timeout")
 		idleTimeout := viper.GetDuration("server.http_idle_timeout")
 
-		server := server.Get(addr, certFile, keyFile, clientCertFile, logLevel, readTimeout, writeTimeout, idleTimeout)
+		server := server.Get(
+			addr,
+			certFile,
+			keyFile,
+			clientCertFile,
+			logLevel,
+			logPretty,
+			readTimeout,
+			writeTimeout,
+			idleTimeout,
+		)
 
 		cobra.CheckErr(server.Run())
 	},
@@ -41,6 +52,7 @@ func init() {
 	serverCmd.Flags().Duration("http-write-timeout", defaultHTTPWriteTimeout, "HTTP write timeout")
 	serverCmd.Flags().Duration("http-idle-timeout", defaultHTTPIdleTimeout, "HTTP idle timeout")
 	serverCmd.Flags().String("log-level", "info", "Log level (trace, debug, info, warn, error, fatal, panic)")
+	serverCmd.Flags().Bool("log-pretty", false, "Enable pretty logging")
 	serverCmd.MarkFlagsRequiredTogether("cert-file", "key-file")
 	serverCmd.MarkFlagFilename("cert-file")
 	serverCmd.MarkFlagFilename("key-file")
@@ -54,4 +66,5 @@ func init() {
 	viper.BindPFlag("server.http_write_timeout", serverCmd.Flags().Lookup("http-write-timeout"))
 	viper.BindPFlag("server.http_idle_timeout", serverCmd.Flags().Lookup("http-idle-timeout"))
 	viper.BindPFlag("server.log.level", serverCmd.Flags().Lookup("log-level"))
+	viper.BindPFlag("server.log.pretty", serverCmd.Flags().Lookup("log-pretty"))
 }

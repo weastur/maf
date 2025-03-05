@@ -26,6 +26,7 @@ type server struct {
 	keyFile          string
 	clientCertFile   string
 	logLevel         string
+	logPretty        bool
 	httpReadTimeout  time.Duration
 	httpWriteTimeout time.Duration
 	httpIdleTimeout  time.Duration
@@ -40,6 +41,7 @@ func Get(
 	keyFile string,
 	clientCertFile string,
 	logLevel string,
+	logPretty bool,
 	httpReadTimeout time.Duration,
 	httpWriteTimeout time.Duration,
 	httpIdleTimeout time.Duration,
@@ -51,6 +53,7 @@ func Get(
 			keyFile:          keyFile,
 			clientCertFile:   clientCertFile,
 			logLevel:         logLevel,
+			logPretty:        logPretty,
 			httpReadTimeout:  httpReadTimeout,
 			httpWriteTimeout: httpWriteTimeout,
 			httpIdleTimeout:  httpIdleTimeout,
@@ -74,7 +77,7 @@ func (s *server) Run() error {
 
 	s.configureFiberApp()
 	s.runFiberApp(&wg)
-	cobra.CheckErr(loggingUtils.ConfigureLogging(s.logLevel))
+	cobra.CheckErr(loggingUtils.ConfigureLogging(s.logLevel, s.logPretty))
 
 	death.WaitForDeathWithFunc(func() {
 		s.shutdownFiberApp()

@@ -19,11 +19,22 @@ It is designed to run on the same host as the MySQL instance.`,
 		keyFile := viper.GetString("agent.key_file")
 		clientCertFile := viper.GetString("agent.client_cert_file")
 		logLevel := viper.GetString("agent.log.level")
+		logPretty := viper.GetBool("agent.log.pretty")
 		readTimeout := viper.GetDuration("agent.http_read_timeout")
 		writeTimeout := viper.GetDuration("agent.http_write_timeout")
 		idleTimeout := viper.GetDuration("agent.http_idle_timeout")
 
-		agent := agent.Get(addr, certFile, keyFile, clientCertFile, logLevel, readTimeout, writeTimeout, idleTimeout)
+		agent := agent.Get(
+			addr,
+			certFile,
+			keyFile,
+			clientCertFile,
+			logLevel,
+			logPretty,
+			readTimeout,
+			writeTimeout,
+			idleTimeout,
+		)
 
 		cobra.CheckErr(agent.Run())
 	},
@@ -41,6 +52,7 @@ func init() {
 	agentCmd.Flags().Duration("http-write-timeout", defaultHTTPWriteTimeout, "HTTP write timeout")
 	agentCmd.Flags().Duration("http-idle-timeout", defaultHTTPIdleTimeout, "HTTP idle timeout")
 	agentCmd.Flags().String("log-level", "info", "Log level (trace, debug, info, warn, error, fatal, panic)")
+	agentCmd.Flags().Bool("log-pretty", false, "Enable pretty logging")
 	agentCmd.MarkFlagsRequiredTogether("cert-file", "key-file")
 	agentCmd.MarkFlagFilename("cert-file")
 	agentCmd.MarkFlagFilename("key-file")
@@ -54,4 +66,5 @@ func init() {
 	viper.BindPFlag("agent.http_write_timeout", agentCmd.Flags().Lookup("http-write-timeout"))
 	viper.BindPFlag("agent.http_idle_timeout", agentCmd.Flags().Lookup("http-idle-timeout"))
 	viper.BindPFlag("agent.log.level", agentCmd.Flags().Lookup("log-level"))
+	viper.BindPFlag("agent.log.pretty", agentCmd.Flags().Lookup("log-pretty"))
 }

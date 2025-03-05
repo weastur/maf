@@ -2,13 +2,18 @@ package logging
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
-func ConfigureLogging(level string) error {
+func ConfigureLogging(level string, pretty bool) error {
+	if pretty {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.DurationFieldUnit = time.Millisecond
 	zerolog.DurationFieldInteger = true
