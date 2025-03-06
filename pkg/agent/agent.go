@@ -1,11 +1,11 @@
 package agent
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/spf13/cobra"
 
 	loggingUtils "github.com/weastur/maf/pkg/utils/logging"
 
@@ -72,12 +72,15 @@ func (a *agent) IsReady(_ *fiber.Ctx) bool {
 }
 
 func (a *agent) Run() error {
+	if err := loggingUtils.ConfigureLogging(a.logLevel, a.logPretty); err != nil {
+		return fmt.Errorf("failed to configure logging: %w", err)
+	}
+
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
 	wg := sync.WaitGroup{}
 
 	a.configureFiberApp()
 	a.runFiberApp(&wg)
-	cobra.CheckErr(loggingUtils.ConfigureLogging(a.logLevel, a.logPretty))
 
 	death.WaitForDeathWithFunc(func() {
 		a.shutdownFiberApp()

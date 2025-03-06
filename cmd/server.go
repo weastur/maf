@@ -1,6 +1,7 @@
 package cmd //nolint:dupl
 
 import (
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/weastur/maf/pkg/config"
 	"github.com/weastur/maf/pkg/server"
@@ -36,7 +37,9 @@ It is designed to run on a separate host.`,
 			idleTimeout,
 		)
 
-		cobra.CheckErr(server.Run())
+		if err := server.Run(); err != nil {
+			log.Fatal().Err(err).Msg("server failed")
+		}
 	},
 }
 

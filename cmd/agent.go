@@ -1,6 +1,7 @@
 package cmd //nolint:dupl
 
 import (
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/weastur/maf/pkg/agent"
 	"github.com/weastur/maf/pkg/config"
@@ -36,7 +37,9 @@ It is designed to run on the same host as the MySQL instance.`,
 			idleTimeout,
 		)
 
-		cobra.CheckErr(agent.Run())
+		if err := agent.Run(); err != nil {
+			log.Fatal().Err(err).Msg("agent failed")
+		}
 	},
 }
 
