@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 
+	utils "github.com/weastur/maf/pkg/utils"
 	loggingUtils "github.com/weastur/maf/pkg/utils/logging"
 
 	SYS "syscall"
@@ -32,6 +33,7 @@ type server struct {
 	httpWriteTimeout time.Duration
 	httpIdleTimeout  time.Duration
 	fiberApp         *fiber.App
+	sentryDSN        string
 }
 
 var serverInstance Server
@@ -46,6 +48,7 @@ func Get(
 	httpReadTimeout time.Duration,
 	httpWriteTimeout time.Duration,
 	httpIdleTimeout time.Duration,
+	sentryDSN string,
 ) Server {
 	if serverInstance == nil {
 		serverInstance = &server{
@@ -58,6 +61,7 @@ func Get(
 			httpReadTimeout:  httpReadTimeout,
 			httpWriteTimeout: httpWriteTimeout,
 			httpIdleTimeout:  httpIdleTimeout,
+			sentryDSN:        sentryDSN,
 		}
 	}
 
@@ -84,6 +88,7 @@ func (s *server) Run() error {
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
 	wg := sync.WaitGroup{}
 
+	utils.ConfigureSentry(s.sentryDSN)
 	s.configureFiberApp()
 	s.runFiberApp(&wg)
 

@@ -15,6 +15,7 @@ linters:
     - wrapcheck
     - reassign
     - godox
+    - dupl
 
 linters-settings:
   depguard:

@@ -24,6 +24,7 @@ It is designed to run on a separate host.`,
 		readTimeout := viper.GetDuration("server.http_read_timeout")
 		writeTimeout := viper.GetDuration("server.http_write_timeout")
 		idleTimeout := viper.GetDuration("server.http_idle_timeout")
+		sentryDSN := viper.GetString("server.sentry.dsn")
 
 		server := server.Get(
 			addr,
@@ -35,6 +36,7 @@ It is designed to run on a separate host.`,
 			readTimeout,
 			writeTimeout,
 			idleTimeout,
+			sentryDSN,
 		)
 
 		if err := server.Run(); err != nil {
@@ -56,6 +58,7 @@ func init() {
 	serverCmd.Flags().Duration("http-idle-timeout", defaultHTTPIdleTimeout, "HTTP idle timeout")
 	serverCmd.Flags().String("log-level", "info", "Log level (trace, debug, info, warn, error, fatal, panic)")
 	serverCmd.Flags().Bool("log-pretty", false, "Enable pretty logging")
+	serverCmd.Flags().String("sentry-dsn", "", "Sentry DSN")
 	serverCmd.MarkFlagsRequiredTogether("cert-file", "key-file")
 	serverCmd.MarkFlagFilename("cert-file")
 	serverCmd.MarkFlagFilename("key-file")
@@ -70,4 +73,5 @@ func init() {
 	viper.BindPFlag("server.http_idle_timeout", serverCmd.Flags().Lookup("http-idle-timeout"))
 	viper.BindPFlag("server.log.level", serverCmd.Flags().Lookup("log-level"))
 	viper.BindPFlag("server.log.pretty", serverCmd.Flags().Lookup("log-pretty"))
+	viper.BindPFlag("server.sentry.dsn", serverCmd.Flags().Lookup("sentry-dsn"))
 }
