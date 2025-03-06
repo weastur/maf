@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
 
 	loggingUtils "github.com/weastur/maf/pkg/utils/logging"
 
@@ -64,10 +65,14 @@ func Get(
 }
 
 func (s *server) IsLive(_ *fiber.Ctx) bool {
+	log.Trace().Msg("Live check called")
+
 	return true
 }
 
 func (s *server) IsReady(_ *fiber.Ctx) bool {
+	log.Trace().Msg("Ready check called")
+
 	return true
 }
 
@@ -83,8 +88,11 @@ func (s *server) Run() error {
 	s.runFiberApp(&wg)
 
 	death.WaitForDeathWithFunc(func() {
+		log.Trace().Msg("Death callback called")
+
 		s.shutdownFiberApp()
 
+		log.Trace().Msg("Waiting for all goroutines to finish")
 		wg.Wait()
 	})
 

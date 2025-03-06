@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/keyauth"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -22,6 +23,8 @@ func authFilter(c *fiber.Ctx) bool {
 
 	for _, pattern := range unprotectedURLs {
 		if pattern.MatchString(url) {
+			log.Trace().Str("url", url).Msg("URL is unprotected")
+
 			return true
 		}
 	}
@@ -40,6 +43,8 @@ func validateAPIKey(_ *fiber.Ctx, key string) (bool, error) {
 	if subtle.ConstantTimeCompare(hashedAPIKey[:], hashedKey[:]) == 1 {
 		return true, nil
 	}
+
+	log.Warn().Msg("API key is missing or malformed")
 
 	return false, keyauth.ErrMissingOrMalformedAPIKey
 }

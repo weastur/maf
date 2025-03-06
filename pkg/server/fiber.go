@@ -11,6 +11,8 @@ import (
 )
 
 func (s *server) configureFiberApp() {
+	log.Trace().Msg("Configuring fiber app")
+
 	s.fiberApp = fiber.New(
 		fiber.Config{
 			AppName:               "maf-server " + utils.AppVersion(),
@@ -36,6 +38,8 @@ func (s *server) configureFiberApp() {
 }
 
 func (s *server) runFiberApp(wg *sync.WaitGroup) {
+	log.Trace().Msg("Running fiber app")
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -47,6 +51,8 @@ func (s *server) runFiberApp(wg *sync.WaitGroup) {
 }
 
 func (s *server) shutdownFiberApp() {
+	log.Trace().Msg("Shutting down fiber app")
+
 	if err := s.fiberApp.ShutdownWithTimeout(utils.AppShutdownTimeout); err != nil {
 		log.Error().Err(err).Msg("failed to shutdown fiber app")
 	}
