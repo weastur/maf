@@ -52,6 +52,12 @@ func (c *config) Init(cfgFileName string) error {
 	c.viperInstance.AutomaticEnv()
 
 	if err := c.viperInstance.ReadInConfig(); err != nil {
+		var errCfgNotFound viper.ConfigFileNotFoundError
+		if errors.As(err, &errCfgNotFound) {
+			// No config file found, so using defaults
+			return c.validate()
+		}
+
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
 
