@@ -5,11 +5,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 
-	utils "github.com/weastur/maf/pkg/utils"
 	loggingUtils "github.com/weastur/maf/pkg/utils/logging"
+	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 
 	SYS "syscall"
 
@@ -88,7 +89,8 @@ func (a *agent) Run() error {
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
 	wg := sync.WaitGroup{}
 
-	utils.ConfigureSentry(a.sentryDSN)
+	sentryUtils.ConfigureSentry(a.sentryDSN)
+	defer sentryUtils.RecoverForSentry(sentry.CurrentHub())
 	a.configureFiberApp()
 	a.runFiberApp(&wg)
 
@@ -96,7 +98,7 @@ func (a *agent) Run() error {
 		log.Trace().Msg("Death callback called")
 
 		a.shutdownFiberApp()
-		utils.FlushSentry()
+		sentryUtils.FlushSentry()
 
 		log.Trace().Msg("Waiting for all goroutines to finish")
 		wg.Wait()

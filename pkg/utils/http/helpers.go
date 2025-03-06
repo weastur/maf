@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"github.com/weastur/maf/pkg/utils"
 	apiUtils "github.com/weastur/maf/pkg/utils/http/api"
 )
 
@@ -69,6 +70,14 @@ func AttachGenericMiddlewares(app *fiber.App, healthchecker Healthchecker) {
 		Repanic:         true,
 		WaitForDelivery: true,
 	}))
+	app.Use(func(c *fiber.Ctx) error {
+		if hub := fibersentry.GetHubFromContext(c); hub != nil {
+			hub.Scope().SetTag(utils.SentryScopeTag, "fiber")
+		}
+
+		return c.Next()
+	})
+
 	app.Use(fiberzerolog.New(fiberzerolog.Config{
 		Logger: &log.Logger,
 		Fields: []string{"requestId", "ip", "method", "path", "status", "latency"},

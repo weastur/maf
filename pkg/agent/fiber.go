@@ -8,6 +8,7 @@ import (
 	"github.com/weastur/maf/pkg/agent/http/api/v1alpha"
 	"github.com/weastur/maf/pkg/utils"
 	httpUtils "github.com/weastur/maf/pkg/utils/http"
+	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
 
 func (a *agent) configureFiberApp() {
@@ -43,6 +44,7 @@ func (a *agent) runFiberApp(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer sentryUtils.RecoverForSentry(sentryUtils.ForkSentryHub("fiber"))
 
 		if err := httpUtils.Listen(a.fiberApp, a.addr, a.certFile, a.keyFile, a.clientCertFile); err != nil {
 			log.Error().Err(err).Msg("failed to listen")
