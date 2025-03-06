@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 
+	utils "github.com/weastur/maf/pkg/utils"
 	loggingUtils "github.com/weastur/maf/pkg/utils/logging"
 
 	SYS "syscall"
@@ -32,6 +33,7 @@ type agent struct {
 	httpWriteTimeout time.Duration
 	httpIdleTimeout  time.Duration
 	fiberApp         *fiber.App
+	sentryDSN        string
 }
 
 var agentInstance Agent
@@ -46,6 +48,7 @@ func Get(
 	httpReadTimeout time.Duration,
 	httpWriteTimeout time.Duration,
 	httpIdleTimeout time.Duration,
+	sentryDSN string,
 ) Agent {
 	if agentInstance == nil {
 		agentInstance = &agent{
@@ -58,6 +61,7 @@ func Get(
 			httpReadTimeout:  httpReadTimeout,
 			httpWriteTimeout: httpWriteTimeout,
 			httpIdleTimeout:  httpIdleTimeout,
+			sentryDSN:        sentryDSN,
 		}
 	}
 
@@ -84,6 +88,7 @@ func (a *agent) Run() error {
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
 	wg := sync.WaitGroup{}
 
+	utils.ConfigureSentry(a.sentryDSN)
 	a.configureFiberApp()
 	a.runFiberApp(&wg)
 
@@ -91,6 +96,7 @@ func (a *agent) Run() error {
 		log.Trace().Msg("Death callback called")
 
 		a.shutdownFiberApp()
+		utils.FlushSentry()
 
 		log.Trace().Msg("Waiting for all goroutines to finish")
 		wg.Wait()

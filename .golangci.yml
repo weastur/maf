@@ -32,6 +32,8 @@ linters-settings:
           - github.com/gofiber/contrib/swagger
           - github.com/rs/zerolog
           - github.com/gofiber/contrib/fiberzerolog
+          - github.com/getsentry/sentry-go
+          - github.com/gofiber/contrib/fibersentry
         deny:
           - pkg: "math/rand$"
             desc: use math/rand/v2

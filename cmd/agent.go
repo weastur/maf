@@ -1,4 +1,4 @@
-package cmd //nolint:dupl
+package cmd
 
 import (
 	"github.com/rs/zerolog/log"
@@ -24,6 +24,7 @@ It is designed to run on the same host as the MySQL instance.`,
 		readTimeout := viper.GetDuration("agent.http_read_timeout")
 		writeTimeout := viper.GetDuration("agent.http_write_timeout")
 		idleTimeout := viper.GetDuration("agent.http_idle_timeout")
+		sentryDSN := viper.GetString("agent.sentry.dsn")
 
 		agent := agent.Get(
 			addr,
@@ -35,6 +36,7 @@ It is designed to run on the same host as the MySQL instance.`,
 			readTimeout,
 			writeTimeout,
 			idleTimeout,
+			sentryDSN,
 		)
 
 		if err := agent.Run(); err != nil {
@@ -56,6 +58,7 @@ func init() {
 	agentCmd.Flags().Duration("http-idle-timeout", defaultHTTPIdleTimeout, "HTTP idle timeout")
 	agentCmd.Flags().String("log-level", "info", "Log level (trace, debug, info, warn, error, fatal, panic)")
 	agentCmd.Flags().Bool("log-pretty", false, "Enable pretty logging")
+	agentCmd.Flags().String("sentry-dsn", "", "Sentry DSN")
 	agentCmd.MarkFlagsRequiredTogether("cert-file", "key-file")
 	agentCmd.MarkFlagFilename("cert-file")
 	agentCmd.MarkFlagFilename("key-file")
@@ -70,4 +73,5 @@ func init() {
 	viper.BindPFlag("agent.http_idle_timeout", agentCmd.Flags().Lookup("http-idle-timeout"))
 	viper.BindPFlag("agent.log.level", agentCmd.Flags().Lookup("log-level"))
 	viper.BindPFlag("agent.log.pretty", agentCmd.Flags().Lookup("log-pretty"))
+	viper.BindPFlag("agent.sentry.dsn", agentCmd.Flags().Lookup("sentry-dsn"))
 }

@@ -1,4 +1,4 @@
-package cmd //nolint:dupl
+package cmd
 
 import (
 	"github.com/rs/zerolog/log"
