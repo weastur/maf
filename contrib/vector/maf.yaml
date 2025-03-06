@@ -1,0 +1,19 @@
+---
+type: remap
+inputs:
+  - maf_logs
+source: |-
+  structured, .parsing_error = parse_json(.message)
+  if .parsing_error != null {
+    err = .parsing_error
+    log("Unable to parse: {{err}}", level: "error")
+  } else {
+    ., .parsing_error = merge(., structured)
+    if .parsing_error != null {
+      err = .parsing_error
+      log("Unable to merge: " + err, level: "error")
+    } else {
+    .timestamp = del(.time)
+    }
+  }
+  .tags = ["maf"]
