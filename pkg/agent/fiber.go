@@ -44,7 +44,7 @@ func (a *agent) runFiberApp(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer sentryUtils.RecoverForSentry(sentryUtils.ForkSentryHub("fiber"))
+		defer sentryUtils.Recover(sentryUtils.Fork("fiber"))
 
 		if err := httpUtils.Listen(a.fiberApp, a.addr, a.certFile, a.keyFile, a.clientCertFile); err != nil {
 			log.Error().Err(err).Msg("failed to listen")

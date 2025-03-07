@@ -5,13 +5,40 @@ import (
 	"os"
 	"time"
 
+	sentryzerolog "github.com/getsentry/sentry-go/zerolog"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	utils "github.com/weastur/maf/pkg/utils"
+	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
 
-func ConfigureLogging(level string, pretty bool) error {
-	if pretty {
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+func Configure(level string, pretty bool) error {
+	consoleWriter := zerolog.ConsoleWriter{Out: os.Stderr}
+
+	if sentryUtils.IsConfgured() {
+		var multiLevelWriter zerolog.LevelWriter
+
+		sentryWriter, err := sentryzerolog.NewWithHub(
+			sentryUtils.Fork("zerolog"),
+			sentryzerolog.Options{
+				Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
+				WithBreadcrumbs: true,
+				FlushTimeout:    utils.SentryFlushTtimeout,
+			},
+		)
+		if err != nil {
+			return fmt.Errorf("failed to create sentry zerolog writer: %w", err)
+		}
+
+		if pretty {
+			multiLevelWriter = zerolog.MultiLevelWriter(consoleWriter, sentryWriter)
+		} else {
+			multiLevelWriter = zerolog.MultiLevelWriter(os.Stderr, sentryWriter)
+		}
+
+		log.Logger = zerolog.New(multiLevelWriter).With().Timestamp().Logger()
+	} else if pretty {
+		log.Logger = log.Output(consoleWriter)
 	}
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix

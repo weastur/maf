@@ -5,6 +5,7 @@ go 1.23.6
 require (
 	github.com/VictoriaMetrics/metrics v1.35.2
 	github.com/getsentry/sentry-go v0.31.1
+	github.com/getsentry/sentry-go/zerolog v0.31.1
 	github.com/gofiber/contrib/fibersentry v1.0.7
 	github.com/gofiber/contrib/fiberzerolog v1.0.2
 	github.com/gofiber/contrib/swagger v1.2.0
@@ -18,6 +19,7 @@ require (
 require (
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
+	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-openapi/analysis v0.21.4 // indirect

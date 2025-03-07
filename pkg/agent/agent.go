@@ -82,15 +82,18 @@ func (a *agent) IsReady(_ *fiber.Ctx) bool {
 }
 
 func (a *agent) Run() error {
-	if err := loggingUtils.ConfigureLogging(a.logLevel, a.logPretty); err != nil {
-		return fmt.Errorf("failed to configure logging: %w", err)
+	if err := sentryUtils.Configure(a.sentryDSN); err != nil {
+		return fmt.Errorf("failed to run agent: %w", err)
+	}
+	defer sentryUtils.Recover(sentry.CurrentHub())
+
+	if err := loggingUtils.Configure(a.logLevel, a.logPretty); err != nil {
+		return fmt.Errorf("failed to run agent: %w", err)
 	}
 
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
 	wg := sync.WaitGroup{}
 
-	sentryUtils.ConfigureSentry(a.sentryDSN)
-	defer sentryUtils.RecoverForSentry(sentry.CurrentHub())
 	a.configureFiberApp()
 	a.runFiberApp(&wg)
 
@@ -98,7 +101,7 @@ func (a *agent) Run() error {
 		log.Trace().Msg("Death callback called")
 
 		a.shutdownFiberApp()
-		sentryUtils.FlushSentry()
+		sentryUtils.Flush()
 
 		log.Trace().Msg("Waiting for all goroutines to finish")
 		wg.Wait()
