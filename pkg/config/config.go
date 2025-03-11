@@ -7,7 +7,12 @@ import (
 	"sync"
 
 	"github.com/spf13/viper"
+	validate "github.com/weastur/maf/pkg/config/validate"
 )
+
+type validator interface {
+	Validate(viperInstance *viper.Viper) error
+}
 
 type Config struct {
 	viperInstance *viper.Viper
@@ -24,8 +29,8 @@ func Get() *Config {
 		instance = &Config{
 			viperInstance: viper.New(),
 			validators: []validator{
-				&validatorMutualTLSMisconfig{},
-				&validatorLogLevel{},
+				validate.NewValidatorMutualTLSMisconfig(),
+				validate.NewValidatorLogLevel(),
 			},
 		}
 	})
