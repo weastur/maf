@@ -13,8 +13,9 @@ var serverCmd = &cobra.Command{
 	Long: `Run a maf server that will communicate with the agents and perform failover if needed.
 It is designed to run on a separate host.`,
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive
-		viper := config.Get().Viper()
+		var cfg Config = config.Get()
 
+		viper := cfg.Viper()
 		addr := viper.GetString("server.addr")
 		certFile := viper.GetString("server.cert_file")
 		keyFile := viper.GetString("server.key_file")
@@ -46,7 +47,9 @@ It is designed to run on a separate host.`,
 }
 
 func init() {
-	viper := config.Get().Viper()
+	var cfg Config = config.Get()
+
+	viper := cfg.Viper()
 
 	rootCmd.AddCommand(serverCmd)
 	serverCmd.Flags().String("addr", ":7080", "Address to listen to")

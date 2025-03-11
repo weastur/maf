@@ -4,37 +4,36 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/spf13/viper"
 )
 
-var configInstance Config
-
-type Config interface {
-	Init(cfgFileName string) error
-	Viper() *viper.Viper
-}
-
-type config struct {
+type Config struct {
 	viperInstance *viper.Viper
 	validators    []validator
 }
 
-func Get() Config {
-	if configInstance == nil {
-		configInstance = &config{
+var (
+	instance *Config
+	once     sync.Once
+)
+
+func Get() *Config {
+	once.Do(func() {
+		instance = &Config{
 			viperInstance: viper.New(),
 			validators: []validator{
 				&validatorMutualTLSMisconfig{},
 				&validatorLogLevel{},
 			},
 		}
-	}
+	})
 
-	return configInstance
+	return instance
 }
 
-func (c *config) Init(cfgFileName string) error {
+func (c *Config) Init(cfgFileName string) error {
 	if cfgFileName != "" {
 		c.viperInstance.SetConfigFile(cfgFileName)
 	} else {
@@ -64,11 +63,11 @@ func (c *config) Init(cfgFileName string) error {
 	return c.validate()
 }
 
-func (c *config) Viper() *viper.Viper {
+func (c *Config) Viper() *viper.Viper {
 	return c.viperInstance
 }
 
-func (c *config) validate() error {
+func (c *Config) validate() error {
 	errs := make([]error, len(c.validators))
 
 	for i, validator := range c.validators {

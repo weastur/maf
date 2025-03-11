@@ -13,8 +13,9 @@ var agentCmd = &cobra.Command{
 	Long: `Run a maf agent that will monitor the MySQL instance and perform failover if needed.
 It is designed to run on the same host as the MySQL instance.`,
 	Run: func(cmd *cobra.Command, args []string) { //nolint:revive
-		viper := config.Get().Viper()
+		var cfg Config = config.Get()
 
+		viper := cfg.Viper()
 		addr := viper.GetString("agent.addr")
 		certFile := viper.GetString("agent.cert_file")
 		keyFile := viper.GetString("agent.key_file")
@@ -46,7 +47,9 @@ It is designed to run on the same host as the MySQL instance.`,
 }
 
 func init() {
-	viper := config.Get().Viper()
+	var cfg Config = config.Get()
+
+	viper := cfg.Viper()
 
 	rootCmd.AddCommand(agentCmd)
 	agentCmd.Flags().String("addr", ":7070", "Address to listen to")

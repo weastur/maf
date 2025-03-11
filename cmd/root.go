@@ -4,8 +4,14 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/weastur/maf/pkg/config"
 )
+
+type Config interface {
+	Init(cfgFileName string) error
+	Viper() *viper.Viper
+}
 
 var cfgFile string
 
@@ -31,6 +37,7 @@ func init() {
 }
 
 func initConfig() {
-	cfg := config.Get()
+	var cfg Config = config.Get()
+
 	cobra.CheckErr(cfg.Init(cfgFile))
 }
