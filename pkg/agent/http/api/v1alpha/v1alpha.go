@@ -2,6 +2,7 @@ package v1alpha
 
 import (
 	"context"
+	"sync"
 
 	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
@@ -10,22 +11,25 @@ import (
 	v1alphaUtils "github.com/weastur/maf/pkg/utils/http/api/v1alpha"
 )
 
-type v1alpha struct {
+type APIV1Alpha struct {
 	prefix  string
 	version string
 }
 
-var apiInstance apiUtils.API
+var (
+	instance *APIV1Alpha
+	once     sync.Once
+)
 
-func Get() apiUtils.API {
-	if apiInstance == nil {
-		apiInstance = &v1alpha{
+func Get() *APIV1Alpha {
+	once.Do(func() {
+		instance = &APIV1Alpha{
 			version: "v1alpha",
 			prefix:  "/v1alpha",
 		}
-	}
+	})
 
-	return apiInstance
+	return instance
 }
 
 // @title MySQL auto failover agent API
@@ -49,12 +53,12 @@ func Get() apiUtils.API {
 // @description API key for the agent. For now, only 'root' is allowed
 // @externalDocs.description Find out more about MAF on GitHub
 // @externalDocs.url https://github.com/weastur/maf/wiki
-func (api *v1alpha) Router(topRouter fiber.Router) fiber.Router {
+func (api *APIV1Alpha) Init(topRouter fiber.Router) {
 	router := httpUtils.APIVersionGroup(topRouter, api.version)
 
 	router.Use(swagger.New(swagger.Config{
 		Title:    "MySQL auto failover agent API, version" + api.version,
-		BasePath: api.Prefix(),
+		BasePath: httpUtils.APIPrefix + api.prefix,
 		FilePath: "./pkg/agent/http/api/v1alpha/swagger.json",
 		Path:     "docs",
 		CacheAge: 0,
@@ -71,18 +75,8 @@ func (api *v1alpha) Router(topRouter fiber.Router) fiber.Router {
 	router.Use(v1alphaUtils.AuthMiddleware())
 
 	router.Get("/version", v1alphaUtils.VersionHandler)
-
-	return router
 }
 
-func (api *v1alpha) Prefix() string {
-	return httpUtils.APIPrefix + api.prefix
-}
-
-func (api *v1alpha) Version() string {
-	return api.version
-}
-
-func (api *v1alpha) ErrorHandler(c *fiber.Ctx, err error) error {
+func (api *APIV1Alpha) ErrorHandler(c *fiber.Ctx, err error) error {
 	return v1alphaUtils.ErrorHandler(c, err)
 }

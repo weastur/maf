@@ -79,19 +79,19 @@ func (s *Server) IsReady(_ *fiber.Ctx) bool {
 }
 
 func (s *Server) Run() error {
-	if err := sentryUtils.Configure(s.sentryDSN); err != nil {
+	if err := sentryUtils.Init(s.sentryDSN); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
 	defer sentryUtils.Recover(sentry.CurrentHub())
 
-	if err := loggingUtils.Configure(s.logLevel, s.logPretty); err != nil {
+	if err := loggingUtils.Init(s.logLevel, s.logPretty); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
 
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
 	wg := sync.WaitGroup{}
 
-	s.configureFiberApp()
+	s.initFiberApp()
 	s.runFiberApp(&wg)
 
 	death.WaitForDeathWithFunc(func() {

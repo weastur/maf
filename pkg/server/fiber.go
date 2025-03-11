@@ -11,7 +11,11 @@ import (
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
 
-func (s *Server) configureFiberApp() {
+type API interface {
+	Init(topRouter fiber.Router)
+}
+
+func (s *Server) initFiberApp() {
 	log.Trace().Msg("Configuring fiber app")
 
 	s.fiberApp = fiber.New(
@@ -35,7 +39,9 @@ func (s *Server) configureFiberApp() {
 
 	api := httpUtils.APIGroup(s.fiberApp)
 
-	v1alpha.Get().Router(api)
+	var v1AlphaInstance API = v1alpha.Get()
+
+	v1AlphaInstance.Init(api)
 }
 
 func (s *Server) runFiberApp(wg *sync.WaitGroup) {

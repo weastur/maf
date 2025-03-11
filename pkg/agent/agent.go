@@ -79,19 +79,19 @@ func (a *Agent) IsReady(_ *fiber.Ctx) bool {
 }
 
 func (a *Agent) Run() error {
-	if err := sentryUtils.Configure(a.sentryDSN); err != nil {
+	if err := sentryUtils.Init(a.sentryDSN); err != nil {
 		return fmt.Errorf("failed to run agent: %w", err)
 	}
 	defer sentryUtils.Recover(sentry.CurrentHub())
 
-	if err := loggingUtils.Configure(a.logLevel, a.logPretty); err != nil {
+	if err := loggingUtils.Init(a.logLevel, a.logPretty); err != nil {
 		return fmt.Errorf("failed to run agent: %w", err)
 	}
 
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
 	wg := sync.WaitGroup{}
 
-	a.configureFiberApp()
+	a.initFiberApp()
 	a.runFiberApp(&wg)
 
 	death.WaitForDeathWithFunc(func() {

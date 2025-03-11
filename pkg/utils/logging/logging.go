@@ -12,7 +12,7 @@ import (
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
 
-func Configure(level string, pretty bool) error {
+func Init(level string, pretty bool) error {
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stderr}
 
 	if sentryUtils.IsConfgured() {

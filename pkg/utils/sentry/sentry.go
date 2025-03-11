@@ -8,7 +8,7 @@ import (
 	utils "github.com/weastur/maf/pkg/utils"
 )
 
-func Configure(dsn string) error {
+func Init(dsn string) error {
 	if dsn == "" {
 		return nil
 	}

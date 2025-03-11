@@ -24,6 +24,10 @@ const (
 	APIPrefix                  = "/api"
 )
 
+type API interface {
+	ErrorHandler(c *fiber.Ctx, err error) error
+}
+
 func Listen(app *fiber.App, addr string, certFile string, keyFile string, clientCertFile string) error {
 	switch {
 	case clientCertFile != "":
@@ -96,7 +100,7 @@ func AttachGenericMiddlewares(app *fiber.App, healthchecker Healthchecker) {
 }
 
 func ErrorHandler(c *fiber.Ctx, err error) error {
-	apiInstance, ok := c.UserContext().Value(apiUtils.UserContextKey("apiInstance")).(apiUtils.API)
+	apiInstance, ok := c.UserContext().Value(apiUtils.UserContextKey("apiInstance")).(API)
 	if ok {
 		return apiInstance.ErrorHandler(c, err)
 	}
