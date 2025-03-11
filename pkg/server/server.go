@@ -17,13 +17,7 @@ import (
 	DEATH "github.com/vrecan/death/v3"
 )
 
-type Server interface {
-	Run() error
-	IsLive(c *fiber.Ctx) bool
-	IsReady(c *fiber.Ctx) bool
-}
-
-type server struct {
+type Server struct {
 	addr             string
 	certFile         string
 	keyFile          string
@@ -37,7 +31,10 @@ type server struct {
 	sentryDSN        string
 }
 
-var serverInstance Server
+var (
+	instance *Server
+	once     sync.Once
+)
 
 func Get(
 	addr string,
@@ -50,9 +47,9 @@ func Get(
 	httpWriteTimeout time.Duration,
 	httpIdleTimeout time.Duration,
 	sentryDSN string,
-) Server {
-	if serverInstance == nil {
-		serverInstance = &server{
+) *Server {
+	once.Do(func() {
+		instance = &Server{
 			addr:             addr,
 			certFile:         certFile,
 			keyFile:          keyFile,
@@ -64,24 +61,24 @@ func Get(
 			httpIdleTimeout:  httpIdleTimeout,
 			sentryDSN:        sentryDSN,
 		}
-	}
+	})
 
-	return serverInstance
+	return instance
 }
 
-func (s *server) IsLive(_ *fiber.Ctx) bool {
+func (s *Server) IsLive(_ *fiber.Ctx) bool {
 	log.Trace().Msg("Live check called")
 
 	return true
 }
 
-func (s *server) IsReady(_ *fiber.Ctx) bool {
+func (s *Server) IsReady(_ *fiber.Ctx) bool {
 	log.Trace().Msg("Ready check called")
 
 	return true
 }
 
-func (s *server) Run() error {
+func (s *Server) Run() error {
 	if err := sentryUtils.Configure(s.sentryDSN); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}

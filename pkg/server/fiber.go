@@ -11,7 +11,7 @@ import (
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
 
-func (s *server) configureFiberApp() {
+func (s *Server) configureFiberApp() {
 	log.Trace().Msg("Configuring fiber app")
 
 	s.fiberApp = fiber.New(
@@ -38,7 +38,7 @@ func (s *server) configureFiberApp() {
 	v1alpha.Get().Router(api)
 }
 
-func (s *server) runFiberApp(wg *sync.WaitGroup) {
+func (s *Server) runFiberApp(wg *sync.WaitGroup) {
 	log.Trace().Msg("Running fiber app")
 
 	wg.Add(1)
@@ -52,7 +52,7 @@ func (s *server) runFiberApp(wg *sync.WaitGroup) {
 	}()
 }
 
-func (s *server) shutdownFiberApp() {
+func (s *Server) shutdownFiberApp() {
 	log.Trace().Msg("Shutting down fiber app")
 
 	if err := s.fiberApp.ShutdownWithTimeout(utils.AppShutdownTimeout); err != nil {
