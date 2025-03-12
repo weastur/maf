@@ -29,9 +29,9 @@ func Get() *Config {
 		instance = &Config{
 			viperInstance: viper.New(),
 			validators: []Validator{
-				validate.NewValidatorMutualTLSMisconfig(),
-				validate.NewValidatorLogLevel(),
-				validate.NewValidatorRaft(),
+				validate.NewMutualTLS(),
+				validate.NewLogLevel(),
+				validate.NewRaft(),
 			},
 		}
 	})

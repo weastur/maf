@@ -6,23 +6,23 @@ import (
 	"github.com/spf13/viper"
 )
 
-type ValidatorLogLevel struct{}
+type LogLevel struct{}
 
-var ErrLogLevelMisconfig = errors.New(
+var ErrLogLevel = errors.New(
 	"log level misconfiguration. Log level must be one of: trace, debug, info, warn, error, fatal, panic",
 )
 
-func NewValidatorLogLevel() *ValidatorLogLevel {
-	return &ValidatorLogLevel{}
+func NewLogLevel() *LogLevel {
+	return &LogLevel{}
 }
 
-func (v *ValidatorLogLevel) Validate(viperInstance *viper.Viper) error {
+func (v *LogLevel) Validate(viperInstance *viper.Viper) error {
 	for _, key := range []string{"agent.log.level", "server.log.level"} {
 		level := viperInstance.GetString(key)
 		switch level {
 		case "trace", "debug", "info", "warn", "error", "fatal", "panic":
 		default:
-			return ErrLogLevelMisconfig
+			return ErrLogLevel
 		}
 	}
 

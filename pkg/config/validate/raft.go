@@ -6,17 +6,17 @@ import (
 	"github.com/spf13/viper"
 )
 
-type ValidatorRaft struct{}
+type Raft struct{}
 
 var ErrRaft = errors.New(
 	"raft peers and node ID must be set",
 )
 
-func NewValidatorRaft() *ValidatorRaft {
-	return &ValidatorRaft{}
+func NewRaft() *Raft {
+	return &Raft{}
 }
 
-func (v *ValidatorRaft) Validate(viperInstance *viper.Viper) error {
+func (v *Raft) Validate(viperInstance *viper.Viper) error {
 	if !viperInstance.IsSet("server.raft.peers") || !viperInstance.IsSet("server.raft.node_id") {
 		return ErrRaft
 	}
