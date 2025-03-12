@@ -5,15 +5,17 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/weastur/maf/pkg/agent/worker/fiber/http/api/v1alpha"
 	"github.com/weastur/maf/pkg/utils"
 	httpUtils "github.com/weastur/maf/pkg/utils/http"
+	"github.com/weastur/maf/pkg/utils/logging"
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
 
 type API interface {
-	Init(topRouter fiber.Router)
+	Init(topRouter fiber.Router, logger zerolog.Logger)
 }
 
 type Config struct {
@@ -30,12 +32,16 @@ type Config struct {
 type Fiber struct {
 	config *Config
 	app    *fiber.App
+	logger zerolog.Logger
 }
 
 func New(config *Config) *Fiber {
 	log.Trace().Msg("Configuring fiber worker")
 
-	f := &Fiber{config: config}
+	f := &Fiber{
+		config: config,
+		logger: log.With().Str(logging.ComponentCtxKey, "fiber").Logger(),
+	}
 
 	f.app = fiber.New(
 		fiber.Config{
@@ -49,9 +55,9 @@ func New(config *Config) *Fiber {
 			ErrorHandler:          httpUtils.ErrorHandler,
 		},
 	)
-	httpUtils.AttachGenericMiddlewares(f.app, f)
+	httpUtils.AttachGenericMiddlewares(f.app, f.logger, f)
 	f.app.Hooks().OnShutdown(func() error {
-		log.Info().Msg("Shutting down agent handler")
+		f.logger.Info().Msg("Shutting down agent handler")
 
 		return nil
 	})
@@ -60,25 +66,25 @@ func New(config *Config) *Fiber {
 
 	var v1AlphaInstance API = v1alpha.Get()
 
-	v1AlphaInstance.Init(api)
+	v1AlphaInstance.Init(api, f.logger)
 
 	return f
 }
 
 func (f *Fiber) IsLive(_ *fiber.Ctx) bool {
-	log.Trace().Msg("Live check called")
+	f.logger.Trace().Msg("Live check called")
 
 	return true
 }
 
 func (f *Fiber) IsReady(_ *fiber.Ctx) bool {
-	log.Trace().Msg("Ready check called")
+	f.logger.Trace().Msg("Ready check called")
 
 	return true
 }
 
 func (f *Fiber) Run(wg *sync.WaitGroup) {
-	log.Info().Msg("Running fiber worker")
+	f.logger.Info().Msg("Running")
 
 	wg.Add(1)
 	go func() {
@@ -86,17 +92,17 @@ func (f *Fiber) Run(wg *sync.WaitGroup) {
 		defer sentryUtils.Recover(sentryUtils.Fork("fiber"))
 
 		if err := httpUtils.Listen(
-			f.app, f.config.Addr, f.config.CertFile, f.config.KeyFile, f.config.ClientCertFile,
+			f.app, f.logger, f.config.Addr, f.config.CertFile, f.config.KeyFile, f.config.ClientCertFile,
 		); err != nil {
-			log.Error().Err(err).Msg("failed to listen")
+			f.logger.Error().Err(err).Msg("failed to listen")
 		}
 	}()
 }
 
 func (f *Fiber) Stop() {
-	log.Info().Msg("Stopping fiber worker")
+	f.logger.Info().Msg("Stopping")
 
 	if err := f.app.ShutdownWithTimeout(f.config.ShutdownTimeout); err != nil {
-		log.Error().Err(err).Msg("failed to shutdown fiber app")
+		f.logger.Error().Err(err).Msg("failed to shutdown fiber app")
 	}
 }

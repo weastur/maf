@@ -25,7 +25,7 @@ func (v *Raft) Validate(viperInstance *viper.Viper) error {
 		return ErrRaftMissingMandatory
 	}
 
-	if !viperInstance.GetBool("server.raft.devmode") && !viperInstance.IsSet("server.raft.data_dir") {
+	if !viperInstance.GetBool("server.raft.devmode") && !viperInstance.IsSet("server.raft.datadir") {
 		return ErrRaftStorage
 	}
 

@@ -12,7 +12,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"github.com/weastur/maf/pkg/utils"
 	apiUtils "github.com/weastur/maf/pkg/utils/http/api"
@@ -28,22 +27,29 @@ type API interface {
 	ErrorHandler(c *fiber.Ctx, err error) error
 }
 
-func Listen(app *fiber.App, addr string, certFile string, keyFile string, clientCertFile string) error {
+func Listen(
+	app *fiber.App,
+	logger zerolog.Logger,
+	addr string,
+	certFile string,
+	keyFile string,
+	clientCertFile string,
+) error {
 	switch {
 	case clientCertFile != "":
-		log.Info().Msgf("Listening with mutual TLS on %s", addr)
+		logger.Info().Msgf("Listening with mutual TLS on %s", addr)
 
 		if err := app.ListenMutualTLS(addr, certFile, keyFile, clientCertFile); err != nil {
 			return fmt.Errorf("failed to listen with mutual TLS: %w", err)
 		}
 	case certFile != "" && keyFile != "":
-		log.Info().Msgf("Listening with TLS on %s", addr)
+		logger.Info().Msgf("Listening with TLS on %s", addr)
 
 		if err := app.ListenTLS(addr, certFile, keyFile); err != nil {
 			return fmt.Errorf("failed to listen with TLS: %w", err)
 		}
 	default:
-		log.Info().Msgf("Listening on %s", addr)
+		logger.Info().Msgf("Listening on %s", addr)
 
 		if err := app.Listen(addr); err != nil {
 			return fmt.Errorf("failed to listen: %w", err)
@@ -69,7 +75,7 @@ func APIVersionGroup(api fiber.Router, version string) fiber.Router {
 	})
 }
 
-func AttachGenericMiddlewares(app *fiber.App, healthchecker Healthchecker) {
+func AttachGenericMiddlewares(app *fiber.App, logger zerolog.Logger, healthchecker Healthchecker) {
 	app.Use(fibersentry.New(fibersentry.Config{
 		Repanic:         true,
 		WaitForDelivery: true,
@@ -83,7 +89,7 @@ func AttachGenericMiddlewares(app *fiber.App, healthchecker Healthchecker) {
 	})
 
 	app.Use(fiberzerolog.New(fiberzerolog.Config{
-		Logger: &log.Logger,
+		Logger: &logger,
 		Fields: []string{"requestId", "ip", "method", "path", "status", "latency"},
 		Levels: []zerolog.Level{zerolog.ErrorLevel, zerolog.ErrorLevel, zerolog.DebugLevel},
 	}))

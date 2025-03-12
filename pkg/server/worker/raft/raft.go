@@ -4,7 +4,9 @@ import (
 	"os"
 	"sync"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/weastur/maf/pkg/utils/logging"
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
 
@@ -21,28 +23,33 @@ type Config struct {
 type Raft struct {
 	config *Config
 	done   chan struct{}
+	logger zerolog.Logger
 }
 
 func New(config *Config) *Raft {
 	log.Trace().Msg("Configuring raft worker")
 
-	return &Raft{config: config, done: make(chan struct{})}
+	return &Raft{
+		config: config,
+		done:   make(chan struct{}),
+		logger: log.With().Str(logging.ComponentCtxKey, "raft").Logger(),
+	}
 }
 
 func (r *Raft) init() {
-	log.Trace().Msg("Initializing raft worker")
+	r.logger.Trace().Msg("Initializing")
 
 	if r.config.Datadir != "" {
-		log.Info().Msgf("Using raft data directory: %s", r.config.Datadir)
+		r.logger.Info().Msgf("Using raft data directory: %s", r.config.Datadir)
 
 		if err := os.MkdirAll(r.config.Datadir, datadirPerms); err != nil {
-			log.Fatal().Err(err).Msg("Failed to create raft data directory")
+			r.logger.Fatal().Err(err).Msg("Failed to create raft data directory")
 		}
 	}
 }
 
 func (r *Raft) Run(wg *sync.WaitGroup) {
-	log.Info().Msg("Running raft worker")
+	r.logger.Info().Msg("Running")
 
 	wg.Add(1)
 	go func() {
@@ -56,7 +63,7 @@ func (r *Raft) Run(wg *sync.WaitGroup) {
 }
 
 func (r *Raft) Stop() {
-	log.Info().Msg("Stopping raft worker")
+	r.logger.Info().Msg("Stopping")
 
 	close(r.done)
 }

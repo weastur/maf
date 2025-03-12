@@ -41,7 +41,7 @@ It is designed to run on a separate host.`,
 			NodeID:  viper.GetString("server.raft.node_id"),
 			Devmode: viper.GetBool("server.raft.devmode"),
 			Peers:   viper.GetStringSlice("server.raft.peers"),
-			Datadir: viper.GetString("server.raft.data_dir"),
+			Datadir: viper.GetString("server.raft.datadir"),
 		}
 
 		srv := server.Get(serverConfig, raftConfig, fiberConfig)
@@ -87,10 +87,10 @@ func init() {
 	serverCmd.MarkFlagFilename("http-key-file")
 	serverCmd.MarkFlagFilename("http-client-cert-file")
 
-	viper.BindPFlag("server.http.addr", serverCmd.Flags().Lookup("addr"))
-	viper.BindPFlag("server.http.cert_file", serverCmd.Flags().Lookup("cert-file"))
-	viper.BindPFlag("server.http.key_file", serverCmd.Flags().Lookup("key-file"))
-	viper.BindPFlag("server.http.client_cert_file", serverCmd.Flags().Lookup("client-cert-file"))
+	viper.BindPFlag("server.http.addr", serverCmd.Flags().Lookup("http-addr"))
+	viper.BindPFlag("server.http.cert_file", serverCmd.Flags().Lookup("http-cert-file"))
+	viper.BindPFlag("server.http.key_file", serverCmd.Flags().Lookup("http-key-file"))
+	viper.BindPFlag("server.http.client_cert_file", serverCmd.Flags().Lookup("http-client-cert-file"))
 	viper.BindPFlag("server.http.read_timeout", serverCmd.Flags().Lookup("http-read-timeout"))
 	viper.BindPFlag("server.http.write_timeout", serverCmd.Flags().Lookup("http-write-timeout"))
 	viper.BindPFlag("server.http.idle_timeout", serverCmd.Flags().Lookup("http-idle-timeout"))
@@ -103,7 +103,7 @@ func init() {
 
 	viper.BindPFlag("server.raft.addr", serverCmd.Flags().Lookup("raft-addr"))
 	viper.BindPFlag("server.raft.node_id", serverCmd.Flags().Lookup("raft-node-id"))
-	viper.BindPFlag("server.raft.data_dir", serverCmd.Flags().Lookup("raft-data-dir"))
+	viper.BindPFlag("server.raft.datadir", serverCmd.Flags().Lookup("raft-data-dir"))
 	viper.BindPFlag("server.raft.devmode", serverCmd.Flags().Lookup("raft-devmode"))
 	viper.BindPFlag("server.raft.peers", serverCmd.Flags().Lookup("raft-peers"))
 }

@@ -51,7 +51,7 @@ func init() {
 
 	rootCmd.AddCommand(agentCmd)
 
-	agentCmd.Flags().String("http-addr", ":7080", "Address to listen to")
+	agentCmd.Flags().String("http-addr", ":7070", "Address to listen to")
 	agentCmd.Flags().String("http-cert-file", "", "Path to the cert file (required if key-file is set)")
 	agentCmd.Flags().String("http-key-file", "", "Path to the key file (required if cert-file is set)")
 	agentCmd.Flags().String("http-client-cert-file", "", "Path to the client cert file (for mTLS)")
@@ -73,10 +73,10 @@ func init() {
 	agentCmd.MarkFlagFilename("key-file")
 	agentCmd.MarkFlagFilename("client-cert-file")
 
-	viper.BindPFlag("agent.http.addr", agentCmd.Flags().Lookup("addr"))
-	viper.BindPFlag("agent.http.cert_file", agentCmd.Flags().Lookup("cert-file"))
-	viper.BindPFlag("agent.http.key_file", agentCmd.Flags().Lookup("key-file"))
-	viper.BindPFlag("agent.http.client_cert_file", agentCmd.Flags().Lookup("client-cert-file"))
+	viper.BindPFlag("agent.http.addr", agentCmd.Flags().Lookup("http-addr"))
+	viper.BindPFlag("agent.http.cert_file", agentCmd.Flags().Lookup("http-cert-file"))
+	viper.BindPFlag("agent.http.key_file", agentCmd.Flags().Lookup("http-key-file"))
+	viper.BindPFlag("agent.http.client_cert_file", agentCmd.Flags().Lookup("http-client-cert-file"))
 	viper.BindPFlag("agent.http.read_timeout", agentCmd.Flags().Lookup("http-read-timeout"))
 	viper.BindPFlag("agent.http.write_timeout", agentCmd.Flags().Lookup("http-write-timeout"))
 	viper.BindPFlag("agent.http.idle_timeout", agentCmd.Flags().Lookup("http-idle-timeout"))

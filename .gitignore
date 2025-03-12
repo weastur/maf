@@ -35,3 +35,4 @@ dist/
 /build/completions
 /build/manpages
 /.ansible
+/localdev

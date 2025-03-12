@@ -12,6 +12,8 @@ import (
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
 
+const ComponentCtxKey = "component"
+
 func Init(level string, pretty bool) error {
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stderr}
 
@@ -40,6 +42,8 @@ func Init(level string, pretty bool) error {
 	} else if pretty {
 		log.Logger = log.Output(consoleWriter)
 	}
+
+	log.Logger = log.With().Str(ComponentCtxKey, "core").Logger()
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.DurationFieldUnit = time.Millisecond

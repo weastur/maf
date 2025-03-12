@@ -4,20 +4,24 @@ import (
 	"maps"
 	"sync"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/weastur/maf/pkg/utils/logging"
 )
 
 type KeyValue map[string]string
 
 type SafeStorage struct {
-	mu   sync.RWMutex
-	data KeyValue
+	mu     sync.RWMutex
+	data   KeyValue
+	logger zerolog.Logger
 }
 
 func NewSafeStorage() *SafeStorage {
 	return &SafeStorage{
-		mu:   sync.RWMutex{},
-		data: make(KeyValue),
+		mu:     sync.RWMutex{},
+		data:   make(KeyValue),
+		logger: log.With().Str(logging.ComponentCtxKey, "raft-safestorage").Logger(),
 	}
 }
 
@@ -27,7 +31,7 @@ func (s *SafeStorage) Get(key string) (string, bool) {
 
 	val, ok := s.data[key]
 
-	log.Trace().Msgf("Getting from storage: %s:%s", key, val)
+	s.logger.Trace().Msgf("Getting from storage: %s:%s", key, val)
 
 	return val, ok
 }
@@ -35,7 +39,7 @@ func (s *SafeStorage) Get(key string) (string, bool) {
 func (s *SafeStorage) Set(key, value string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	log.Trace().Msgf("Setting in storage: %s:%s", key, value)
+	s.logger.Trace().Msgf("Setting in storage: %s:%s", key, value)
 
 	s.data[key] = value
 }
@@ -43,7 +47,7 @@ func (s *SafeStorage) Set(key, value string) {
 func (s *SafeStorage) Delete(key string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	log.Trace().Msgf("Deleting from storage: %s", key)
+	s.logger.Trace().Msgf("Deleting from storage: %s", key)
 
 	delete(s.data, key)
 }
@@ -51,7 +55,7 @@ func (s *SafeStorage) Delete(key string) {
 func (s *SafeStorage) Snapshot() KeyValue {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	log.Trace().Msg("Creating snapshot")
+	s.logger.Trace().Msg("Creating snapshot")
 
 	clone := make(map[string]string)
 	maps.Copy(clone, s.data)
@@ -62,7 +66,7 @@ func (s *SafeStorage) Snapshot() KeyValue {
 func (s *SafeStorage) Restore(data KeyValue) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	log.Trace().Msg("Restoring snapshot")
+	s.logger.Trace().Msg("Restoring snapshot")
 
 	maps.Copy(s.data, data)
 }
