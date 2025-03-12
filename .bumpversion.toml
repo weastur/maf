@@ -37,7 +37,7 @@ values = ["dev", "rc", "final"]
 optional_value = "final"
 
 [[tool.bumpversion.files]]
-filename = "utils/version.go"
+filename = "pkg/utils/version.go"
 search = "var version = \"v{current_version}\""
 replace = "var version = \"v{new_version}\""
 
