@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/spf13/viper"
-	validate "github.com/weastur/maf/pkg/config/validate"
+	"github.com/weastur/maf/pkg/config/validate"
 )
 
 type Validator interface {

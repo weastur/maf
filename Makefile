@@ -14,8 +14,8 @@ generate: ## Generate code
 	@PATH=$(ROOT_DIR)/gen:$(PATH) go generate ./...
 
 swagger: go-build-deps generate ## Generate swagger docs
-	@swag init --quiet --generalInfo v1alpha.go --dir pkg/agent/http/api/v1alpha,pkg/utils/http --output pkg/agent/http/api/v1alpha --outputTypes json
-	@swag init --quiet --generalInfo v1alpha.go --dir pkg/server/http/api/v1alpha,pkg/utils/http --output pkg/server/http/api/v1alpha --outputTypes json
+	@swag init --quiet --generalInfo v1alpha.go --dir pkg/agent/worker/fiber/http/api/v1alpha,pkg/utils/http --output pkg/agent/worker/fiber/http/api/v1alpha --outputTypes json
+	@swag init --quiet --generalInfo v1alpha.go --dir pkg/server/worker/fiber/http/api/v1alpha,pkg/utils/http --output pkg/server/worker/fiber/http/api/v1alpha --outputTypes json
 
 clean: ## Cleanup
 	@rm -rf $(DIST_DIR)

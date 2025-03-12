@@ -59,7 +59,7 @@ func (api *APIV1Alpha) Init(topRouter fiber.Router) {
 	router.Use(swagger.New(swagger.Config{
 		Title:    "MySQL auto failover agent API, version" + api.version,
 		BasePath: httpUtils.APIPrefix + api.prefix,
-		FilePath: "./pkg/agent/http/api/v1alpha/swagger.json",
+		FilePath: "./pkg/agent/worker/fiber/http/api/v1alpha/swagger.json",
 		Path:     "docs",
 		CacheAge: 0,
 	}))

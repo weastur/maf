@@ -2,12 +2,13 @@ package agent
 
 import (
 	"fmt"
+	"slices"
 	"sync"
-	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
+
+	"github.com/weastur/maf/pkg/agent/worker/fiber"
 
 	loggingUtils "github.com/weastur/maf/pkg/utils/logging"
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
@@ -17,18 +18,20 @@ import (
 	DEATH "github.com/vrecan/death/v3"
 )
 
+type Worker interface {
+	Run(wg *sync.WaitGroup)
+	Stop()
+}
+
+type Config struct {
+	LogLevel  string
+	LogPretty bool
+	SentryDSN string
+}
+
 type Agent struct {
-	addr             string
-	certFile         string
-	keyFile          string
-	clientCertFile   string
-	logLevel         string
-	logPretty        bool
-	httpReadTimeout  time.Duration
-	httpWriteTimeout time.Duration
-	httpIdleTimeout  time.Duration
-	fiberApp         *fiber.App
-	sentryDSN        string
+	config      *Config
+	fiberConfig *fiber.Config
 }
 
 var (
@@ -37,67 +40,48 @@ var (
 )
 
 func Get(
-	addr string,
-	certFile string,
-	keyFile string,
-	clientCertFile string,
-	logLevel string,
-	logPretty bool,
-	httpReadTimeout time.Duration,
-	httpWriteTimeout time.Duration,
-	httpIdleTimeout time.Duration,
-	sentryDSN string,
+	config *Config,
+	fiberConfig *fiber.Config,
 ) *Agent {
 	once.Do(func() {
 		instance = &Agent{
-			addr:             addr,
-			certFile:         certFile,
-			keyFile:          keyFile,
-			clientCertFile:   clientCertFile,
-			logLevel:         logLevel,
-			logPretty:        logPretty,
-			httpReadTimeout:  httpReadTimeout,
-			httpWriteTimeout: httpWriteTimeout,
-			httpIdleTimeout:  httpIdleTimeout,
-			sentryDSN:        sentryDSN,
+			config:      config,
+			fiberConfig: fiberConfig,
 		}
 	})
 
 	return instance
 }
 
-func (a *Agent) IsLive(_ *fiber.Ctx) bool {
-	log.Trace().Msg("Live check called")
-
-	return true
-}
-
-func (a *Agent) IsReady(_ *fiber.Ctx) bool {
-	log.Trace().Msg("Ready check called")
-
-	return true
-}
-
 func (a *Agent) Run() error {
-	if err := sentryUtils.Init(a.sentryDSN); err != nil {
+	if err := sentryUtils.Init(a.config.SentryDSN); err != nil {
 		return fmt.Errorf("failed to run agent: %w", err)
 	}
 	defer sentryUtils.Recover(sentry.CurrentHub())
 
-	if err := loggingUtils.Init(a.logLevel, a.logPretty); err != nil {
+	if err := loggingUtils.Init(a.config.LogLevel, a.config.LogPretty); err != nil {
 		return fmt.Errorf("failed to run agent: %w", err)
 	}
+
+	fiberWorker := fiber.New(a.fiberConfig)
+	workers := []Worker{fiberWorker}
 
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
 	wg := sync.WaitGroup{}
 
-	a.initFiberApp()
-	a.runFiberApp(&wg)
+	for _, worker := range workers {
+		worker.Run(&wg)
+	}
 
 	death.WaitForDeathWithFunc(func() {
 		log.Trace().Msg("Death callback called")
 
-		a.shutdownFiberApp()
+		slices.Reverse(workers)
+
+		for _, worker := range workers {
+			worker.Stop()
+		}
+
 		sentryUtils.Flush()
 
 		log.Trace().Msg("Waiting for all goroutines to finish")

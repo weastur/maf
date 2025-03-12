@@ -16,6 +16,7 @@ linters:
     - reassign
     - godox
     - dupl
+    - varnamelen
 
 linters-settings:
   depguard:
@@ -40,16 +41,6 @@ linters-settings:
         deny:
           - pkg: "math/rand$"
             desc: use math/rand/v2
-  varnamelen:
-    ignore-decls:
-      - t testing.T
-      - e error
-      - i int
-      - T any
-      - w http.ResponseWriter
-      - r *http.Request
-      - wg sync.WaitGroup
-      - c *fiber.Ctx
   forbidigo:
     forbid:
       - ^print(ln)?$

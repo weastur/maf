@@ -2,12 +2,14 @@ package server
 
 import (
 	"fmt"
+	"slices"
 	"sync"
-	"time"
 
 	sentry "github.com/getsentry/sentry-go"
-	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
+
+	"github.com/weastur/maf/pkg/server/worker/fiber"
+	"github.com/weastur/maf/pkg/server/worker/raft"
 
 	loggingUtils "github.com/weastur/maf/pkg/utils/logging"
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
@@ -17,22 +19,21 @@ import (
 	DEATH "github.com/vrecan/death/v3"
 )
 
+type Worker interface {
+	Run(wg *sync.WaitGroup)
+	Stop()
+}
+
+type Config struct {
+	LogLevel  string
+	LogPretty bool
+	SentryDSN string
+}
+
 type Server struct {
-	addr             string
-	certFile         string
-	keyFile          string
-	clientCertFile   string
-	logLevel         string
-	logPretty        bool
-	httpReadTimeout  time.Duration
-	httpWriteTimeout time.Duration
-	httpIdleTimeout  time.Duration
-	fiberApp         *fiber.App
-	sentryDSN        string
-	raftAddr         string
-	raftNodeID       string
-	raftDevmode      bool
-	raftPeers        []string
+	fiberConfig *fiber.Config
+	raftConfig  *raft.Config
+	config      *Config
 }
 
 var (
@@ -41,78 +42,54 @@ var (
 )
 
 func Get(
-	addr string,
-	certFile string,
-	keyFile string,
-	clientCertFile string,
-	logLevel string,
-	logPretty bool,
-	httpReadTimeout time.Duration,
-	httpWriteTimeout time.Duration,
-	httpIdleTimeout time.Duration,
-	sentryDSN string,
-	raftAddr string,
-	raftNodeID string,
-	raftDevmode bool,
-	raftPeers []string,
+	config *Config,
+	raftConfig *raft.Config,
+	fiberConfig *fiber.Config,
 ) *Server {
 	once.Do(func() {
 		instance = &Server{
-			addr:             addr,
-			certFile:         certFile,
-			keyFile:          keyFile,
-			clientCertFile:   clientCertFile,
-			logLevel:         logLevel,
-			logPretty:        logPretty,
-			httpReadTimeout:  httpReadTimeout,
-			httpWriteTimeout: httpWriteTimeout,
-			httpIdleTimeout:  httpIdleTimeout,
-			sentryDSN:        sentryDSN,
-			raftAddr:         raftAddr,
-			raftNodeID:       raftNodeID,
-			raftDevmode:      raftDevmode,
-			raftPeers:        raftPeers,
+			config:      config,
+			fiberConfig: fiberConfig,
+			raftConfig:  raftConfig,
 		}
 	})
 
 	return instance
 }
 
-func (s *Server) IsLive(_ *fiber.Ctx) bool {
-	log.Trace().Msg("Live check called")
-
-	return true
-}
-
-func (s *Server) IsReady(_ *fiber.Ctx) bool {
-	log.Trace().Msg("Ready check called")
-
-	return true
-}
-
 func (s *Server) Run() error {
-	if err := sentryUtils.Init(s.sentryDSN); err != nil {
+	if err := sentryUtils.Init(s.config.SentryDSN); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
 	defer sentryUtils.Recover(sentry.CurrentHub())
 
-	if err := loggingUtils.Init(s.logLevel, s.logPretty); err != nil {
+	if err := loggingUtils.Init(s.config.LogLevel, s.config.LogPretty); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
+
+	raftWorker := raft.New(s.raftConfig)
+	fiberWorker := fiber.New(s.fiberConfig, raftWorker)
+	workers := []Worker{raftWorker, fiberWorker}
 
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
 	wg := sync.WaitGroup{}
 
-	s.initFiberApp()
-	s.runFiberApp(&wg)
+	for _, worker := range workers {
+		worker.Run(&wg)
+	}
 
 	death.WaitForDeathWithFunc(func() {
 		log.Trace().Msg("Death callback called")
 
-		s.shutdownFiberApp()
+		slices.Reverse(workers)
+
+		for _, worker := range workers {
+			worker.Stop()
+		}
+
 		sentryUtils.Flush()
 
-		log.Trace().Msg("Waiting for all goroutines to finish")
+		log.Trace().Msg("Waiting for all workers to stop")
 		wg.Wait()
 	})
 
