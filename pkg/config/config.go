@@ -30,6 +30,7 @@ func Get() *Config {
 			viperInstance: viper.New(),
 			validators: []Validator{
 				validate.NewMutualTLS(),
+				validate.NewTLS(),
 				validate.NewLogLevel(),
 				validate.NewRaft(),
 			},

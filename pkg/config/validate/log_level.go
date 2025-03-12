@@ -9,7 +9,7 @@ import (
 type LogLevel struct{}
 
 var ErrLogLevel = errors.New(
-	"log level misconfiguration. Log level must be one of: trace, debug, info, warn, error, fatal, panic",
+	"log level must be one of: trace, debug, info, warn, error, fatal, panic",
 )
 
 func NewLogLevel() *LogLevel {

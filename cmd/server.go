@@ -82,7 +82,6 @@ func init() {
 	serverCmd.Flags().Bool("raft-devmode", false, "Store Raft data in memory")
 	serverCmd.Flags().StringArray("raft-peers", []string{}, "Raft peers")
 
-	serverCmd.MarkFlagsRequiredTogether("cert-file", "key-file")
 	serverCmd.MarkFlagFilename("cert-file")
 	serverCmd.MarkFlagFilename("key-file")
 	serverCmd.MarkFlagFilename("client-cert-file")

@@ -63,7 +63,6 @@ linters-settings:
     exclude-functions:
       - (*github.com/spf13/viper.Viper).BindPFlag
       - (*github.com/spf13/cobra.Command).MarkFlagFilename
-      - (*github.com/spf13/cobra.Command).MarkFlagRequired
   wsl:
     allow-cuddle-with-calls:
       - Done

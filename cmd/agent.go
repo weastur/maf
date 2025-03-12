@@ -62,7 +62,6 @@ func init() {
 	agentCmd.Flags().String("log-level", "info", "Log level (trace, debug, info, warn, error, fatal, panic)")
 	agentCmd.Flags().Bool("log-pretty", false, "Enable pretty logging")
 	agentCmd.Flags().String("sentry-dsn", "", "Sentry DSN")
-	agentCmd.MarkFlagsRequiredTogether("cert-file", "key-file")
 	agentCmd.MarkFlagFilename("cert-file")
 	agentCmd.MarkFlagFilename("key-file")
 	agentCmd.MarkFlagFilename("client-cert-file")

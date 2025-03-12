@@ -9,7 +9,7 @@ import (
 type MutualTLS struct{}
 
 var ErrMutualTLS = errors.New(
-	"mTLS misconfiguration. Both cert-file and key-file must be set with the client-cert-file",
+	"both cert-file and key-file must be set with the client-cert-file",
 )
 
 func NewMutualTLS() *MutualTLS {
