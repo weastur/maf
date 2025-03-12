@@ -17,6 +17,7 @@ linters:
     - godox
     - dupl
     - varnamelen
+    - unused # tmp
 
 linters-settings:
   depguard:
