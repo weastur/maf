@@ -31,6 +31,7 @@ func Get() *Config {
 			validators: []Validator{
 				validate.NewValidatorMutualTLSMisconfig(),
 				validate.NewValidatorLogLevel(),
+				validate.NewValidatorRaft(),
 			},
 		}
 	})

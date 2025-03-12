@@ -35,6 +35,8 @@ linters-settings:
           - github.com/gofiber/contrib/fiberzerolog
           - github.com/getsentry/sentry-go
           - github.com/gofiber/contrib/fibersentry
+          - github.com/hashicorp/raft
+          - github.com/hashicorp/raft-boltdb/v2
         deny:
           - pkg: "math/rand$"
             desc: use math/rand/v2
@@ -61,6 +63,7 @@ linters-settings:
     exclude-functions:
       - (*github.com/spf13/viper.Viper).BindPFlag
       - (*github.com/spf13/cobra.Command).MarkFlagFilename
+      - (*github.com/spf13/cobra.Command).MarkFlagRequired
   wsl:
     allow-cuddle-with-calls:
       - Done

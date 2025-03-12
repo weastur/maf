@@ -29,6 +29,10 @@ type Server struct {
 	httpIdleTimeout  time.Duration
 	fiberApp         *fiber.App
 	sentryDSN        string
+	raftAddr         string
+	raftNodeID       string
+	raftDevmode      bool
+	raftPeers        []string
 }
 
 var (
@@ -47,6 +51,10 @@ func Get(
 	httpWriteTimeout time.Duration,
 	httpIdleTimeout time.Duration,
 	sentryDSN string,
+	raftAddr string,
+	raftNodeID string,
+	raftDevmode bool,
+	raftPeers []string,
 ) *Server {
 	once.Do(func() {
 		instance = &Server{
@@ -60,6 +68,10 @@ func Get(
 			httpWriteTimeout: httpWriteTimeout,
 			httpIdleTimeout:  httpIdleTimeout,
 			sentryDSN:        sentryDSN,
+			raftAddr:         raftAddr,
+			raftNodeID:       raftNodeID,
+			raftDevmode:      raftDevmode,
+			raftPeers:        raftPeers,
 		}
 	})
 
