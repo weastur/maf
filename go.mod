@@ -1,6 +1,6 @@
 module github.com/weastur/maf
 
-go 1.23.6
+go 1.24.1
 
 require (
 	github.com/VictoriaMetrics/metrics v1.35.2
