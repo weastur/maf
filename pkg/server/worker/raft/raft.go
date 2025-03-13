@@ -41,16 +41,10 @@ func New(config *Config) *Raft {
 	}
 }
 
-func (r *Raft) init() { //nolint:funlen
+func (r *Raft) init() {
 	r.logger.Trace().Msg("Initializing")
 
-	if r.config.Datadir != "" {
-		r.logger.Info().Msgf("Using raft data directory: %s", r.config.Datadir)
-
-		if err := os.MkdirAll(r.config.Datadir, datadirPerms); err != nil {
-			r.logger.Fatal().Err(err).Msg("Failed to create raft data directory")
-		}
-	}
+	r.ensureDatadir()
 
 	rconfig := raft.DefaultConfig()
 	rconfig.LocalID = raft.ServerID(r.config.NodeID)
@@ -105,6 +99,16 @@ func (r *Raft) init() { //nolint:funlen
 		},
 	}
 	ra.BootstrapCluster(configuration)
+}
+
+func (r *Raft) ensureDatadir() {
+	if r.config.Datadir != "" {
+		r.logger.Info().Msgf("Using raft data directory: %s", r.config.Datadir)
+
+		if err := os.MkdirAll(r.config.Datadir, datadirPerms); err != nil {
+			r.logger.Fatal().Err(err).Msg("Failed to create raft data directory")
+		}
+	}
 }
 
 func (r *Raft) Run(wg *sync.WaitGroup) {
