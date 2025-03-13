@@ -19,6 +19,7 @@ const (
 	datadirPerms     = 0o700
 	transportMaxPool = 3
 	transportTimeout = 10 * time.Second
+	snapshotRetain   = 2
 )
 
 type Config struct {
@@ -36,6 +37,7 @@ type Raft struct {
 	logger      zerolog.Logger
 	hrlogger    *HCZeroLogger
 	hrtransport *raft.NetworkTransport
+	hrsnapshots *raft.FileSnapshotStore
 }
 
 func New(config *Config) *Raft {
@@ -55,11 +57,7 @@ func (r *Raft) init() {
 	r.ensureDatadir()
 	r.configureHRaft()
 	r.configureHRTransport()
-
-	snapshots, err := raft.NewFileSnapshotStore(r.config.Datadir, 2, os.Stderr) //nolint:mnd
-	if err != nil {
-		r.logger.Fatal().Err(err).Msg("Failed to create snapshot store")
-	}
+	r.configureHRSnapshots()
 
 	var logStore raft.LogStore
 
@@ -82,7 +80,7 @@ func (r *Raft) init() {
 
 	fsm := NewFSM(NewSafeStorage())
 
-	ra, err := raft.NewRaft(r.hrconfig, fsm, logStore, stableStore, snapshots, r.hrtransport)
+	ra, err := raft.NewRaft(r.hrconfig, fsm, logStore, stableStore, r.hrsnapshots, r.hrtransport)
 	if err != nil {
 		r.logger.Fatal().Err(err).Msg("Failed to create raft")
 	}
@@ -96,6 +94,15 @@ func (r *Raft) init() {
 		},
 	}
 	ra.BootstrapCluster(configuration)
+}
+
+func (r *Raft) configureHRSnapshots() {
+	var err error
+
+	r.hrsnapshots, err = raft.NewFileSnapshotStore(r.config.Datadir, snapshotRetain, os.Stderr)
+	if err != nil {
+		r.logger.Fatal().Err(err).Msg("Failed to create snapshot store")
+	}
 }
 
 func (r *Raft) configureHRTransport() {
