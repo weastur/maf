@@ -44,6 +44,7 @@ type Raft struct {
 	stableStore   hraft.StableStore
 	fsm           hraft.FSM
 	storage       Storage
+	raftInstance  *hraft.Raft
 }
 
 func New(config *Config) *Raft {
@@ -66,11 +67,7 @@ func (r *Raft) init() {
 	r.initSnapshotStore()
 	r.initStore()
 	r.initFSM()
-
-	ra, err := hraft.NewRaft(r.hrconfig, r.fsm, r.logStore, r.stableStore, r.snapshotStore, r.transport)
-	if err != nil {
-		r.logger.Fatal().Err(err).Msg("Failed to create raft")
-	}
+	r.initRaftInstance()
 
 	configuration := hraft.Configuration{
 		Servers: []hraft.Server{
@@ -80,7 +77,16 @@ func (r *Raft) init() {
 			},
 		},
 	}
-	ra.BootstrapCluster(configuration)
+	r.raftInstance.BootstrapCluster(configuration)
+}
+
+func (r *Raft) initRaftInstance() {
+	var err error
+
+	r.raftInstance, err = hraft.NewRaft(r.hrconfig, r.fsm, r.logStore, r.stableStore, r.snapshotStore, r.transport)
+	if err != nil {
+		r.logger.Fatal().Err(err).Msg("Failed to create raft")
+	}
 }
 
 func (r *Raft) initFSM() {
