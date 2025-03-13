@@ -68,7 +68,10 @@ func (r *Raft) init() {
 	r.initStore()
 	r.initFSM()
 	r.initRaftInstance()
+	r.bootstrap()
+}
 
+func (r *Raft) bootstrap() {
 	configuration := hraft.Configuration{
 		Servers: []hraft.Server{
 			{
