@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashicorp/raft"
+	hraft "github.com/hashicorp/raft"
 	raftboltdb "github.com/hashicorp/raft-boltdb/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -20,6 +20,7 @@ const (
 	transportMaxPool = 3
 	transportTimeout = 10 * time.Second
 	snapshotRetain   = 2
+	dbName           = "raft.db"
 )
 
 type Config struct {
@@ -31,23 +32,25 @@ type Config struct {
 }
 
 type Raft struct {
-	config      *Config
-	hrconfig    *raft.Config
-	done        chan struct{}
-	logger      zerolog.Logger
-	hrlogger    *HCZeroLogger
-	hrtransport *raft.NetworkTransport
-	hrsnapshots *raft.FileSnapshotStore
+	config        *Config
+	hrconfig      *hraft.Config
+	done          chan struct{}
+	logger        zerolog.Logger
+	hlogger       *HCZeroLogger
+	transport     *hraft.NetworkTransport
+	snapshotStore *hraft.FileSnapshotStore
+	logStore      hraft.LogStore
+	stableStore   hraft.StableStore
 }
 
 func New(config *Config) *Raft {
 	log.Trace().Msg("Configuring raft worker")
 
 	return &Raft{
-		config:   config,
-		done:     make(chan struct{}),
-		logger:   log.With().Str(logging.ComponentCtxKey, "raft").Logger(),
-		hrlogger: NewHCZeroLogger(log.With().Str(logging.ComponentCtxKey, "hraft").Logger()),
+		config:  config,
+		done:    make(chan struct{}),
+		logger:  log.With().Str(logging.ComponentCtxKey, "raft").Logger(),
+		hlogger: NewHCZeroLogger(log.With().Str(logging.ComponentCtxKey, "hraft").Logger()),
 	}
 }
 
@@ -55,74 +58,83 @@ func (r *Raft) init() {
 	r.logger.Trace().Msg("Initializing")
 
 	r.ensureDatadir()
-	r.configureHRaft()
-	r.configureHRTransport()
-	r.configureHRSnapshots()
-
-	var logStore raft.LogStore
-
-	var stableStore raft.StableStore
-
-	if r.config.Devmode {
-		logStore = raft.NewInmemStore()
-		stableStore = raft.NewInmemStore()
-	} else {
-		boltDB, err := raftboltdb.New(raftboltdb.Options{
-			Path: filepath.Join(r.config.Datadir, "raft.db"),
-		})
-		if err != nil {
-			r.logger.Fatal().Err(err).Msg("Failed to create boltDB")
-		}
-
-		logStore = boltDB
-		stableStore = boltDB
-	}
+	r.configureRaft()
+	r.initTransport()
+	r.initSnapshotStore()
+	r.initStore()
 
 	fsm := NewFSM(NewSafeStorage())
 
-	ra, err := raft.NewRaft(r.hrconfig, fsm, logStore, stableStore, r.hrsnapshots, r.hrtransport)
+	ra, err := hraft.NewRaft(r.hrconfig, fsm, r.logStore, r.stableStore, r.snapshotStore, r.transport)
 	if err != nil {
 		r.logger.Fatal().Err(err).Msg("Failed to create raft")
 	}
 
-	configuration := raft.Configuration{
-		Servers: []raft.Server{
+	configuration := hraft.Configuration{
+		Servers: []hraft.Server{
 			{
 				ID:      r.hrconfig.LocalID,
-				Address: r.hrtransport.LocalAddr(),
+				Address: r.transport.LocalAddr(),
 			},
 		},
 	}
 	ra.BootstrapCluster(configuration)
 }
 
-func (r *Raft) configureHRSnapshots() {
+func (r *Raft) initStore() {
+	r.logger.Trace().Msg("Initializing store")
+
+	if r.config.Devmode {
+		r.logger.Info().Msg("Using in-memory store")
+		r.logStore = hraft.NewInmemStore()
+		r.stableStore = hraft.NewInmemStore()
+	} else {
+		r.logger.Info().Msg("Using boltdb store")
+
+		boltDB, err := raftboltdb.New(raftboltdb.Options{
+			Path: filepath.Join(r.config.Datadir, dbName),
+		})
+		if err != nil {
+			r.logger.Fatal().Err(err).Msg("Failed to create boltDB")
+		}
+
+		r.logStore = boltDB
+		r.stableStore = boltDB
+	}
+}
+
+func (r *Raft) initSnapshotStore() {
 	var err error
 
-	r.hrsnapshots, err = raft.NewFileSnapshotStore(r.config.Datadir, snapshotRetain, os.Stderr)
+	r.logger.Trace().Msg("Initializing snapshot store")
+
+	r.snapshotStore, err = hraft.NewFileSnapshotStore(r.config.Datadir, snapshotRetain, os.Stderr)
 	if err != nil {
 		r.logger.Fatal().Err(err).Msg("Failed to create snapshot store")
 	}
 }
 
-func (r *Raft) configureHRTransport() {
+func (r *Raft) initTransport() {
+	r.logger.Trace().Msgf("Initializing transport for %s", r.config.Addr)
+
 	addr, err := net.ResolveTCPAddr("tcp", r.config.Addr)
 	if err != nil {
 		r.logger.Fatal().Err(err).Msg("Failed to resolve TCP address")
 	}
 
-	r.hrtransport, err = raft.NewTCPTransport(r.config.Addr, addr, transportMaxPool, transportTimeout, os.Stderr)
+	r.transport, err = hraft.NewTCPTransport(r.config.Addr, addr, transportMaxPool, transportTimeout, os.Stderr)
 	if err != nil {
 		r.logger.Fatal().Err(err).Msg("Failed to create TCP transport")
 	}
 }
 
-func (r *Raft) configureHRaft() {
+func (r *Raft) configureRaft() {
 	r.logger.Trace().Msg("Configuring raft")
 
-	r.hrconfig = raft.DefaultConfig()
-	r.hrconfig.LocalID = raft.ServerID(r.config.NodeID)
-	r.hrconfig.Logger = r.hrlogger
+	r.hrconfig = hraft.DefaultConfig()
+	r.logger.Trace().Msgf("Raft server ID: %s", r.config.NodeID)
+	r.hrconfig.LocalID = hraft.ServerID(r.config.NodeID)
+	r.hrconfig.Logger = r.hlogger
 }
 
 func (r *Raft) ensureDatadir() {
