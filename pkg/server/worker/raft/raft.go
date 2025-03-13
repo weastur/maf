@@ -1,6 +1,7 @@
 package raft
 
 import (
+	"errors"
 	"net"
 	"os"
 	"path/filepath"
@@ -80,7 +81,15 @@ func (r *Raft) bootstrap() {
 			},
 		},
 	}
-	r.raftInstance.BootstrapCluster(configuration)
+
+	r.logger.Info().Msg("Bootstrapping raft cluster with configuration")
+
+	err := r.raftInstance.BootstrapCluster(configuration).Error()
+	if errors.Is(err, hraft.ErrCantBootstrap) {
+		r.logger.Warn().Msg("Can't bootstrap cluster as it already exists. Ignoring")
+	} else if err != nil {
+		r.logger.Fatal().Err(err).Msg("Failed to bootstrap cluster")
+	}
 }
 
 func (r *Raft) initRaftInstance() {
