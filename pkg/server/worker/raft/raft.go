@@ -1,9 +1,14 @@
 package raft
 
 import (
+	"net"
 	"os"
+	"path/filepath"
 	"sync"
+	"time"
 
+	"github.com/hashicorp/raft"
+	raftboltdb "github.com/hashicorp/raft-boltdb/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/weastur/maf/pkg/utils/logging"
@@ -36,7 +41,7 @@ func New(config *Config) *Raft {
 	}
 }
 
-func (r *Raft) init() {
+func (r *Raft) init() { //nolint:funlen
 	r.logger.Trace().Msg("Initializing")
 
 	if r.config.Datadir != "" {
@@ -46,6 +51,60 @@ func (r *Raft) init() {
 			r.logger.Fatal().Err(err).Msg("Failed to create raft data directory")
 		}
 	}
+
+	rconfig := raft.DefaultConfig()
+	rconfig.LocalID = raft.ServerID(r.config.NodeID)
+
+	addr, err := net.ResolveTCPAddr("tcp", r.config.Addr)
+	if err != nil {
+		r.logger.Fatal().Err(err).Msg("Failed to resolve TCP address")
+	}
+
+	transport, err := raft.NewTCPTransport(r.config.Addr, addr, 3, 10*time.Second, os.Stderr) //nolint:mnd
+	if err != nil {
+		r.logger.Fatal().Err(err).Msg("Failed to create TCP transport")
+	}
+
+	snapshots, err := raft.NewFileSnapshotStore(r.config.Datadir, 2, os.Stderr) //nolint:mnd
+	if err != nil {
+		r.logger.Fatal().Err(err).Msg("Failed to create snapshot store")
+	}
+
+	var logStore raft.LogStore
+
+	var stableStore raft.StableStore
+
+	if r.config.Devmode {
+		logStore = raft.NewInmemStore()
+		stableStore = raft.NewInmemStore()
+	} else {
+		boltDB, err := raftboltdb.New(raftboltdb.Options{
+			Path: filepath.Join(r.config.Datadir, "raft.db"),
+		})
+		if err != nil {
+			r.logger.Fatal().Err(err).Msg("Failed to create boltDB")
+		}
+
+		logStore = boltDB
+		stableStore = boltDB
+	}
+
+	fsm := NewFSM(NewSafeStorage())
+
+	ra, err := raft.NewRaft(rconfig, fsm, logStore, stableStore, snapshots, transport)
+	if err != nil {
+		r.logger.Fatal().Err(err).Msg("Failed to create raft")
+	}
+
+	configuration := raft.Configuration{
+		Servers: []raft.Server{
+			{
+				ID:      rconfig.LocalID,
+				Address: transport.LocalAddr(),
+			},
+		},
+	}
+	ra.BootstrapCluster(configuration)
 }
 
 func (r *Raft) Run(wg *sync.WaitGroup) {
