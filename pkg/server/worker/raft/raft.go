@@ -15,7 +15,11 @@ import (
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
 
-const datadirPerms = 0o700
+const (
+	datadirPerms     = 0o700
+	transportMaxPool = 3
+	transportTimeout = 10 * time.Second
+)
 
 type Config struct {
 	Addr    string
@@ -26,11 +30,12 @@ type Config struct {
 }
 
 type Raft struct {
-	config   *Config
-	hrconfig *raft.Config
-	done     chan struct{}
-	logger   zerolog.Logger
-	hrlogger *HCZeroLogger
+	config      *Config
+	hrconfig    *raft.Config
+	done        chan struct{}
+	logger      zerolog.Logger
+	hrlogger    *HCZeroLogger
+	hrtransport *raft.NetworkTransport
 }
 
 func New(config *Config) *Raft {
@@ -49,16 +54,7 @@ func (r *Raft) init() {
 
 	r.ensureDatadir()
 	r.configureHRaft()
-
-	addr, err := net.ResolveTCPAddr("tcp", r.config.Addr)
-	if err != nil {
-		r.logger.Fatal().Err(err).Msg("Failed to resolve TCP address")
-	}
-
-	transport, err := raft.NewTCPTransport(r.config.Addr, addr, 3, 10*time.Second, os.Stderr) //nolint:mnd
-	if err != nil {
-		r.logger.Fatal().Err(err).Msg("Failed to create TCP transport")
-	}
+	r.configureHRTransport()
 
 	snapshots, err := raft.NewFileSnapshotStore(r.config.Datadir, 2, os.Stderr) //nolint:mnd
 	if err != nil {
@@ -86,7 +82,7 @@ func (r *Raft) init() {
 
 	fsm := NewFSM(NewSafeStorage())
 
-	ra, err := raft.NewRaft(r.hrconfig, fsm, logStore, stableStore, snapshots, transport)
+	ra, err := raft.NewRaft(r.hrconfig, fsm, logStore, stableStore, snapshots, r.hrtransport)
 	if err != nil {
 		r.logger.Fatal().Err(err).Msg("Failed to create raft")
 	}
@@ -95,11 +91,23 @@ func (r *Raft) init() {
 		Servers: []raft.Server{
 			{
 				ID:      r.hrconfig.LocalID,
-				Address: transport.LocalAddr(),
+				Address: r.hrtransport.LocalAddr(),
 			},
 		},
 	}
 	ra.BootstrapCluster(configuration)
+}
+
+func (r *Raft) configureHRTransport() {
+	addr, err := net.ResolveTCPAddr("tcp", r.config.Addr)
+	if err != nil {
+		r.logger.Fatal().Err(err).Msg("Failed to resolve TCP address")
+	}
+
+	r.hrtransport, err = raft.NewTCPTransport(r.config.Addr, addr, transportMaxPool, transportTimeout, os.Stderr)
+	if err != nil {
+		r.logger.Fatal().Err(err).Msg("Failed to create TCP transport")
+	}
 }
 
 func (r *Raft) configureHRaft() {
