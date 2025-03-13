@@ -122,7 +122,7 @@ func (r *Raft) initTransport() {
 		r.logger.Fatal().Err(err).Msg("Failed to resolve TCP address")
 	}
 
-	r.transport, err = hraft.NewTCPTransport(r.config.Addr, addr, transportMaxPool, transportTimeout, os.Stderr)
+	r.transport, err = hraft.NewTCPTransportWithLogger(r.config.Addr, addr, transportMaxPool, transportTimeout, r.hlogger)
 	if err != nil {
 		r.logger.Fatal().Err(err).Msg("Failed to create TCP transport")
 	}
