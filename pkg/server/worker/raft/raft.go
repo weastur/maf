@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/go-hclog"
 	hraft "github.com/hashicorp/raft"
 	raftboltdb "github.com/hashicorp/raft-boltdb/v2"
 	"github.com/rs/zerolog"
@@ -36,11 +37,13 @@ type Raft struct {
 	hrconfig      *hraft.Config
 	done          chan struct{}
 	logger        zerolog.Logger
-	hlogger       *HCZeroLogger
-	transport     *hraft.NetworkTransport
-	snapshotStore *hraft.FileSnapshotStore
+	hlogger       hclog.Logger
+	transport     hraft.Transport
+	snapshotStore hraft.SnapshotStore
 	logStore      hraft.LogStore
 	stableStore   hraft.StableStore
+	fsm           hraft.FSM
+	storage       Storage
 }
 
 func New(config *Config) *Raft {
@@ -62,10 +65,9 @@ func (r *Raft) init() {
 	r.initTransport()
 	r.initSnapshotStore()
 	r.initStore()
+	r.initFSM()
 
-	fsm := NewFSM(NewSafeStorage())
-
-	ra, err := hraft.NewRaft(r.hrconfig, fsm, r.logStore, r.stableStore, r.snapshotStore, r.transport)
+	ra, err := hraft.NewRaft(r.hrconfig, r.fsm, r.logStore, r.stableStore, r.snapshotStore, r.transport)
 	if err != nil {
 		r.logger.Fatal().Err(err).Msg("Failed to create raft")
 	}
@@ -79,6 +81,11 @@ func (r *Raft) init() {
 		},
 	}
 	ra.BootstrapCluster(configuration)
+}
+
+func (r *Raft) initFSM() {
+	r.storage = NewSafeStorage()
+	r.fsm = NewFSM(r.storage)
 }
 
 func (r *Raft) initStore() {
