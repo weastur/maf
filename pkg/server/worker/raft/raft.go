@@ -108,7 +108,7 @@ func (r *Raft) initSnapshotStore() {
 
 	r.logger.Trace().Msg("Initializing snapshot store")
 
-	r.snapshotStore, err = hraft.NewFileSnapshotStore(r.config.Datadir, snapshotRetain, os.Stderr)
+	r.snapshotStore, err = hraft.NewFileSnapshotStoreWithLogger(r.config.Datadir, snapshotRetain, r.hlogger)
 	if err != nil {
 		r.logger.Fatal().Err(err).Msg("Failed to create snapshot store")
 	}
