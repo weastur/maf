@@ -26,9 +26,10 @@ type Config struct {
 }
 
 type Raft struct {
-	config *Config
-	done   chan struct{}
-	logger zerolog.Logger
+	config   *Config
+	hrconfig *raft.Config
+	done     chan struct{}
+	logger   zerolog.Logger
 }
 
 func New(config *Config) *Raft {
@@ -45,9 +46,7 @@ func (r *Raft) init() {
 	r.logger.Trace().Msg("Initializing")
 
 	r.ensureDatadir()
-
-	rconfig := raft.DefaultConfig()
-	rconfig.LocalID = raft.ServerID(r.config.NodeID)
+	r.configureHRaft()
 
 	addr, err := net.ResolveTCPAddr("tcp", r.config.Addr)
 	if err != nil {
@@ -85,7 +84,7 @@ func (r *Raft) init() {
 
 	fsm := NewFSM(NewSafeStorage())
 
-	ra, err := raft.NewRaft(rconfig, fsm, logStore, stableStore, snapshots, transport)
+	ra, err := raft.NewRaft(r.hrconfig, fsm, logStore, stableStore, snapshots, transport)
 	if err != nil {
 		r.logger.Fatal().Err(err).Msg("Failed to create raft")
 	}
@@ -93,12 +92,19 @@ func (r *Raft) init() {
 	configuration := raft.Configuration{
 		Servers: []raft.Server{
 			{
-				ID:      rconfig.LocalID,
+				ID:      r.hrconfig.LocalID,
 				Address: transport.LocalAddr(),
 			},
 		},
 	}
 	ra.BootstrapCluster(configuration)
+}
+
+func (r *Raft) configureHRaft() {
+	r.logger.Trace().Msg("Configuring raft")
+
+	r.hrconfig = raft.DefaultConfig()
+	r.hrconfig.LocalID = raft.ServerID(r.config.NodeID)
 }
 
 func (r *Raft) ensureDatadir() {
