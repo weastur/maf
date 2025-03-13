@@ -77,7 +77,7 @@ func init() {
 
 	serverCmd.Flags().String("sentry-dsn", "", "Sentry DSN")
 
-	serverCmd.Flags().String("raft-addr", ":7081", "Raft address to listen to")
+	serverCmd.Flags().String("raft-addr", "127.0.0.1:7081", "Raft address to listen to. Address should be advertisable.")
 	serverCmd.Flags().String("raft-node-id", "", "Raft node ID")
 	serverCmd.Flags().String("raft-data-dir", "/var/lib/maf", "Raft data directory")
 	serverCmd.Flags().Bool("raft-devmode", false, "Store Raft data in memory")
