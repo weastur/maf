@@ -39,6 +39,7 @@ linters-settings:
           - github.com/gofiber/contrib/fibersentry
           - github.com/hashicorp/raft
           - github.com/hashicorp/raft-boltdb/v2
+          - github.com/hashicorp/go-hclog
         deny:
           - pkg: "math/rand$"
             desc: use math/rand/v2

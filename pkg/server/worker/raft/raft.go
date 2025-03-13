@@ -30,15 +30,17 @@ type Raft struct {
 	hrconfig *raft.Config
 	done     chan struct{}
 	logger   zerolog.Logger
+	hrlogger *HCZeroLogger
 }
 
 func New(config *Config) *Raft {
 	log.Trace().Msg("Configuring raft worker")
 
 	return &Raft{
-		config: config,
-		done:   make(chan struct{}),
-		logger: log.With().Str(logging.ComponentCtxKey, "raft").Logger(),
+		config:   config,
+		done:     make(chan struct{}),
+		logger:   log.With().Str(logging.ComponentCtxKey, "raft").Logger(),
+		hrlogger: NewHCZeroLogger(log.With().Str(logging.ComponentCtxKey, "hraft").Logger()),
 	}
 }
 
@@ -105,6 +107,7 @@ func (r *Raft) configureHRaft() {
 
 	r.hrconfig = raft.DefaultConfig()
 	r.hrconfig.LocalID = raft.ServerID(r.config.NodeID)
+	r.hrconfig.Logger = r.hrlogger
 }
 
 func (r *Raft) ensureDatadir() {
