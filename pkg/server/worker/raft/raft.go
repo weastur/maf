@@ -197,5 +197,5 @@ func (r *Raft) Stop() {
 }
 
 func (r *Raft) IsLeader() bool {
-	return true
+	return r.raftInstance.State() == hraft.Leader
 }
