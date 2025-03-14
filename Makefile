@@ -4,6 +4,8 @@
 BINARY_NAME=maf
 BIN_DIR=./bin
 DIST_DIR=./dist
+DEVENV_DIR=./devenv
+LOCAL_DEV_DIR=$(DEVENV_DIR)/local
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 build: swagger ## Build the binary
@@ -20,6 +22,7 @@ swagger: go-build-deps generate ## Generate swagger docs
 clean: ## Cleanup
 	@rm -rf $(DIST_DIR)
 	@rm -rf $(BIN_DIR)
+	@rm -rf $(LOCAL_DEV_DIR)
 
 tests: unit-tests ## Run all tests
 
