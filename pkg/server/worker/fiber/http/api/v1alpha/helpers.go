@@ -42,7 +42,7 @@ func parseAndValidate(c *fiber.Ctx, req any) error {
 		return fmt.Errorf("failed to parse request: %w", err)
 	}
 
-	if err := uCtx.api.validator.Struct(req); err != nil {
+	if err := uCtx.api.validator.Validate(req); err != nil {
 		uCtx.logger.Error().Err(err).Msg("Failed to validate request")
 
 		return fmt.Errorf("failed to validate request: %w", err)

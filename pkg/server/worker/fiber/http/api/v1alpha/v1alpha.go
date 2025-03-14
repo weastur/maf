@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
@@ -16,10 +15,14 @@ import (
 
 const consensusInstanceContextKey = apiUtils.UserContextKey("consensusInstance")
 
+type Validator interface {
+	Validate(data any) error
+}
+
 type APIV1Alpha struct {
 	prefix    string
 	version   string
-	validator *validator.Validate
+	validator Validator
 }
 
 var (
@@ -32,7 +35,7 @@ func Get() *APIV1Alpha {
 		instance = &APIV1Alpha{
 			version:   "v1alpha",
 			prefix:    "/v1alpha",
-			validator: validator.New(validator.WithRequiredStructEnabled()),
+			validator: v1alphaUtils.NewXValidator(),
 		}
 	})
 
