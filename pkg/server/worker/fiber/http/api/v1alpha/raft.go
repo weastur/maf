@@ -2,16 +2,11 @@ package v1alpha
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/rs/zerolog"
-	"github.com/weastur/maf/pkg/server/worker/raft"
-	apiUtils "github.com/weastur/maf/pkg/utils/http/api"
 	v1alphaUtils "github.com/weastur/maf/pkg/utils/http/api/v1alpha"
 )
 
 func joinHandler(c *fiber.Ctx) error {
-	logger := zerolog.Ctx(c.UserContext())
-	co, _ := c.UserContext().Value(consensusInstanceContextKey).(raft.Consensus)
-	api, _ := c.UserContext().Value(apiUtils.APIInstanceContextKey).(*APIV1Alpha)
+	logger, co, api := unpackCtx(c)
 
 	joinReq := new(JoinRequest)
 	if err := c.BodyParser(joinReq); err != nil {
@@ -36,9 +31,7 @@ func joinHandler(c *fiber.Ctx) error {
 }
 
 func leaveHandler(c *fiber.Ctx) error {
-	logger := zerolog.Ctx(c.UserContext())
-	co, _ := c.UserContext().Value(consensusInstanceContextKey).(raft.Consensus)
-	api, _ := c.UserContext().Value(apiUtils.APIInstanceContextKey).(*APIV1Alpha)
+	logger, co, api := unpackCtx(c)
 
 	leaveReq := new(LeaveRequest)
 	if err := c.BodyParser(leaveReq); err != nil {
