@@ -193,6 +193,18 @@ func (r *Raft) Run(wg *sync.WaitGroup) {
 func (r *Raft) Stop() {
 	r.logger.Info().Msg("Stopping")
 
+	if r.IsLeader() {
+		r.logger.Info().Msg("I'm the leader, stepping down")
+
+		if err := r.raftInstance.LeadershipTransfer().Error(); err != nil {
+			r.logger.Error().Err(err).Msg("Failed to transfer leadership")
+		}
+	}
+
+	if err := r.raftInstance.Shutdown().Error(); err != nil {
+		r.logger.Error().Err(err).Msg("Failed to shutdown raft")
+	}
+
 	close(r.done)
 }
 
