@@ -9,18 +9,18 @@ import (
 	"github.com/weastur/maf/pkg/utils/logging"
 )
 
-type KeyValue map[string]string
+type Mapping map[string]string
 
 type SafeStorage struct {
 	mu     sync.RWMutex
-	data   KeyValue
+	data   Mapping
 	logger zerolog.Logger
 }
 
 func NewSafeStorage() *SafeStorage {
 	return &SafeStorage{
 		mu:     sync.RWMutex{},
-		data:   make(KeyValue),
+		data:   make(Mapping),
 		logger: log.With().Str(logging.ComponentCtxKey, "raft-safestorage").Logger(),
 	}
 }
@@ -52,7 +52,7 @@ func (s *SafeStorage) Delete(key string) {
 	delete(s.data, key)
 }
 
-func (s *SafeStorage) Snapshot() KeyValue {
+func (s *SafeStorage) Snapshot() Mapping {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	s.logger.Trace().Msg("Creating snapshot")
@@ -63,7 +63,7 @@ func (s *SafeStorage) Snapshot() KeyValue {
 	return clone
 }
 
-func (s *SafeStorage) Restore(data KeyValue) {
+func (s *SafeStorage) Restore(data Mapping) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.logger.Trace().Msg("Restoring snapshot")

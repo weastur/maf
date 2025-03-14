@@ -15,8 +15,8 @@ type Storage interface {
 	Get(key string) (string, bool)
 	Set(key, value string)
 	Delete(key string)
-	Snapshot() KeyValue
-	Restore(data KeyValue)
+	Snapshot() Mapping
+	Restore(data Mapping)
 }
 
 type FSM struct {
@@ -25,7 +25,7 @@ type FSM struct {
 }
 
 type FSMSnapshot struct {
-	data   KeyValue
+	data   Mapping
 	logger zerolog.Logger
 }
 
@@ -73,7 +73,7 @@ func (f *FSM) Restore(rc io.ReadCloser) error {
 		return fmt.Errorf("failed to decode snapshot: %w", err)
 	}
 
-	f.storage.Restore(KeyValue(data))
+	f.storage.Restore(Mapping(data))
 
 	return nil
 }
