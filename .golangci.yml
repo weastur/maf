@@ -17,7 +17,6 @@ linters:
     - godox
     - dupl
     - varnamelen
-    - unused # tmp
 
 linters-settings:
   depguard:
@@ -40,6 +39,7 @@ linters-settings:
           - github.com/hashicorp/raft
           - github.com/hashicorp/raft-boltdb/v2
           - github.com/hashicorp/go-hclog
+          - github.com/go-playground/validator/v10
         deny:
           - pkg: "math/rand$"
             desc: use math/rand/v2
