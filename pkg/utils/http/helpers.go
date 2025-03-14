@@ -94,7 +94,11 @@ func AttachGenericMiddlewares(app *fiber.App, logger zerolog.Logger, healthcheck
 		Levels: []zerolog.Level{zerolog.ErrorLevel, zerolog.ErrorLevel, zerolog.DebugLevel},
 	}))
 	app.Use(compress.New())
-	app.Use(requestid.New())
+	app.Use(requestid.New(
+		requestid.Config{
+			ContextKey: apiUtils.RequestIDContextKey,
+		},
+	))
 	app.Use(limiter.New(limiter.Config{
 		Max:        defaultRateLimit,
 		Expiration: defaultRateLimitExpiration,
