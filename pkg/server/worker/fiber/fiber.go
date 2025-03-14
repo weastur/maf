@@ -18,7 +18,7 @@ type API interface {
 	Init(topRouter fiber.Router, logger zerolog.Logger)
 }
 
-type ElectionCoordinator interface {
+type Consensus interface {
 	IsLeader() bool
 }
 
@@ -36,16 +36,16 @@ type Config struct {
 type Fiber struct {
 	config *Config
 	app    *fiber.App
-	ec     ElectionCoordinator
+	c      Consensus
 	logger zerolog.Logger
 }
 
-func New(config *Config, ec ElectionCoordinator) *Fiber {
+func New(config *Config, c Consensus) *Fiber {
 	log.Trace().Msg("Configuring fiber worker")
 
 	f := &Fiber{
 		config: config,
-		ec:     ec,
+		c:      c,
 		logger: log.With().Str(logging.ComponentCtxKey, "fiber").Logger(),
 	}
 
