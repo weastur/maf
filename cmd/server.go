@@ -37,11 +37,12 @@ It is designed to run on a separate host.`,
 		}
 
 		raftConfig := &raft.Config{
-			Addr:    viper.GetString("server.raft.addr"),
-			NodeID:  viper.GetString("server.raft.node_id"),
-			Devmode: viper.GetBool("server.raft.devmode"),
-			Peers:   viper.GetStringSlice("server.raft.peers"),
-			Datadir: viper.GetString("server.raft.datadir"),
+			Addr:      viper.GetString("server.raft.addr"),
+			NodeID:    viper.GetString("server.raft.node_id"),
+			Devmode:   viper.GetBool("server.raft.devmode"),
+			Peers:     viper.GetStringSlice("server.raft.peers"),
+			Datadir:   viper.GetString("server.raft.datadir"),
+			Bootstrap: viper.GetBool("server.raft.bootstrap"),
 		}
 
 		srv := server.Get(serverConfig, raftConfig, fiberConfig)
@@ -82,6 +83,7 @@ func init() {
 	serverCmd.Flags().String("raft-data-dir", "/var/lib/maf", "Raft data directory")
 	serverCmd.Flags().Bool("raft-devmode", false, "Store Raft data in memory")
 	serverCmd.Flags().StringArray("raft-peers", []string{}, "Raft peers")
+	serverCmd.Flags().Bool("raft-bootstrap", false, "Bootstrap the Raft cluster")
 
 	serverCmd.MarkFlagFilename("http-cert-file")
 	serverCmd.MarkFlagFilename("http-key-file")
@@ -106,4 +108,5 @@ func init() {
 	viper.BindPFlag("server.raft.datadir", serverCmd.Flags().Lookup("raft-data-dir"))
 	viper.BindPFlag("server.raft.devmode", serverCmd.Flags().Lookup("raft-devmode"))
 	viper.BindPFlag("server.raft.peers", serverCmd.Flags().Lookup("raft-peers"))
+	viper.BindPFlag("server.raft.bootstrap", serverCmd.Flags().Lookup("raft-bootstrap"))
 }

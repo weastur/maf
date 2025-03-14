@@ -26,11 +26,12 @@ const (
 )
 
 type Config struct {
-	Addr    string
-	NodeID  string
-	Devmode bool
-	Peers   []string
-	Datadir string
+	Addr      string
+	NodeID    string
+	Devmode   bool
+	Peers     []string
+	Datadir   string
+	Bootstrap bool
 }
 
 type Raft struct {
@@ -69,7 +70,10 @@ func (r *Raft) init() {
 	r.initStore()
 	r.initFSM()
 	r.initRaftInstance()
-	r.bootstrap()
+
+	if r.config.Bootstrap {
+		r.bootstrap()
+	}
 }
 
 func (r *Raft) bootstrap() {
