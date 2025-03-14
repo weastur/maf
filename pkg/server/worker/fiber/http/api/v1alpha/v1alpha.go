@@ -69,8 +69,7 @@ func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger, co ra
 	}))
 
 	router.Use(func(c *fiber.Ctx) error {
-		apiInstanceKey := apiUtils.UserContextKey("apiInstance")
-		ctx := context.WithValue(context.Background(), apiInstanceKey, api)
+		ctx := context.WithValue(context.Background(), apiUtils.APIInstanceContextKey, api)
 		ctx = context.WithValue(ctx, consensusInstanceContextKey, co)
 		ctx = logger.WithContext(ctx)
 		c.SetUserContext(ctx)

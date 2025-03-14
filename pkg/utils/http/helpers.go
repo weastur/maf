@@ -106,7 +106,7 @@ func AttachGenericMiddlewares(app *fiber.App, logger zerolog.Logger, healthcheck
 }
 
 func ErrorHandler(c *fiber.Ctx, err error) error {
-	apiInstance, ok := c.UserContext().Value(apiUtils.UserContextKey("apiInstance")).(API)
+	apiInstance, ok := c.UserContext().Value(apiUtils.APIInstanceContextKey).(API)
 	if ok {
 		return apiInstance.ErrorHandler(c, err)
 	}
