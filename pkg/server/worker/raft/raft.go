@@ -211,3 +211,15 @@ func (r *Raft) Stop() {
 func (r *Raft) IsLeader() bool {
 	return r.raftInstance.State() == hraft.Leader
 }
+
+func (r *Raft) Join(serverID, addr string) error {
+	r.logger.Trace().Msgf("Joining %s at %s", serverID, addr)
+
+	return nil
+}
+
+func (r *Raft) Leave(serverID string) error {
+	r.logger.Trace().Msgf("Leaving %s", serverID)
+
+	return nil
+}
