@@ -53,7 +53,7 @@ func New(config *Config, ec ElectionCoordinator) *Fiber {
 		fiber.Config{
 			AppName:               "maf-server " + utils.AppVersion(),
 			ServerHeader:          "maf-server/" + utils.AppVersion(),
-			RequestMethods:        []string{fiber.MethodGet, fiber.MethodHead},
+			RequestMethods:        []string{fiber.MethodGet, fiber.MethodHead, fiber.MethodPost},
 			ReadTimeout:           f.config.ReadTimeout,
 			WriteTimeout:          f.config.WriteTimeout,
 			IdleTimeout:           f.config.IdleTimeout,

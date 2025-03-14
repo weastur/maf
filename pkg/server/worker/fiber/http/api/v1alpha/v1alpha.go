@@ -76,6 +76,9 @@ func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger) {
 	router.Use(v1alphaUtils.AuthMiddleware())
 
 	router.Get("/version", v1alphaUtils.VersionHandler)
+
+	router.Post("/raft/join", joinHandler)
+	router.Post("/raft/leave", leaveHandler)
 }
 
 func (api *APIV1Alpha) ErrorHandler(c *fiber.Ctx, err error) error {
