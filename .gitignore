@@ -30,6 +30,7 @@ go.work.sum
 dist/
 
 .maf.yaml
+.maf-*.yaml
 /man
 /mafdoc
 /build/completions
