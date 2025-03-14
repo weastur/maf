@@ -7,10 +7,13 @@ import (
 	"github.com/gofiber/contrib/swagger"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
+	"github.com/weastur/maf/pkg/server/worker/raft"
 	httpUtils "github.com/weastur/maf/pkg/utils/http"
 	apiUtils "github.com/weastur/maf/pkg/utils/http/api"
 	v1alphaUtils "github.com/weastur/maf/pkg/utils/http/api/v1alpha"
 )
+
+const consensusInstanceContextKey = apiUtils.UserContextKey("consensusInstance")
 
 type APIV1Alpha struct {
 	prefix  string
@@ -54,7 +57,7 @@ func Get() *APIV1Alpha {
 // @description API key for the server. For now, only 'root' is allowed
 // @externalDocs.description Find out more about MAF on GitHub
 // @externalDocs.url https://github.com/weastur/maf/wiki
-func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger) {
+func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger, co raft.Consensus) {
 	router := httpUtils.APIVersionGroup(topRouter, api.version)
 
 	router.Use(swagger.New(swagger.Config{
@@ -66,8 +69,9 @@ func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger) {
 	}))
 
 	router.Use(func(c *fiber.Ctx) error {
-		ctxKey := apiUtils.UserContextKey("apiInstance")
-		ctx := context.WithValue(context.Background(), ctxKey, api)
+		apiInstanceKey := apiUtils.UserContextKey("apiInstance")
+		ctx := context.WithValue(context.Background(), apiInstanceKey, api)
+		ctx = context.WithValue(ctx, consensusInstanceContextKey, co)
 		ctx = logger.WithContext(ctx)
 		c.SetUserContext(ctx)
 
