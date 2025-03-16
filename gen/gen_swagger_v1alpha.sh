@@ -13,11 +13,21 @@ cat <<EOF > "$HEADER_FILE"
 // @Header       all {int} X-Ratelimit-Reset "Rate limit reset interval in seconds"
 EOF
 
-
 if [[ -z "$FILE" || ! -f "$FILE" ]]; then
     echo "Error: File $FILE does not exist or is not set!"
     exit 1
 fi
 
-sed -i "/\/\/ @COMMON_HEADERS_PLACEHOLDER/r $HEADER_FILE" "$FILE"
-sed -i "/\/\/ @COMMON_HEADERS_PLACEHOLDER/d" "$FILE"
+if [[ "$(uname)" == "Darwin" ]]; then
+    # On macOS, prefer gsed
+    if ! command -v gsed >/dev/null 2>&1; then
+        echo "Error: gsed not found. Please install it with 'brew install gnu-sed'"
+        exit 1
+    fi
+    SED="gsed"
+else
+    SED="sed"
+fi
+
+"$SED" -i "/\/\/ @COMMON_HEADERS_PLACEHOLDER/r $HEADER_FILE" "$FILE"
+"$SED" -i "/\/\/ @COMMON_HEADERS_PLACEHOLDER/d" "$FILE"
