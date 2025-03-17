@@ -1,6 +1,7 @@
 module github.com/weastur/maf
 
 go 1.24.1
+
 require (
 	github.com/VictoriaMetrics/metrics v1.35.2
 	github.com/getsentry/sentry-go v0.31.1
@@ -10,7 +11,7 @@ require (
 	github.com/gofiber/contrib/fiberzerolog v1.0.2
 	github.com/gofiber/contrib/swagger v1.2.0
 	github.com/gofiber/fiber/v2 v2.52.6
-	github.com/hashicorp/go-hclog v1.6.2
+	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/raft v1.7.2
 	github.com/hashicorp/raft-boltdb/v2 v2.3.1
 	github.com/rs/zerolog v1.33.0
