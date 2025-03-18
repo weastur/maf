@@ -53,6 +53,8 @@ func Get() *APIV1Alpha {
 // @host 127.0.0.1:7080
 // @tag.name aux
 // @tag.description Auxiliary endpoints
+// @tag.name raft
+// @tag.description Raft-related endpoints
 // @BasePath /api/v1alpha
 // @accept json
 // @produce json

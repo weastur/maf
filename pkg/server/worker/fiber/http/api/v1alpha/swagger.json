@@ -27,6 +27,106 @@
     "host": "127.0.0.1:7080",
     "basePath": "/api/v1alpha",
     "paths": {
+        "/raft/join": {
+            "post": {
+                "description": "Join the server to the cluster. The server becomes voter in case of success",
+                "tags": [
+                    "raft"
+                ],
+                "summary": "Join server to cluster",
+                "parameters": [
+                    {
+                        "description": "Join request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/JoinRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Response with error details or success code",
+                        "schema": {
+                            "$ref": "#/definitions/Response"
+                        },
+                        "headers": {
+                            "X-API-Version": {
+                                "type": "string",
+                                "description": "API version, e.g. v1alpha"
+                            },
+                            "X-Ratelimit-Limit": {
+                                "type": "int",
+                                "description": "Rate limit value"
+                            },
+                            "X-Ratelimit-Remaining": {
+                                "type": "int",
+                                "description": "Rate limit remaining"
+                            },
+                            "X-Ratelimit-Reset": {
+                                "type": "int",
+                                "description": "Rate limit reset interval in seconds"
+                            },
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "UUID of the request"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/raft/leave": {
+            "post": {
+                "description": "Leave the cluster. The server becomes non-voter in case of success\nand will not participate in the consensus",
+                "tags": [
+                    "raft"
+                ],
+                "summary": "Leave the cluster",
+                "parameters": [
+                    {
+                        "description": "Leave request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/LeaveRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Response with error details or success code",
+                        "schema": {
+                            "$ref": "#/definitions/Response"
+                        },
+                        "headers": {
+                            "X-API-Version": {
+                                "type": "string",
+                                "description": "API version, e.g. v1alpha"
+                            },
+                            "X-Ratelimit-Limit": {
+                                "type": "int",
+                                "description": "Rate limit value"
+                            },
+                            "X-Ratelimit-Remaining": {
+                                "type": "int",
+                                "description": "Rate limit remaining"
+                            },
+                            "X-Ratelimit-Reset": {
+                                "type": "int",
+                                "description": "Rate limit reset interval in seconds"
+                            },
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "UUID of the request"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/version": {
             "get": {
                 "description": "Return the version of running app. Not the API version, but the application",
@@ -80,12 +180,47 @@
         }
     },
     "definitions": {
+        "JoinRequest": {
+            "description": "Raft join request with server metadata",
+            "type": "object",
+            "required": [
+                "addr",
+                "serverId"
+            ],
+            "properties": {
+                "addr": {
+                    "type": "string",
+                    "example": "10.1.2.3:7081"
+                },
+                "serverId": {
+                    "type": "string",
+                    "example": "maf-2"
+                }
+            }
+        },
+        "LeaveRequest": {
+            "description": "Raft leave request with server metadata",
+            "type": "object",
+            "required": [
+                "serverId"
+            ],
+            "properties": {
+                "serverId": {
+                    "type": "string",
+                    "example": "maf-2"
+                }
+            }
+        },
         "Response": {
             "description": "Response wrapper to not build the API on top of outdated HTTP codes set",
             "type": "object",
             "properties": {
                 "data": {
-                    "description": "Any data"
+                    "description": "Any structured data or null",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "object"
+                    }
                 },
                 "error": {
                     "description": "Error message. If status is not success, this field must be filled by a string with error message",
@@ -127,6 +262,10 @@
         {
             "description": "Auxiliary endpoints",
             "name": "aux"
+        },
+        {
+            "description": "Raft-related endpoints",
+            "name": "raft"
         }
     ]
 }
