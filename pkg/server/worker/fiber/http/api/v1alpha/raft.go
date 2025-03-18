@@ -13,6 +13,7 @@ import (
 // @Param        request body JoinRequest true "Join request"
 // @Success      200 {object} Response "Response with error details or success code"
 // @Router       /raft/join [post]
+// @Security     ApiKeyAuth
 // @Header       all {string} X-Request-ID "UUID of the request"
 // @Header       all {string} X-API-Version "API version, e.g. v1alpha"
 // @Header       all {int} X-Ratelimit-Limit "Rate limit value"
@@ -42,6 +43,7 @@ func joinHandler(c *fiber.Ctx) error {
 // @Param        request body LeaveRequest true "Leave request"
 // @Success      200 {object} Response "Response with error details or success code"
 // @Router       /raft/leave [post]
+// @Security     ApiKeyAuth
 // @Header       all {string} X-Request-ID "UUID of the request"
 // @Header       all {string} X-API-Version "API version, e.g. v1alpha"
 // @Header       all {int} X-Ratelimit-Limit "Rate limit value"

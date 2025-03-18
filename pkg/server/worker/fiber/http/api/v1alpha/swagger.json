@@ -29,6 +29,11 @@
     "paths": {
         "/raft/join": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Join the server to the cluster. The server becomes voter in case of success",
                 "tags": [
                     "raft"
@@ -79,6 +84,11 @@
         },
         "/raft/leave": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Leave the cluster. The server becomes non-voter in case of success\nand will not participate in the consensus",
                 "tags": [
                     "raft"

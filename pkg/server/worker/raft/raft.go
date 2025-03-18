@@ -2,6 +2,7 @@ package raft
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -214,6 +215,52 @@ func (r *Raft) IsLeader() bool {
 
 func (r *Raft) Join(serverID, addr string) error {
 	r.logger.Trace().Msgf("Joining %s at %s", serverID, addr)
+
+	if !r.IsLeader() {
+		r.logger.Warn().Msg("I'm not a leader, can't proceed with join")
+
+		return ErrNotALeader
+	}
+
+	cfgFuture := r.raftInstance.GetConfiguration()
+	if err := cfgFuture.Error(); err != nil {
+		r.logger.Error().Err(err).Msg("Failed to get raft configuration")
+
+		return fmt.Errorf("failed to get raft configuration: %w", err)
+	}
+
+	cfg := cfgFuture.Configuration()
+
+	rNodeID := hraft.ServerID(serverID)
+	rAddr := hraft.ServerAddress(addr)
+
+	// Check if the server is already a member of the cluster or needs to be removed first
+	// due to address or ID change.
+	for _, srv := range cfg.Servers {
+		if srv.ID == rNodeID && srv.Address == rAddr {
+			r.logger.Info().Msgf("node %s at %s already member of cluster, ignoring join request", serverID, addr)
+
+			return nil
+		} else if srv.ID == rNodeID || srv.Address == rAddr {
+			r.logger.Info().Msgf("node %s at %s already member of cluster, removing existing node", serverID, addr)
+
+			idxFuture := r.raftInstance.RemoveServer(srv.ID, 0, 0)
+			if err := idxFuture.Error(); err != nil {
+				r.logger.Err(err).Msgf("Failed to remove existing node %s at %s", srv.ID, srv.Address)
+
+				return fmt.Errorf("failed to remove existing node %s at %s: %w", srv.ID, srv.Address, err)
+			}
+		}
+	}
+
+	idxFuture := r.raftInstance.AddVoter(rNodeID, rAddr, 0, 0)
+	if err := idxFuture.Error(); err != nil {
+		r.logger.Err(err).Msg("Failed to add voter")
+
+		return fmt.Errorf("failed to add voter: %w", err)
+	}
+
+	r.logger.Info().Msgf("Successfully added %s at %s", serverID, addr)
 
 	return nil
 }
