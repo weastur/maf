@@ -16,8 +16,9 @@ type LeaveRequest struct {
 // Server metadata
 // @Description Metadata of the server in the raft cluster
 type Server struct {
-	ID       string `example:"maf-1"                json:"id"`
-	Address  string `example:"127.0.0.1:7081"       json:"address"`
+	ID      string `example:"maf-1"          json:"id"`
+	Address string `example:"127.0.0.1:7081" json:"address"`
+	// Suffrage of the server in terms of the consensus: Voter, Nonvoter, Staging
 	Suffrage string `enums:"Voter,Nonvoter,Staging" example:"Voter" json:"suffrage"`
 	Leader   bool   `example:"true"                 json:"leader"`
 } // @Name RaftServer

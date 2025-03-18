@@ -262,7 +262,7 @@
                     }
                 },
                 "state": {
-                    "description": "State of the server in terms of the consensus: Leader, Follower, Candidate",
+                    "description": "State of the server in terms of the consensus: Leader, Follower, Candidate, etc.",
                     "type": "string",
                     "enum": [
                         "Follower",
