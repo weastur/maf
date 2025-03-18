@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/weastur/maf/pkg/server/worker/fiber/http/api/v1alpha"
-	v1alphaUtils "github.com/weastur/maf/pkg/utils/http/api/v1alpha"
 	"resty.dev/v3"
 )
 
@@ -21,37 +19,38 @@ type Client struct {
 	AuthToken string
 }
 
-func NewClient(addr string) *Client {
+func New(addr string) *Client {
 	return &Client{
 		Addr:      addr,
 		AuthToken: defaultAPIKey,
 	}
 }
 
-func (c *Client) JoinReqiuest(serverID, addr string) error {
+func (c *Client) Join(serverID, addr string) error {
 	r := resty.New()
 	defer r.Close()
 
 	res, err := r.R().
 		SetHeaderAuthorizationKey(authHeader).
+		SetAuthScheme("").
 		SetAuthToken(c.AuthToken).
-		SetBody(&v1alpha.JoinRequest{
+		SetBody(&JoinRequest{
 			ServerID: serverID,
 			Addr:     addr,
 		}).
-		SetResult(&v1alphaUtils.Response{}).
-		Post(c.Addr + "/api/v1alpha/server/join")
+		SetResult(&Response{}).
+		Post("http://" + c.Addr + "/api/v1alpha/raft/join")
 	if err != nil {
 		return err
 	}
 
-	data, ok := res.Result().(*v1alphaUtils.Response)
+	data, ok := res.Result().(*Response)
 	if !ok {
 		return errFailedToCastResponse
 	}
 
-	if data.Error != nil {
-		return fmt.Errorf("error: %w", data.Error)
+	if data.Error != "" {
+		return fmt.Errorf("failed to join: %s", data.Error) //nolint:err113
 	}
 
 	return nil

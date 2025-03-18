@@ -330,6 +330,7 @@
                     "example": true
                 },
                 "suffrage": {
+                    "description": "Suffrage of the server in terms of the consensus: Voter, Nonvoter, Staging",
                     "type": "string",
                     "enum": [
                         "Voter",

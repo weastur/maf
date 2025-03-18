@@ -15,6 +15,13 @@ import (
 
 const consensusInstanceContextKey = apiUtils.UserContextKey("consensusInstance")
 
+type Consensus interface {
+	IsLeader() bool
+	Join(serverID, addr string) error
+	Leave(serverID string) error
+	GetInfo(verbose bool) (*raft.Info, error)
+}
+
 type Validator interface {
 	Validate(data any) error
 }
@@ -65,8 +72,13 @@ func Get() *APIV1Alpha {
 // @description API key for the server. For now, only 'root' is allowed
 // @externalDocs.description Find out more about MAF on GitHub
 // @externalDocs.url https://github.com/weastur/maf/wiki
-func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger, co raft.Consensus) {
+func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger, co any) {
 	router := httpUtils.APIVersionGroup(topRouter, api.version)
+
+	co, ok := co.(Consensus)
+	if !ok {
+		logger.Fatal().Msg("Failed to cast consensus instance")
+	}
 
 	router.Use(swagger.New(swagger.Config{
 		Title:    "MySQL auto failover server API, version" + api.version,

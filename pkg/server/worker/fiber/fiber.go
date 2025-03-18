@@ -8,16 +8,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/weastur/maf/pkg/server/worker/fiber/http/api/v1alpha"
-	"github.com/weastur/maf/pkg/server/worker/raft"
 	"github.com/weastur/maf/pkg/utils"
 	httpUtils "github.com/weastur/maf/pkg/utils/http"
 	"github.com/weastur/maf/pkg/utils/logging"
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
-
-type API interface {
-	Init(topRouter fiber.Router, logger zerolog.Logger, co raft.Consensus)
-}
 
 type Config struct {
 	Addr            string
@@ -33,16 +28,14 @@ type Config struct {
 type Fiber struct {
 	config *Config
 	app    *fiber.App
-	co     raft.Consensus
 	logger zerolog.Logger
 }
 
-func New(config *Config, co raft.Consensus) *Fiber {
+func New(config *Config, co any) *Fiber {
 	log.Trace().Msg("Configuring fiber worker")
 
 	f := &Fiber{
 		config: config,
-		co:     co,
 		logger: log.With().Str(logging.ComponentCtxKey, "fiber").Logger(),
 	}
 
@@ -67,9 +60,7 @@ func New(config *Config, co raft.Consensus) *Fiber {
 
 	api := httpUtils.APIGroup(f.app)
 
-	var v1AlphaInstance API = v1alpha.Get()
-
-	v1AlphaInstance.Init(api, f.logger, co)
+	v1alpha.Get().Init(api, f.logger, co)
 
 	return f
 }

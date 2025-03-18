@@ -6,7 +6,6 @@ import (
 	"github.com/gofiber/contrib/fiberzerolog"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
-	"github.com/weastur/maf/pkg/server/worker/raft"
 	apiUtils "github.com/weastur/maf/pkg/utils/http/api"
 )
 
@@ -14,14 +13,14 @@ const requestIDLogField = fiberzerolog.FieldRequestID
 
 type unwrappedCtx struct {
 	logger zerolog.Logger
-	co     raft.Consensus
+	co     Consensus
 	api    *APIV1Alpha
 	rid    string
 }
 
 func unpackCtx(c *fiber.Ctx) *unwrappedCtx {
 	logger := zerolog.Ctx(c.UserContext())
-	co, _ := c.UserContext().Value(consensusInstanceContextKey).(raft.Consensus)
+	co, _ := c.UserContext().Value(consensusInstanceContextKey).(Consensus)
 	api, _ := c.UserContext().Value(apiUtils.APIInstanceContextKey).(*APIV1Alpha)
 	rid, _ := c.UserContext().Value(apiUtils.RequestIDContextKey).(string)
 

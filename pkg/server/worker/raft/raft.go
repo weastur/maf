@@ -14,6 +14,7 @@ import (
 	raftboltdb "github.com/hashicorp/raft-boltdb/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	apiClient "github.com/weastur/maf/pkg/server/worker/fiber/http/api/v1alpha/client"
 	"github.com/weastur/maf/pkg/utils/logging"
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
@@ -22,6 +23,7 @@ const (
 	datadirPerms     = 0o700
 	transportMaxPool = 3
 	transportTimeout = 10 * time.Second
+	retryJoinDelay   = time.Second
 	snapshotRetain   = 2
 	dbName           = "raft.db"
 )
@@ -74,6 +76,8 @@ func (r *Raft) init() {
 
 	if r.config.Bootstrap {
 		r.bootstrap()
+	} else {
+		go r.retryJoin()
 	}
 }
 
@@ -94,6 +98,33 @@ func (r *Raft) bootstrap() {
 		r.logger.Warn().Msg("Can't bootstrap cluster as it already exists. Ignoring")
 	} else if err != nil {
 		r.logger.Fatal().Err(err).Msg("Failed to bootstrap cluster")
+	}
+}
+
+func (r *Raft) retryJoin() {
+	r.logger.Info().Msg("Retrying to join peers")
+
+	for {
+		for _, peer := range r.config.Peers {
+			r.logger.Debug().Msgf("Joining peer %s", peer)
+
+			if peer == r.config.Addr {
+				r.logger.Debug().Msg("Skipping self")
+
+				continue
+			}
+
+			api := apiClient.New(peer)
+			if err := api.Join(r.config.NodeID, r.config.Addr); err != nil {
+				r.logger.Warn().Err(err).Msgf("Failed to join peer %s", peer)
+			} else {
+				r.logger.Info().Msgf("Successfully joined peer %s", peer)
+
+				return
+			}
+		}
+
+		time.Sleep(retryJoinDelay)
 	}
 }
 
