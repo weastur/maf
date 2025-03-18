@@ -41,6 +41,7 @@ linters-settings:
           - github.com/hashicorp/go-hclog
           - github.com/go-playground/validator/v10
           - github.com/jinzhu/copier
+          - resty.dev/v3
         deny:
           - pkg: "math/rand$"
             desc: use math/rand/v2
