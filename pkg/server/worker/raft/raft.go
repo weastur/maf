@@ -270,3 +270,41 @@ func (r *Raft) Leave(serverID string) error {
 
 	return nil
 }
+
+func (r *Raft) GetInfo(verbose bool) (*Info, error) {
+	r.logger.Trace().Msg("Getting status")
+
+	cfgFuture := r.raftInstance.GetConfiguration()
+	if err := cfgFuture.Error(); err != nil {
+		r.logger.Error().Err(err).Msg("Failed to get raft configuration")
+
+		return nil, fmt.Errorf("failed to get raft configuration: %w", err)
+	}
+
+	cfg := cfgFuture.Configuration()
+
+	info := &Info{
+		ID:      r.config.NodeID,
+		Addr:    r.config.Addr,
+		State:   r.raftInstance.State().String(),
+		Servers: make([]Server, 0),
+		Stats:   nil,
+	}
+
+	lAddr, lID := r.raftInstance.LeaderWithID()
+
+	for _, srv := range cfg.Servers {
+		info.Servers = append(info.Servers, Server{
+			ID:       string(srv.ID),
+			Address:  string(srv.Address),
+			Suffrage: srv.Suffrage.String(),
+			Leader:   srv.ID == lID && srv.Address == lAddr,
+		})
+	}
+
+	if verbose {
+		info.Stats = r.raftInstance.Stats()
+	}
+
+	return info, nil
+}

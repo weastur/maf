@@ -2,6 +2,7 @@ package v1alpha
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/jinzhu/copier"
 	v1alphaUtils "github.com/weastur/maf/pkg/utils/http/api/v1alpha"
 )
 
@@ -62,4 +63,34 @@ func leaveHandler(c *fiber.Ctx) error {
 	}
 
 	return v1alphaUtils.WrapResponse(c, v1alphaUtils.StatusSuccess, nil, nil)
+}
+
+// Get raft info
+//
+// @Summary      Return raft info
+// @Description  Return the raft cluster info with current server state and stats
+// @Tags         raft
+// @Success      200 {object} InfoResponse "Raft cluster info"
+// @Router       /raft/info [get]
+// @Param        include_stats query bool false "Include extended stats"
+// @Security     ApiKeyAuth
+// @Header       all {string} X-Request-ID "UUID of the request"
+// @Header       all {string} X-API-Version "API version, e.g. v1alpha"
+// @Header       all {int} X-Ratelimit-Limit "Rate limit value"
+// @Header       all {int} X-Ratelimit-Remaining "Rate limit remaining"
+// @Header       all {int} X-Ratelimit-Reset "Rate limit reset interval in seconds"
+func infoHandler(c *fiber.Ctx) error {
+	uCtx := unpackCtx(c)
+
+	coInfo, err := uCtx.co.GetInfo(c.QueryBool("include_stats"))
+	if err != nil {
+		return err
+	}
+
+	data := &InfoResponse{}
+	if err := copier.Copy(data, coInfo); err != nil {
+		return err
+	}
+
+	return v1alphaUtils.WrapResponse(c, v1alphaUtils.StatusSuccess, data, nil)
 }

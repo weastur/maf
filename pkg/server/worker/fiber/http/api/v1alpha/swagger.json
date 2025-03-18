@@ -27,6 +27,58 @@
     "host": "127.0.0.1:7080",
     "basePath": "/api/v1alpha",
     "paths": {
+        "/raft/info": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Return the raft cluster info with current server state and stats",
+                "tags": [
+                    "raft"
+                ],
+                "summary": "Return raft info",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Include extended stats",
+                        "name": "include_stats",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Raft cluster info",
+                        "schema": {
+                            "$ref": "#/definitions/RaftInfoResponse"
+                        },
+                        "headers": {
+                            "X-API-Version": {
+                                "type": "string",
+                                "description": "API version, e.g. v1alpha"
+                            },
+                            "X-Ratelimit-Limit": {
+                                "type": "int",
+                                "description": "Rate limit value"
+                            },
+                            "X-Ratelimit-Remaining": {
+                                "type": "int",
+                                "description": "Rate limit remaining"
+                            },
+                            "X-Ratelimit-Reset": {
+                                "type": "int",
+                                "description": "Rate limit reset interval in seconds"
+                            },
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "UUID of the request"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/raft/join": {
             "post": {
                 "security": [
@@ -46,7 +98,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/JoinRequest"
+                            "$ref": "#/definitions/RaftJoinRequest"
                         }
                     }
                 ],
@@ -101,7 +153,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/LeaveRequest"
+                            "$ref": "#/definitions/RaftLeaveRequest"
                         }
                     }
                 ],
@@ -156,7 +208,7 @@
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/Version"
+                                            "$ref": "#/definitions/VersionResponse"
                                         }
                                     }
                                 }
@@ -190,7 +242,40 @@
         }
     },
     "definitions": {
-        "JoinRequest": {
+        "RaftInfoResponse": {
+            "description": "Satatus of the raft cluster with servers metadata",
+            "type": "object",
+            "properties": {
+                "addr": {
+                    "type": "string",
+                    "example": "127.0.0.1:7081"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "maf-1"
+                },
+                "servers": {
+                    "description": "List of servers in the cluster",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/RaftServer"
+                    }
+                },
+                "state": {
+                    "description": "State of the server in terms of the consensus: Leader, Follower, Candidate",
+                    "type": "string",
+                    "example": "Leader"
+                },
+                "stats": {
+                    "description": "Extended stats of the raft cluster",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "RaftJoinRequest": {
             "description": "Raft join request with server metadata",
             "type": "object",
             "required": [
@@ -208,7 +293,7 @@
                 }
             }
         },
-        "LeaveRequest": {
+        "RaftLeaveRequest": {
             "description": "Raft leave request with server metadata",
             "type": "object",
             "required": [
@@ -218,6 +303,28 @@
                 "serverId": {
                     "type": "string",
                     "example": "maf-2"
+                }
+            }
+        },
+        "RaftServer": {
+            "description": "Metadata of the server in the raft cluster",
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "127.0.0.1:7081"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "maf-1"
+                },
+                "leader": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "suffrage": {
+                    "type": "string",
+                    "example": "Voter"
                 }
             }
         },
@@ -249,7 +356,7 @@
                 }
             }
         },
-        "Version": {
+        "VersionResponse": {
             "description": "Application version",
             "type": "object",
             "properties": {

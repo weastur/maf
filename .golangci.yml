@@ -40,6 +40,7 @@ linters-settings:
           - github.com/hashicorp/raft-boltdb/v2
           - github.com/hashicorp/go-hclog
           - github.com/go-playground/validator/v10
+          - github.com/jinzhu/copier
         deny:
           - pkg: "math/rand$"
             desc: use math/rand/v2

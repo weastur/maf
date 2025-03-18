@@ -22,7 +22,7 @@ type Response struct {
 // @Description Application version
 type Version struct {
 	Version string `example:"v1.0.0" json:"version"`
-} // @Name Version
+} // @Name VersionResponse
 
 const (
 	StatusSuccess Status = iota

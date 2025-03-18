@@ -46,7 +46,7 @@
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/Version"
+                                            "$ref": "#/definitions/VersionResponse"
                                         }
                                     }
                                 }
@@ -108,7 +108,7 @@
                 }
             }
         },
-        "Version": {
+        "VersionResponse": {
             "description": "Application version",
             "type": "object",
             "properties": {

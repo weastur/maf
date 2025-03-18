@@ -90,6 +90,7 @@ func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger, co ra
 
 	router.Post("/raft/join", joinHandler)
 	router.Post("/raft/leave", leaveHandler)
+	router.Get("/raft/info", infoHandler)
 }
 
 func (api *APIV1Alpha) ErrorHandler(c *fiber.Ctx, err error) error {
