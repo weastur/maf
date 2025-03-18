@@ -264,6 +264,13 @@
                 "state": {
                     "description": "State of the server in terms of the consensus: Leader, Follower, Candidate",
                     "type": "string",
+                    "enum": [
+                        "Follower",
+                        "Candidate",
+                        "Leader",
+                        "Shutdown",
+                        "Unknown"
+                    ],
                     "example": "Leader"
                 },
                 "stats": {
@@ -324,6 +331,11 @@
                 },
                 "suffrage": {
                     "type": "string",
+                    "enum": [
+                        "Voter",
+                        "Nonvoter",
+                        "Staging"
+                    ],
                     "example": "Voter"
                 }
             }

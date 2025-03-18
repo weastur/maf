@@ -16,19 +16,19 @@ type LeaveRequest struct {
 // Server metadata
 // @Description Metadata of the server in the raft cluster
 type Server struct {
-	ID       string `example:"maf-1"          json:"id"`
-	Address  string `example:"127.0.0.1:7081" json:"address"`
-	Suffrage string `example:"Voter"          json:"suffrage"`
-	Leader   bool   `example:"true"           json:"leader"`
+	ID       string `example:"maf-1"                json:"id"`
+	Address  string `example:"127.0.0.1:7081"       json:"address"`
+	Suffrage string `enums:"Voter,Nonvoter,Staging" example:"Voter" json:"suffrage"`
+	Leader   bool   `example:"true"                 json:"leader"`
 } // @Name RaftServer
 
 // Info response
 // @Description Satatus of the raft cluster with servers metadata
 type InfoResponse struct {
-	// State of the server in terms of the consensus: Leader, Follower, Candidate
-	State string `example:"Leader"         json:"state"`
-	Addr  string `example:"127.0.0.1:7081" json:"addr"`
-	ID    string `example:"maf-1"          json:"id"`
+	// State of the server in terms of the consensus: Leader, Follower, Candidate, etc.
+	State string `enums:"Follower,Candidate,Leader,Shutdown,Unknown" example:"Leader" json:"state"`
+	Addr  string `example:"127.0.0.1:7081"                           json:"addr"`
+	ID    string `example:"maf-1"                                    json:"id"`
 	// List of servers in the cluster
 	Servers []Server `json:"servers"`
 	// Extended stats of the raft cluster
