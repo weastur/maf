@@ -14,6 +14,11 @@ import (
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
 
+type Consensus interface {
+	IsReady() bool
+	IsLive() bool
+}
+
 type Config struct {
 	Addr            string
 	CertFile        string
@@ -28,14 +33,16 @@ type Config struct {
 type Fiber struct {
 	config *Config
 	app    *fiber.App
+	co     Consensus
 	logger zerolog.Logger
 }
 
-func New(config *Config, co any) *Fiber {
+func New(config *Config, co Consensus) *Fiber {
 	log.Trace().Msg("Configuring fiber worker")
 
 	f := &Fiber{
 		config: config,
+		co:     co,
 		logger: log.With().Str(logging.ComponentCtxKey, "fiber").Logger(),
 	}
 
@@ -60,7 +67,12 @@ func New(config *Config, co any) *Fiber {
 
 	api := httpUtils.APIGroup(f.app)
 
-	v1alpha.Get().Init(api, f.logger, co)
+	v1alphaConsensus, ok := f.co.(v1alpha.Consensus)
+	if !ok {
+		f.logger.Fatal().Msg("Consensus does not implement v1alpha interface")
+	}
+
+	v1alpha.Get().Init(api, f.logger, v1alphaConsensus)
 
 	return f
 }
@@ -68,13 +80,13 @@ func New(config *Config, co any) *Fiber {
 func (f *Fiber) IsLive(_ *fiber.Ctx) bool {
 	f.logger.Trace().Msg("Live check called")
 
-	return true
+	return f.co.IsLive()
 }
 
 func (f *Fiber) IsReady(_ *fiber.Ctx) bool {
 	f.logger.Trace().Msg("Ready check called")
 
-	return true
+	return f.co.IsReady()
 }
 
 func (f *Fiber) Run(wg *sync.WaitGroup) {

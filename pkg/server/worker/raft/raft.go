@@ -63,6 +63,14 @@ func New(config *Config) *Raft {
 	}
 }
 
+func (r *Raft) IsReady() bool {
+	return r.raftInstance != nil
+}
+
+func (r *Raft) IsLive() bool {
+	return r.IsReady()
+}
+
 func (r *Raft) init() {
 	r.logger.Trace().Msg("Initializing")
 
