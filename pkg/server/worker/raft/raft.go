@@ -125,8 +125,10 @@ func (r *Raft) retryJoin() {
 			api := apiClient.New(peer)
 			if err := api.Join(r.config.NodeID, r.config.Addr); err != nil {
 				r.logger.Warn().Err(err).Msgf("Failed to join peer %s", peer)
+				api.Close()
 			} else {
 				r.logger.Info().Msgf("Successfully joined peer %s", peer)
+				api.Close()
 
 				return
 			}
