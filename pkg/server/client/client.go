@@ -82,7 +82,7 @@ func NewWithMutualTLS(host, certFile, keyFile, serverCertFile string) *Client {
 }
 
 func NewWithAutoTLS(host string, config *TLSConfig) *Client {
-	if config == nil {
+	if config == nil || (config.CertFile == "" && config.KeyFile == "" && config.ServerCertFile == "") {
 		return New(host)
 	} else if config.CertFile == "" && config.KeyFile == "" {
 		return NewWithTLS(host, config.ServerCertFile)
