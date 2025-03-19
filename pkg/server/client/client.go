@@ -1,7 +1,6 @@
 package client
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -11,8 +10,6 @@ import (
 	"github.com/weastur/maf/pkg/utils/logging"
 	"resty.dev/v3"
 )
-
-var ErrFailedToCastResponse = errors.New("failed to cast response")
 
 const (
 	authHeader                   = "X-Auth-Token"
@@ -68,6 +65,27 @@ func (c *Client) Close() {
 	c.rclient.Close()
 }
 
+func (c *Client) parseResponse(res *resty.Response) (any, error) {
+	if res.IsError() {
+		err := &StatusCodeError{Code: res.StatusCode()}
+
+		return nil, err
+	}
+
+	data, ok := res.Result().(*response)
+	if !ok {
+		return nil, ErrUnknownResponseFormat
+	}
+
+	if !data.IsSuccess() {
+		err := &ServerError{Details: data.Error}
+
+		return nil, err
+	}
+
+	return data.Data, nil
+}
+
 func (c *Client) Join(serverID, addr string) error {
 	res, err := c.rclient.R().
 		SetBody(&joinRequest{
@@ -77,16 +95,15 @@ func (c *Client) Join(serverID, addr string) error {
 		SetResult(&response{}).
 		Post("http://" + c.Addr + "/api/v1alpha/raft/join")
 	if err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform join request")
+
+		return fmt.Errorf("failed to perform join request: %w", err)
+	}
+
+	if _, err := c.parseResponse(res); err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform join request")
+
 		return err
-	}
-
-	data, ok := res.Result().(*response)
-	if !ok {
-		return ErrFailedToCastResponse
-	}
-
-	if data.Error != "" {
-		return fmt.Errorf("failed to join: %s", data.Error) //nolint:err113
 	}
 
 	return nil
