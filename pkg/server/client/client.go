@@ -49,6 +49,7 @@ func New(host string) *Client {
 	client.rclient.SetRetryMaxWaitTime(defaultRetryMaxWaitTime)
 	client.rclient.SetCircuitBreaker(cb)
 	client.rclient.SetLogger(NewRestyLogger(client.logger))
+	client.rclient.AddContentDecompresser("br", decompressBrotli)
 
 	if e := client.logger.Debug(); e.Enabled() {
 		e.Msg("Request debug enabled")
