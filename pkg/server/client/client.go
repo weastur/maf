@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/weastur/maf/pkg/utils"
+	"github.com/weastur/maf/pkg/utils/logging"
 	"resty.dev/v3"
 )
 
@@ -25,6 +28,7 @@ type Client struct {
 	Addr      string
 	AuthToken string
 	rclient   *resty.Client
+	logger    zerolog.Logger
 }
 
 func New(addr string) *Client {
@@ -32,6 +36,7 @@ func New(addr string) *Client {
 		Addr:      addr,
 		AuthToken: apiKey,
 		rclient:   resty.New(),
+		logger:    log.With().Str(logging.ComponentCtxKey, "server-client").Logger(),
 	}
 	cb := resty.NewCircuitBreaker().SetTimeout(defaultCircuitBreakerTimeout)
 
@@ -44,6 +49,12 @@ func New(addr string) *Client {
 	client.rclient.SetRetryWaitTime(defaultRetryWaitTime)
 	client.rclient.SetRetryMaxWaitTime(defaultRetryMaxWaitTime)
 	client.rclient.SetCircuitBreaker(cb)
+	client.rclient.SetLogger(NewRestyLogger(client.logger))
+
+	if e := client.logger.Debug(); e.Enabled() {
+		e.Msg("Debug mode enabled")
+		client.rclient.SetDebug(true)
+	}
 
 	return client
 }
