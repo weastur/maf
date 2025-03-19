@@ -52,8 +52,13 @@ func New(addr string) *Client {
 	client.rclient.SetLogger(NewRestyLogger(client.logger))
 
 	if e := client.logger.Debug(); e.Enabled() {
-		e.Msg("Debug mode enabled")
-		client.rclient.SetDebug(true)
+		e.Msg("Request debug enabled")
+		client.rclient.EnableDebug()
+	}
+
+	if e := client.logger.Trace(); e.Enabled() {
+		e.Msg("Request tracing enabled")
+		client.rclient.EnableTrace()
 	}
 
 	return client
