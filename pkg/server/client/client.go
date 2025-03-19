@@ -23,6 +23,7 @@ const (
 
 type Client struct {
 	Host      string
+	urlPerfix string
 	AuthToken string
 	rclient   *resty.Client
 	logger    zerolog.Logger
@@ -33,6 +34,7 @@ func New(host string) *Client {
 		Host:      host,
 		AuthToken: apiKey,
 		rclient:   resty.New(),
+		urlPerfix: host + "/api/v1alpha",
 		logger:    log.With().Str(logging.ComponentCtxKey, "server-client").Logger(),
 	}
 	cb := resty.NewCircuitBreaker().SetTimeout(defaultCircuitBreakerTimeout)
@@ -93,7 +95,7 @@ func (c *Client) Join(serverID, addr string) error {
 			Addr:     addr,
 		}).
 		SetResult(&response{}).
-		Post(c.Host + "/api/v1alpha/raft/join")
+		Post(c.urlPerfix + "/raft/join")
 	if err != nil {
 		c.logger.Error().Err(err).Msg("Failed to perform join request")
 
