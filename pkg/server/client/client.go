@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/weastur/maf/pkg/utils"
 	"resty.dev/v3"
 )
 
@@ -29,6 +30,7 @@ func New(addr string) *Client {
 	client.rclient.SetHeaderAuthorizationKey(authHeader)
 	client.rclient.SetAuthScheme("")
 	client.rclient.SetAuthToken(client.AuthToken)
+	client.rclient.SetHeader("User-Agent", "maf/"+utils.AppVersion())
 
 	return client
 }
