@@ -22,15 +22,15 @@ const (
 )
 
 type Client struct {
-	Addr      string
+	Host      string
 	AuthToken string
 	rclient   *resty.Client
 	logger    zerolog.Logger
 }
 
-func New(addr string) *Client {
+func New(host string) *Client {
 	client := &Client{
-		Addr:      addr,
+		Host:      host,
 		AuthToken: apiKey,
 		rclient:   resty.New(),
 		logger:    log.With().Str(logging.ComponentCtxKey, "server-client").Logger(),
@@ -93,7 +93,7 @@ func (c *Client) Join(serverID, addr string) error {
 			Addr:     addr,
 		}).
 		SetResult(&response{}).
-		Post("http://" + c.Addr + "/api/v1alpha/raft/join")
+		Post(c.Host + "/api/v1alpha/raft/join")
 	if err != nil {
 		c.logger.Error().Err(err).Msg("Failed to perform join request")
 

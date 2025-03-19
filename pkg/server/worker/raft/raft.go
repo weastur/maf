@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	neturl "net/url"
 	"os"
 	"path/filepath"
 	"sync"
@@ -116,7 +117,14 @@ func (r *Raft) retryJoin() {
 		for _, peer := range r.config.Peers {
 			r.logger.Debug().Msgf("Joining peer %s", peer)
 
-			if peer == r.config.Addr {
+			peerURL, err := neturl.Parse(peer)
+			if err != nil {
+				r.logger.Warn().Err(err).Msgf("Failed to parse peer URL %s", peer)
+
+				continue
+			}
+
+			if peerURL.Host == r.config.Addr {
 				r.logger.Debug().Msg("Skipping self")
 
 				continue
