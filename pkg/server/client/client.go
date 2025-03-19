@@ -3,6 +3,7 @@ package client
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/weastur/maf/pkg/utils"
 	"resty.dev/v3"
@@ -11,8 +12,9 @@ import (
 var ErrFailedToCastResponse = errors.New("failed to cast response")
 
 const (
-	authHeader    = "X-Auth-Token"
-	defaultAPIKey = "root" // pragma: allowlist secret
+	authHeader     = "X-Auth-Token"
+	defaultAPIKey  = "root" // pragma: allowlist secret
+	defaultTimeout = 10 * time.Second
 )
 
 type Client struct {
@@ -31,6 +33,7 @@ func New(addr string) *Client {
 	client.rclient.SetAuthScheme("")
 	client.rclient.SetAuthToken(client.AuthToken)
 	client.rclient.SetHeader("User-Agent", "maf/"+utils.AppVersion())
+	client.rclient.SetTimeout(defaultTimeout)
 
 	return client
 }
