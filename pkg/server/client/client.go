@@ -21,11 +21,16 @@ type Client struct {
 }
 
 func New(addr string) *Client {
-	return &Client{
+	client := &Client{
 		Addr:      addr,
 		AuthToken: defaultAPIKey,
 		rclient:   resty.New(),
 	}
+	client.rclient.SetHeaderAuthorizationKey(authHeader)
+	client.rclient.SetAuthScheme("")
+	client.rclient.SetAuthToken(client.AuthToken)
+
+	return client
 }
 
 func (c *Client) Close() {
@@ -34,9 +39,6 @@ func (c *Client) Close() {
 
 func (c *Client) Join(serverID, addr string) error {
 	res, err := c.rclient.R().
-		SetHeaderAuthorizationKey(authHeader).
-		SetAuthScheme("").
-		SetAuthToken(c.AuthToken).
 		SetBody(&joinRequest{
 			ServerID: serverID,
 			Addr:     addr,
