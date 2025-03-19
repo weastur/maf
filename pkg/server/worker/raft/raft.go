@@ -30,12 +30,13 @@ const (
 )
 
 type Config struct {
-	Addr      string
-	NodeID    string
-	Devmode   bool
-	Peers     []string
-	Datadir   string
-	Bootstrap bool
+	Addr               string
+	NodeID             string
+	Devmode            bool
+	Peers              []string
+	Datadir            string
+	Bootstrap          bool
+	ServerAPITLSConfig *apiClient.TLSConfig
 }
 
 type Raft struct {
@@ -130,7 +131,7 @@ func (r *Raft) retryJoin() {
 				continue
 			}
 
-			api := apiClient.New(peer)
+			api := apiClient.NewWithAutoTLS(peer, r.config.ServerAPITLSConfig)
 			if err := api.Join(r.config.NodeID, r.config.Addr); err != nil {
 				r.logger.Warn().Err(err).Msgf("Failed to join peer %s", peer)
 				api.Close()

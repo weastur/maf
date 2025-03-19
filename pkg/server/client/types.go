@@ -17,6 +17,12 @@ type joinRequest struct {
 	Addr     string `json:"addr"`
 }
 
+type TLSConfig struct {
+	CertFile       string
+	KeyFile        string
+	ServerCertFile string
+}
+
 func (r *response) IsSuccess() bool {
 	return r.Status == statusSuccess
 }

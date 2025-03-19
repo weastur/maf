@@ -64,6 +64,33 @@ func New(host string) *Client {
 	return client
 }
 
+func NewWithTLS(host, serverCertFile string) *Client {
+	client := New(host)
+
+	client.rclient.SetRootCertificates(serverCertFile)
+
+	return client
+}
+
+func NewWithMutualTLS(host, certFile, keyFile, serverCertFile string) *Client {
+	client := New(host)
+
+	client.rclient.SetRootCertificates(serverCertFile)
+	client.rclient.SetCertificateFromFile(certFile, keyFile)
+
+	return client
+}
+
+func NewWithAutoTLS(host string, config *TLSConfig) *Client {
+	if config == nil {
+		return New(host)
+	} else if config.CertFile == "" && config.KeyFile == "" {
+		return NewWithTLS(host, config.ServerCertFile)
+	}
+
+	return NewWithMutualTLS(host, config.CertFile, config.KeyFile, config.ServerCertFile)
+}
+
 func (c *Client) Close() {
 	c.rclient.Close()
 }

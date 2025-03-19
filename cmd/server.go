@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/weastur/maf/pkg/config"
 	"github.com/weastur/maf/pkg/server"
+	serverAPIClient "github.com/weastur/maf/pkg/server/client"
 	"github.com/weastur/maf/pkg/server/worker/fiber"
 	"github.com/weastur/maf/pkg/server/worker/raft"
 )
@@ -43,6 +44,11 @@ It is designed to run on a separate host.`,
 			Peers:     viper.GetStringSlice("server.raft.peers"),
 			Datadir:   viper.GetString("server.raft.datadir"),
 			Bootstrap: viper.GetBool("server.raft.bootstrap"),
+			ServerAPITLSConfig: &serverAPIClient.TLSConfig{
+				CertFile:       viper.GetString("server.http.clients.server.cert_file"),
+				KeyFile:        viper.GetString("server.http.clients.server.key_file"),
+				ServerCertFile: viper.GetString("server.http.clients.server.server_cert_file"),
+			},
 		}
 
 		srv := server.Get(serverConfig, raftConfig, fiberConfig)
@@ -53,7 +59,7 @@ It is designed to run on a separate host.`,
 	},
 }
 
-func init() {
+func init() { //nolint:funlen
 	var cfg Config = config.Get()
 
 	viper := cfg.Viper()
@@ -64,6 +70,36 @@ func init() {
 	serverCmd.Flags().String("http-cert-file", "", "Path to the cert file (required if key-file is set)")
 	serverCmd.Flags().String("http-key-file", "", "Path to the key file (required if cert-file is set)")
 	serverCmd.Flags().String("http-client-cert-file", "", "Path to the client cert file (for mTLS)")
+	serverCmd.Flags().String(
+		"http-clients-server-cert-file",
+		"",
+		"Path to the cert file of the internal client that will connect to maf server (required if key-file is set)",
+	)
+	serverCmd.Flags().String(
+		"http-clients-server-key-file",
+		"",
+		"Path to the key file of the internal client that will connect to maf server (required if cert-file is set)",
+	)
+	serverCmd.Flags().String(
+		"http-clients-server-server_cert-file",
+		"",
+		"Path to the cert file of the internal client that will connect to maf server to verify it (for mTLS)",
+	)
+	serverCmd.Flags().String(
+		"http-clients-agent-cert-file",
+		"",
+		"Path to the cert file of the internal client that will connect to maf agent (required if key-file is set)",
+	)
+	serverCmd.Flags().String(
+		"http-clients-agent-key-file",
+		"",
+		"Path to the key file of the internal client that will connect to maf agent (required if cert-file is set)",
+	)
+	serverCmd.Flags().String(
+		"http-clients-agent-server_cert-file",
+		"",
+		"Path to the cert file of the internal client that will connect to maf agent to verify it (for mTLS)",
+	)
 	serverCmd.Flags().Duration("http-read-timeout", defaultHTTPReadTimeout, "HTTP read timeout")
 	serverCmd.Flags().Duration("http-write-timeout", defaultHTTPWriteTimeout, "HTTP write timeout")
 	serverCmd.Flags().Duration("http-idle-timeout", defaultHTTPIdleTimeout, "HTTP idle timeout")
@@ -88,11 +124,34 @@ func init() {
 	serverCmd.MarkFlagFilename("http-cert-file")
 	serverCmd.MarkFlagFilename("http-key-file")
 	serverCmd.MarkFlagFilename("http-client-cert-file")
+	serverCmd.MarkFlagFilename("http-clients-server-cert-file")
+	serverCmd.MarkFlagFilename("http-clients-server-key-file")
+	serverCmd.MarkFlagFilename("http-clients-server-server-cert-file")
+	serverCmd.MarkFlagFilename("http-clients-agent-cert-file")
+	serverCmd.MarkFlagFilename("http-clients-agent-key-file")
+	serverCmd.MarkFlagFilename("http-clients-agent-server-cert-file")
 
 	viper.BindPFlag("server.http.addr", serverCmd.Flags().Lookup("http-addr"))
 	viper.BindPFlag("server.http.cert_file", serverCmd.Flags().Lookup("http-cert-file"))
 	viper.BindPFlag("server.http.key_file", serverCmd.Flags().Lookup("http-key-file"))
 	viper.BindPFlag("server.http.client_cert_file", serverCmd.Flags().Lookup("http-client-cert-file"))
+
+	viper.BindPFlag("server.http.clients.server.cert_file", serverCmd.Flags().Lookup("http-clients-server-cert-file"))
+	viper.BindPFlag("server.http.clients.server.key_file", serverCmd.Flags().Lookup("http-clients-server-key-file"))
+	viper.BindPFlag(
+		"server.http.clients.server.server_cert_file",
+		serverCmd.Flags().Lookup("http-clients-server-server-cert-file"),
+	)
+	viper.BindPFlag("server.http.clients.agent.cert_file", serverCmd.Flags().Lookup("http-clients-agent-cert-file"))
+	viper.BindPFlag(
+		"server.http.clients.agent.key_file",
+		serverCmd.Flags().Lookup("http-clients-aget-key-file"),
+	)
+	viper.BindPFlag(
+		"server.http.clients.agent.server_cert_file",
+		serverCmd.Flags().Lookup("http-clients-agent-server-cert-file"),
+	)
+
 	viper.BindPFlag("server.http.read_timeout", serverCmd.Flags().Lookup("http-read-timeout"))
 	viper.BindPFlag("server.http.write_timeout", serverCmd.Flags().Lookup("http-write-timeout"))
 	viper.BindPFlag("server.http.idle_timeout", serverCmd.Flags().Lookup("http-idle-timeout"))

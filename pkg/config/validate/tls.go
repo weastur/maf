@@ -17,8 +17,14 @@ func NewTLS() *TLS {
 }
 
 func (v *TLS) Validate(viperInstance *viper.Viper) error {
-	for _, key := range []string{"agent", "server"} {
-		if viperInstance.IsSet(key+".http.cert_file") != viperInstance.IsSet(key+".http.key_file") {
+	for _, key := range []string{"agent.http", "server.http"} {
+		if viperInstance.IsSet(key+".cert_file") != viperInstance.IsSet(key+".key_file") {
+			return ErrTLS
+		}
+	}
+
+	for _, key := range []string{"server.http.clients.server", "server.http.clients.agent"} {
+		if viperInstance.IsSet(key+".cert_file") != viperInstance.IsSet(key+".key_file") {
 			return ErrTLS
 		}
 	}
