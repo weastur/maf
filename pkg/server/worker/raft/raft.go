@@ -14,7 +14,7 @@ import (
 	raftboltdb "github.com/hashicorp/raft-boltdb/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	apiClient "github.com/weastur/maf/pkg/server/worker/fiber/http/api/v1alpha/client"
+	apiClient "github.com/weastur/maf/pkg/server/client"
 	"github.com/weastur/maf/pkg/utils/logging"
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )

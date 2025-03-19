@@ -7,7 +7,7 @@ import (
 	"resty.dev/v3"
 )
 
-var errFailedToCastResponse = errors.New("failed to cast response")
+var ErrFailedToCastResponse = errors.New("failed to cast response")
 
 const (
 	authHeader    = "X-Auth-Token"
@@ -17,36 +17,39 @@ const (
 type Client struct {
 	Addr      string
 	AuthToken string
+	rclient   *resty.Client
 }
 
 func New(addr string) *Client {
 	return &Client{
 		Addr:      addr,
 		AuthToken: defaultAPIKey,
+		rclient:   resty.New(),
 	}
 }
 
-func (c *Client) Join(serverID, addr string) error {
-	r := resty.New()
-	defer r.Close()
+func (c *Client) Close() {
+	c.rclient.Close()
+}
 
-	res, err := r.R().
+func (c *Client) Join(serverID, addr string) error {
+	res, err := c.rclient.R().
 		SetHeaderAuthorizationKey(authHeader).
 		SetAuthScheme("").
 		SetAuthToken(c.AuthToken).
-		SetBody(&JoinRequest{
+		SetBody(&joinRequest{
 			ServerID: serverID,
 			Addr:     addr,
 		}).
-		SetResult(&Response{}).
+		SetResult(&response{}).
 		Post("http://" + c.Addr + "/api/v1alpha/raft/join")
 	if err != nil {
 		return err
 	}
 
-	data, ok := res.Result().(*Response)
+	data, ok := res.Result().(*response)
 	if !ok {
-		return errFailedToCastResponse
+		return ErrFailedToCastResponse
 	}
 
 	if data.Error != "" {
