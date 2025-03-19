@@ -12,9 +12,12 @@ import (
 var ErrFailedToCastResponse = errors.New("failed to cast response")
 
 const (
-	authHeader     = "X-Auth-Token"
-	defaultAPIKey  = "root" // pragma: allowlist secret
-	defaultTimeout = 10 * time.Second
+	authHeader              = "X-Auth-Token"
+	apiKey                  = "root" // pragma: allowlist secret
+	defaultTimeout          = 10 * time.Second
+	defaultRetryCount       = 3
+	defaultRetryWaitTime    = 1 * time.Second
+	defaultRetryMaxWaitTime = 3 * time.Second
 )
 
 type Client struct {
@@ -26,7 +29,7 @@ type Client struct {
 func New(addr string) *Client {
 	client := &Client{
 		Addr:      addr,
-		AuthToken: defaultAPIKey,
+		AuthToken: apiKey,
 		rclient:   resty.New(),
 	}
 	client.rclient.SetHeaderAuthorizationKey(authHeader)
@@ -34,6 +37,9 @@ func New(addr string) *Client {
 	client.rclient.SetAuthToken(client.AuthToken)
 	client.rclient.SetHeader("User-Agent", "maf/"+utils.AppVersion())
 	client.rclient.SetTimeout(defaultTimeout)
+	client.rclient.SetRetryCount(defaultRetryCount)
+	client.rclient.SetRetryWaitTime(defaultRetryWaitTime)
+	client.rclient.SetRetryMaxWaitTime(defaultRetryMaxWaitTime)
 
 	return client
 }
