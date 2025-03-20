@@ -54,6 +54,7 @@ type Raft struct {
 	fsm           hraft.FSM
 	storage       Storage
 	raftInstance  *hraft.Raft
+	initCompleted bool
 }
 
 func New(config *Config) *Raft {
@@ -68,11 +69,11 @@ func New(config *Config) *Raft {
 }
 
 func (r *Raft) IsReady() bool {
-	return r.raftInstance != nil
+	return r.initCompleted
 }
 
 func (r *Raft) IsLive() bool {
-	return r.IsReady()
+	return r.raftInstance.State() == hraft.Leader || r.raftInstance.State() == hraft.Follower
 }
 
 func (r *Raft) init() {
@@ -91,6 +92,8 @@ func (r *Raft) init() {
 	} else {
 		go r.retryJoin()
 	}
+
+	r.initCompleted = true
 }
 
 func (r *Raft) bootstrap() {
