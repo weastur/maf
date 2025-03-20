@@ -55,16 +55,18 @@ type Raft struct {
 	storage       Storage
 	raftInstance  *hraft.Raft
 	initCompleted bool
+	leaderCh      chan bool
 }
 
 func New(config *Config) *Raft {
 	log.Trace().Msg("Configuring raft worker")
 
 	return &Raft{
-		config:  config,
-		done:    make(chan struct{}),
-		logger:  log.With().Str(logging.ComponentCtxKey, "raft").Logger(),
-		hlogger: NewHCZeroLogger(log.With().Str(logging.ComponentCtxKey, "hraft").Logger()),
+		config:   config,
+		done:     make(chan struct{}),
+		logger:   log.With().Str(logging.ComponentCtxKey, "raft").Logger(),
+		hlogger:  NewHCZeroLogger(log.With().Str(logging.ComponentCtxKey, "hraft").Logger()),
+		leaderCh: make(chan bool, 1),
 	}
 }
 
@@ -86,6 +88,7 @@ func (r *Raft) init() {
 	r.initStore()
 	r.initFSM()
 	r.initRaftInstance()
+	r.monitorLeadership()
 
 	if r.config.Bootstrap {
 		r.bootstrap()
@@ -409,4 +412,33 @@ func (r *Raft) Delete(key string) error {
 	}
 
 	return r.applyCommand(OpDelete, key, "")
+}
+
+func (r *Raft) LeaderCh() <-chan bool {
+	return r.leaderCh
+}
+
+func (r *Raft) monitorLeadership() {
+	r.logger.Info().Msg("Monitoring leadership changes")
+
+	go func() {
+		for {
+			select {
+			case isLeader := <-r.raftInstance.LeaderCh():
+				if isLeader {
+					r.logger.Info().Msg("Became leader, performing leader-specific tasks")
+
+					r.leaderCh <- true
+				} else {
+					r.logger.Info().Msg("Lost leadership")
+
+					r.leaderCh <- false
+				}
+			case <-r.done:
+				r.logger.Info().Msg("Stopping leadership monitoring")
+
+				return
+			}
+		}
+	}()
 }
