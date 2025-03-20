@@ -31,6 +31,8 @@ const (
 	cmdTimeout       = 10 * time.Second
 )
 
+type LeadershipChangesCh chan bool
+
 type Config struct {
 	Addr               string
 	NodeID             string
@@ -42,31 +44,31 @@ type Config struct {
 }
 
 type Raft struct {
-	config        *Config
-	hrconfig      *hraft.Config
-	done          chan struct{}
-	logger        zerolog.Logger
-	hlogger       hclog.Logger
-	transport     hraft.Transport
-	snapshotStore hraft.SnapshotStore
-	logStore      hraft.LogStore
-	stableStore   hraft.StableStore
-	fsm           hraft.FSM
-	storage       Storage
-	raftInstance  *hraft.Raft
-	initCompleted bool
-	leaderCh      chan bool
+	config                    *Config
+	hrconfig                  *hraft.Config
+	done                      chan struct{}
+	logger                    zerolog.Logger
+	hlogger                   hclog.Logger
+	transport                 hraft.Transport
+	snapshotStore             hraft.SnapshotStore
+	logStore                  hraft.LogStore
+	stableStore               hraft.StableStore
+	fsm                       hraft.FSM
+	storage                   Storage
+	raftInstance              *hraft.Raft
+	initCompleted             bool
+	leadershipChangesChannels []LeadershipChangesCh
 }
 
 func New(config *Config) *Raft {
 	log.Trace().Msg("Configuring raft worker")
 
 	return &Raft{
-		config:   config,
-		done:     make(chan struct{}),
-		logger:   log.With().Str(logging.ComponentCtxKey, "raft").Logger(),
-		hlogger:  NewHCZeroLogger(log.With().Str(logging.ComponentCtxKey, "hraft").Logger()),
-		leaderCh: make(chan bool, 1),
+		config:                    config,
+		done:                      make(chan struct{}),
+		logger:                    log.With().Str(logging.ComponentCtxKey, "raft").Logger(),
+		hlogger:                   NewHCZeroLogger(log.With().Str(logging.ComponentCtxKey, "hraft").Logger()),
+		leadershipChangesChannels: make([]LeadershipChangesCh, 0),
 	}
 }
 
@@ -414,8 +416,20 @@ func (r *Raft) Delete(key string) error {
 	return r.applyCommand(OpDelete, key, "")
 }
 
-func (r *Raft) LeaderCh() <-chan bool {
-	return r.leaderCh
+func (r *Raft) SubscribeOnLeadershipChanges(ch LeadershipChangesCh) {
+	r.logger.Trace().Msg("Registering leadership changes channel")
+
+	r.leadershipChangesChannels = append(r.leadershipChangesChannels, ch)
+}
+
+func (r *Raft) broadcastLeadershipChange(isLeader bool) {
+	for _, ch := range r.leadershipChangesChannels {
+		select {
+		case ch <- isLeader:
+		default:
+			r.logger.Warn().Msg("Leadership change channel is full, skipping")
+		}
+	}
 }
 
 func (r *Raft) monitorLeadership() {
@@ -428,11 +442,11 @@ func (r *Raft) monitorLeadership() {
 				if isLeader {
 					r.logger.Info().Msg("Became leader, performing leader-specific tasks")
 
-					r.leaderCh <- true
+					r.broadcastLeadershipChange(true)
 				} else {
 					r.logger.Info().Msg("Lost leadership")
 
-					r.leaderCh <- false
+					r.broadcastLeadershipChange(false)
 				}
 			case <-r.done:
 				r.logger.Info().Msg("Stopping leadership monitoring")

@@ -8,15 +8,20 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/weastur/maf/pkg/server/worker/fiber/http/api/v1alpha"
+	"github.com/weastur/maf/pkg/server/worker/raft"
 	"github.com/weastur/maf/pkg/utils"
 	httpUtils "github.com/weastur/maf/pkg/utils/http"
 	"github.com/weastur/maf/pkg/utils/logging"
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
 )
 
+const LeaderAPIAddrKey = "leaderAPIAddr"
+
 type Consensus interface {
 	IsReady() bool
 	IsLive() bool
+	Set(key, value string) error
+	SubscribeOnLeadershipChanges(ch raft.LeadershipChangesCh)
 }
 
 type Config struct {
@@ -31,19 +36,21 @@ type Config struct {
 }
 
 type Fiber struct {
-	config *Config
-	app    *fiber.App
-	co     Consensus
-	logger zerolog.Logger
+	config              *Config
+	app                 *fiber.App
+	co                  Consensus
+	logger              zerolog.Logger
+	leadershipChangesCh raft.LeadershipChangesCh
 }
 
 func New(config *Config, co Consensus) *Fiber {
 	log.Trace().Msg("Configuring fiber worker")
 
 	f := &Fiber{
-		config: config,
-		co:     co,
-		logger: log.With().Str(logging.ComponentCtxKey, "fiber").Logger(),
+		config:              config,
+		co:                  co,
+		logger:              log.With().Str(logging.ComponentCtxKey, "fiber").Logger(),
+		leadershipChangesCh: make(raft.LeadershipChangesCh, 1),
 	}
 
 	f.app = fiber.New(
@@ -64,6 +71,8 @@ func New(config *Config, co Consensus) *Fiber {
 
 		return nil
 	})
+
+	co.SubscribeOnLeadershipChanges(f.leadershipChangesCh)
 
 	api := httpUtils.APIGroup(f.app)
 
@@ -89,6 +98,27 @@ func (f *Fiber) IsReady(_ *fiber.Ctx) bool {
 	return f.co.IsReady()
 }
 
+func (f *Fiber) WatchLeadershipChanges(done <-chan struct{}) {
+	f.logger.Info().Msg("Watching leadership changes")
+
+	for {
+		select {
+		case <-done:
+			f.logger.Info().Msg("Shutting down leadership changes watcher")
+
+			return
+		case isLeader := <-f.leadershipChangesCh:
+			f.logger.Info().Msg("Leadership changes detected")
+
+			if isLeader {
+				if err := f.co.Set(LeaderAPIAddrKey, f.config.Addr); err != nil {
+					f.logger.Fatal().Err(err).Msg("failed to set leader API address, this should not happen")
+				}
+			}
+		}
+	}
+}
+
 func (f *Fiber) Run(wg *sync.WaitGroup) {
 	f.logger.Info().Msg("Running")
 
@@ -96,6 +126,10 @@ func (f *Fiber) Run(wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		defer sentryUtils.Recover(sentryUtils.Fork("fiber"))
+
+		watcherDone := make(chan struct{})
+		go f.WatchLeadershipChanges(watcherDone)
+		defer close(watcherDone)
 
 		if err := httpUtils.Listen(
 			f.app, f.logger, f.config.Addr, f.config.CertFile, f.config.KeyFile, f.config.ClientCertFile,

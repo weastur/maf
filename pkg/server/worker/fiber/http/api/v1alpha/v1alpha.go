@@ -13,7 +13,9 @@ import (
 	v1alphaUtils "github.com/weastur/maf/pkg/utils/http/api/v1alpha"
 )
 
-const consensusInstanceContextKey = apiUtils.UserContextKey("consensusInstance")
+const (
+	consensusInstanceContextKey = apiUtils.UserContextKey("consensusInstance")
+)
 
 type Consensus interface {
 	IsLeader() bool
