@@ -16,3 +16,11 @@ type Command struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
 }
+
+func makeCommand(op OpType, key, value string) *Command {
+	return &Command{
+		Op:    op,
+		Key:   key,
+		Value: value,
+	}
+}

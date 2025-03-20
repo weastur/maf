@@ -1,6 +1,7 @@
 package raft
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -27,6 +28,7 @@ const (
 	retryJoinDelay   = time.Second
 	snapshotRetain   = 2
 	dbName           = "raft.db"
+	cmdTimeout       = 10 * time.Second
 )
 
 type Config struct {
@@ -357,4 +359,51 @@ func (r *Raft) GetInfo(verbose bool) (*Info, error) {
 	}
 
 	return info, nil
+}
+
+func (r *Raft) Get(key string) (string, bool) {
+	r.logger.Trace().Msgf("Getting key %s", key)
+
+	return r.storage.Get(key)
+}
+
+func (r *Raft) applyCommand(op OpType, key, value string) error {
+	cmd := makeCommand(op, key, value)
+
+	data, err := json.Marshal(cmd)
+	if err != nil {
+		r.logger.Error().Err(err).Msg("Failed to marshal command")
+
+		return nil
+	}
+
+	applyFuture := r.raftInstance.Apply(data, cmdTimeout)
+
+	if err := applyFuture.Error(); err != nil {
+		log.Error().Err(err).Msg("failed to apply command")
+
+		return fmt.Errorf("failed to apply command: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Raft) Set(key, value string) error {
+	if !r.IsLeader() {
+		r.logger.Warn().Msg("I'm not a leader, can't proceed with set")
+
+		return nil
+	}
+
+	return r.applyCommand(OpSet, key, value)
+}
+
+func (r *Raft) Delete(key string) error {
+	if !r.IsLeader() {
+		r.logger.Warn().Msg("I'm not a leader, can't proceed with delete")
+
+		return nil
+	}
+
+	return r.applyCommand(OpDelete, key, "")
 }
