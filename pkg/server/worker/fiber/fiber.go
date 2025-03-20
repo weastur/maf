@@ -26,6 +26,7 @@ type Consensus interface {
 
 type Config struct {
 	Addr            string
+	Advertise       string
 	CertFile        string
 	KeyFile         string
 	ClientCertFile  string
@@ -111,7 +112,7 @@ func (f *Fiber) WatchLeadershipChanges(done <-chan struct{}) {
 			f.logger.Info().Msg("Leadership changes detected")
 
 			if isLeader {
-				if err := f.co.Set(LeaderAPIAddrKey, f.config.Addr); err != nil {
+				if err := f.co.Set(LeaderAPIAddrKey, f.config.Advertise); err != nil {
 					f.logger.Fatal().Err(err).Msg("failed to set leader API address, this should not happen")
 				}
 			}

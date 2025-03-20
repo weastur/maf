@@ -26,8 +26,13 @@ It is designed to run on a separate host.`,
 			SentryDSN: viper.GetString("server.sentry.dsn"),
 		}
 
+		advertiseAddr := viper.GetString("server.http.advertise")
+		if advertiseAddr == "" {
+			advertiseAddr = viper.GetString("server.http.addr")
+		}
 		fiberConfig := &fiber.Config{
 			Addr:            viper.GetString("server.http.addr"),
+			Advertise:       advertiseAddr,
 			CertFile:        viper.GetString("server.http.cert_file"),
 			KeyFile:         viper.GetString("server.http.key_file"),
 			ClientCertFile:  viper.GetString("server.http.client_cert_file"),
@@ -67,6 +72,7 @@ func init() { //nolint:funlen
 	rootCmd.AddCommand(serverCmd)
 
 	serverCmd.Flags().String("http-addr", ":7080", "Address to listen to")
+	serverCmd.Flags().String("http-advertise", "", "Address to advertise to other servers")
 	serverCmd.Flags().String("http-cert-file", "", "Path to the cert file (required if key-file is set)")
 	serverCmd.Flags().String("http-key-file", "", "Path to the key file (required if cert-file is set)")
 	serverCmd.Flags().String("http-client-cert-file", "", "Path to the client cert file (for mTLS)")
@@ -132,6 +138,7 @@ func init() { //nolint:funlen
 	serverCmd.MarkFlagFilename("http-clients-agent-server-cert-file")
 
 	viper.BindPFlag("server.http.addr", serverCmd.Flags().Lookup("http-addr"))
+	viper.BindPFlag("server.http.advertise", serverCmd.Flags().Lookup("http-advertise"))
 	viper.BindPFlag("server.http.cert_file", serverCmd.Flags().Lookup("http-cert-file"))
 	viper.BindPFlag("server.http.key_file", serverCmd.Flags().Lookup("http-key-file"))
 	viper.BindPFlag("server.http.client_cert_file", serverCmd.Flags().Lookup("http-client-cert-file"))
