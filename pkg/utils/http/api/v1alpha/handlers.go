@@ -1,4 +1,4 @@
-//go:generate gen_swagger_v1alpha.sh
+//go:generate replacer
 package v1alpha
 
 import (
