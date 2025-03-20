@@ -37,6 +37,7 @@ version: ## Create new version. Bump, tag, commit, create tag
 
 go-build-deps: ## Install go deps to build the project
 	@go install github.com/swaggo/swag/cmd/swag@latest
+	@go install github.com/weastur/replacer/cmd/replacer@v0.0.0-dev2
 
 %:
 	@:
