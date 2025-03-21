@@ -23,6 +23,7 @@ type Consensus interface {
 	Leave(serverID string) error
 	GetInfo(verbose bool) (*raft.Info, error)
 	Get(key string) (string, bool)
+	Set(key, value string) error
 }
 
 type Validator interface {
@@ -102,6 +103,7 @@ func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger, co Co
 	router.Post("/raft/leave", raftLeaveHandler)
 	router.Get("/raft/info", raftInfoHandler)
 	router.Get("/raft/kv/:key", raftKVGetHandler)
+	router.Post("/raft/kv", raftKVSetHandler)
 }
 
 func (api *APIV1Alpha) ErrorHandler(c *fiber.Ctx, err error) error {

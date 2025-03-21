@@ -44,3 +44,10 @@ type KVGetResponse struct {
 	Value string `example:"value" json:"value"`
 	Exist bool   `example:"true"  json:"exist"`
 } // @Name KVGetResponse
+
+// KV set request
+// @Description Request to set the key-value pair
+type KVSetRequest struct {
+	Key   string `example:"key"   json:"key"`
+	Value string `example:"value" json:"value"`
+} // @Name KVSetRequest

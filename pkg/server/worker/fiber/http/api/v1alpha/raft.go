@@ -119,3 +119,32 @@ func raftKVGetHandler(c *fiber.Ctx) error {
 
 	return v1alphaUtils.WrapResponse(c, v1alphaUtils.StatusSuccess, &KVGetResponse{Key: key, Value: value, Exist: ok}, nil)
 }
+
+// Set key/value in kv store
+//
+// @Summary      Set value for key
+// @Description  Set value in kv store for the key
+// @Tags         raft
+// @Param        request body KVSetRequest true "KV set request"
+// @Success      200 {object} Response "Response with error details or success code"
+// @Router       /raft/kv [post]
+// @Security     ApiKeyAuth
+// @Header       all {string} X-Request-ID "UUID of the request"
+// @Header       all {string} X-API-Version "API version, e.g. v1alpha"
+// @Header       all {int} X-Ratelimit-Limit "Rate limit value"
+// @Header       all {int} X-Ratelimit-Remaining "Rate limit remaining"
+// @Header       all {int} X-Ratelimit-Reset "Rate limit reset interval in seconds"
+func raftKVSetHandler(c *fiber.Ctx) error {
+	uCtx := unpackCtx(c)
+
+	setReq := new(KVSetRequest)
+	if err := parseAndValidate(c, setReq); err != nil {
+		return err
+	}
+
+	if err := uCtx.co.Set(setReq.Key, setReq.Value); err != nil {
+		return err
+	}
+
+	return v1alphaUtils.WrapResponse(c, v1alphaUtils.StatusSuccess, nil, nil)
+}

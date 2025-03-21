@@ -134,6 +134,61 @@
                 }
             }
         },
+        "/raft/kv": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Set value in kv store for the key",
+                "tags": [
+                    "raft"
+                ],
+                "summary": "Set value for key",
+                "parameters": [
+                    {
+                        "description": "KV set request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/KVSetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Response with error details or success code",
+                        "schema": {
+                            "$ref": "#/definitions/Response"
+                        },
+                        "headers": {
+                            "X-API-Version": {
+                                "type": "string",
+                                "description": "API version, e.g. v1alpha"
+                            },
+                            "X-Ratelimit-Limit": {
+                                "type": "int",
+                                "description": "Rate limit value"
+                            },
+                            "X-Ratelimit-Remaining": {
+                                "type": "int",
+                                "description": "Rate limit remaining"
+                            },
+                            "X-Ratelimit-Reset": {
+                                "type": "int",
+                                "description": "Rate limit reset interval in seconds"
+                            },
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "UUID of the request"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/raft/kv/{key}": {
             "get": {
                 "security": [
@@ -296,13 +351,27 @@
     },
     "definitions": {
         "KVGetResponse": {
-            "description": "Response to the get request. Also contains exists flag to distinguish between empty and non-existent string value",
+            "description": "Response to the get request. Also contains 'exist' flag to distinguish between empty and non-existent string value",
             "type": "object",
             "properties": {
                 "exist": {
                     "type": "boolean",
                     "example": true
                 },
+                "key": {
+                    "type": "string",
+                    "example": "key"
+                },
+                "value": {
+                    "type": "string",
+                    "example": "value"
+                }
+            }
+        },
+        "KVSetRequest": {
+            "description": "Request to set the key-value pair",
+            "type": "object",
+            "properties": {
                 "key": {
                     "type": "string",
                     "example": "key"
