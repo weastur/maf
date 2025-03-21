@@ -22,6 +22,7 @@ type Consensus interface {
 	Join(serverID, addr string) error
 	Leave(serverID string) error
 	GetInfo(verbose bool) (*raft.Info, error)
+	Get(key string) (string, bool)
 }
 
 type Validator interface {
@@ -97,9 +98,10 @@ func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger, co Co
 
 	router.Get("/version", v1alphaUtils.VersionHandler)
 
-	router.Post("/raft/join", joinHandler)
-	router.Post("/raft/leave", leaveHandler)
-	router.Get("/raft/info", infoHandler)
+	router.Post("/raft/join", raftJoinHandler)
+	router.Post("/raft/leave", raftLeaveHandler)
+	router.Get("/raft/info", raftInfoHandler)
+	router.Get("/raft/kv/:key", raftKVGetHandler)
 }
 
 func (api *APIV1Alpha) ErrorHandler(c *fiber.Ctx, err error) error {

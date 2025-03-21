@@ -134,6 +134,59 @@
                 }
             }
         },
+        "/raft/kv/{key}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Return value for the key from kv store",
+                "tags": [
+                    "raft"
+                ],
+                "summary": "Return value of the key",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Key to receive value",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "KV get response",
+                        "schema": {
+                            "$ref": "#/definitions/KVGetResponse"
+                        },
+                        "headers": {
+                            "X-API-Version": {
+                                "type": "string",
+                                "description": "API version, e.g. v1alpha"
+                            },
+                            "X-Ratelimit-Limit": {
+                                "type": "int",
+                                "description": "Rate limit value"
+                            },
+                            "X-Ratelimit-Remaining": {
+                                "type": "int",
+                                "description": "Rate limit remaining"
+                            },
+                            "X-Ratelimit-Reset": {
+                                "type": "int",
+                                "description": "Rate limit reset interval in seconds"
+                            },
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "UUID of the request"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/raft/leave": {
             "post": {
                 "security": [
@@ -242,6 +295,24 @@
         }
     },
     "definitions": {
+        "KVGetResponse": {
+            "description": "Response to the get request. Also contains exists flag to distinguish between empty and non-existent string value",
+            "type": "object",
+            "properties": {
+                "exist": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "key": {
+                    "type": "string",
+                    "example": "key"
+                },
+                "value": {
+                    "type": "string",
+                    "example": "value"
+                }
+            }
+        },
         "RaftInfoResponse": {
             "description": "Satatus of the raft cluster with servers metadata",
             "type": "object",

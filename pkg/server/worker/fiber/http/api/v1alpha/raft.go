@@ -21,7 +21,7 @@ import (
 // @Header       all {int} X-Ratelimit-Limit "Rate limit value"
 // @Header       all {int} X-Ratelimit-Remaining "Rate limit remaining"
 // @Header       all {int} X-Ratelimit-Reset "Rate limit reset interval in seconds"
-func joinHandler(c *fiber.Ctx) error {
+func raftJoinHandler(c *fiber.Ctx) error {
 	uCtx := unpackCtx(c)
 
 	joinReq := new(JoinRequest)
@@ -51,7 +51,7 @@ func joinHandler(c *fiber.Ctx) error {
 // @Header       all {int} X-Ratelimit-Limit "Rate limit value"
 // @Header       all {int} X-Ratelimit-Remaining "Rate limit remaining"
 // @Header       all {int} X-Ratelimit-Reset "Rate limit reset interval in seconds"
-func leaveHandler(c *fiber.Ctx) error {
+func raftLeaveHandler(c *fiber.Ctx) error {
 	uCtx := unpackCtx(c)
 
 	leaveReq := new(LeaveRequest)
@@ -80,7 +80,7 @@ func leaveHandler(c *fiber.Ctx) error {
 // @Header       all {int} X-Ratelimit-Limit "Rate limit value"
 // @Header       all {int} X-Ratelimit-Remaining "Rate limit remaining"
 // @Header       all {int} X-Ratelimit-Reset "Rate limit reset interval in seconds"
-func infoHandler(c *fiber.Ctx) error {
+func raftInfoHandler(c *fiber.Ctx) error {
 	uCtx := unpackCtx(c)
 
 	coInfo, err := uCtx.co.GetInfo(c.QueryBool("include_stats"))
@@ -94,4 +94,28 @@ func infoHandler(c *fiber.Ctx) error {
 	}
 
 	return v1alphaUtils.WrapResponse(c, v1alphaUtils.StatusSuccess, data, nil)
+}
+
+// Get key from kv store
+//
+// @Summary      Return value of the key
+// @Description  Return value for the key from kv store
+// @Tags         raft
+// @Success      200 {object} KVGetResponse "KV get response"
+// @Router       /raft/kv/{key} [get]
+// @Param        key path string true "Key to receive value"
+// @Security     ApiKeyAuth
+// @Header       all {string} X-Request-ID "UUID of the request"
+// @Header       all {string} X-API-Version "API version, e.g. v1alpha"
+// @Header       all {int} X-Ratelimit-Limit "Rate limit value"
+// @Header       all {int} X-Ratelimit-Remaining "Rate limit remaining"
+// @Header       all {int} X-Ratelimit-Reset "Rate limit reset interval in seconds"
+func raftKVGetHandler(c *fiber.Ctx) error {
+	uCtx := unpackCtx(c)
+
+	key := c.Params("key")
+
+	value, ok := uCtx.co.Get(key)
+
+	return v1alphaUtils.WrapResponse(c, v1alphaUtils.StatusSuccess, &KVGetResponse{Key: key, Value: value, Exist: ok}, nil)
 }

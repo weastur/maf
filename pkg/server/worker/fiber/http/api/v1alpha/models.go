@@ -35,3 +35,12 @@ type InfoResponse struct {
 	// Extended stats of the raft cluster
 	Stats map[string]string `json:"stats"`
 } // @Name RaftInfoResponse
+
+// KV get response
+// @Description Response to the get request.
+// @Description Also contains 'exist' flag to distinguish between empty and non-existent string value
+type KVGetResponse struct {
+	Key   string `example:"key"   json:"key"`
+	Value string `example:"value" json:"value"`
+	Exist bool   `example:"true"  json:"exist"`
+} // @Name KVGetResponse
