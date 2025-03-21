@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/spf13/cobra"
 )
+
+var includeStats bool
 
 var raftCmd = &cobra.Command{
 	Use:   "raft",
@@ -66,11 +69,31 @@ Make sure you know what you are doing and will have enough servers to keep the q
 	},
 }
 
+var infoCmd = &cobra.Command{
+	Use:   "info",
+	Short: "Cluster info",
+	Long: `Returns the raft cluster info with current server state and stats.
+Information is from the current server, so it is exactly the like local node views everything.`,
+	Run: func(_ *cobra.Command, _ []string) {
+		client := getServerAPIClient(false)
+		data, err := client.RaftInfo(includeStats)
+		cobra.CheckErr(err)
+
+		prettyJSON, err := json.MarshalIndent(data, "", "  ")
+		cobra.CheckErr(err)
+
+		fmt.Println(string(prettyJSON))
+	},
+}
+
 func init() {
 	serverCmd.AddCommand(raftCmd)
 
 	raftCmd.AddCommand(kvCmd)
 	raftCmd.AddCommand(forgetCmd)
+	raftCmd.AddCommand(infoCmd)
+
+	infoCmd.Flags().BoolVar(&includeStats, "include-stats", false, "Include extended stats")
 
 	kvCmd.AddCommand(getCmd)
 	kvCmd.AddCommand(setCmd)

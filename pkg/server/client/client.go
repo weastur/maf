@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"strconv"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -25,6 +26,7 @@ const (
 	raftJoinPath                 = "/raft/join"
 	raftKVPath                   = "/raft/kv"
 	raftForgetPath               = "/raft/forget"
+	raftInfoPath                 = "/raft/info"
 )
 
 type Client struct {
@@ -268,4 +270,25 @@ func (c *Client) RaftKVDelete(key string) error {
 	}
 
 	return nil
+}
+
+func (c *Client) RaftInfo(includeStats bool) (any, error) {
+	res, err := c.rclient.R().
+		SetQueryParam("include_stats", strconv.FormatBool(includeStats)).
+		SetResult(&response{}).
+		Get(c.makeURL(raftInfoPath))
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform raft info request")
+
+		return nil, fmt.Errorf("failed to perform raft info request: %w", err)
+	}
+
+	data, err := c.parseResponse(res)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform raft info request")
+
+		return nil, err
+	}
+
+	return data, nil
 }
