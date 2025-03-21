@@ -12,7 +12,7 @@ import (
 // @Summary      Join server to cluster
 // @Description  Join the server to the cluster. The server becomes voter in case of success
 // @Tags         raft
-// @Param        request body JoinRequest true "Join request"
+// @Param        request body RaftJoinRequest true "Join request"
 // @Success      200 {object} Response "Response with error details or success code"
 // @Router       /raft/join [post]
 // @Security     ApiKeyAuth
@@ -24,7 +24,7 @@ import (
 func raftJoinHandler(c *fiber.Ctx) error {
 	uCtx := unpackCtx(c)
 
-	joinReq := new(JoinRequest)
+	joinReq := new(RaftJoinRequest)
 	if err := parseAndValidate(c, joinReq); err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func raftJoinHandler(c *fiber.Ctx) error {
 // @Description  Leave the cluster. The server becomes non-voter in case of success
 // @Description  and will not participate in the consensus
 // @Tags         raft
-// @Param        request body LeaveRequest true "Leave request"
+// @Param        request body RaftLeaveRequest true "Leave request"
 // @Success      200 {object} Response "Response with error details or success code"
 // @Router       /raft/leave [post]
 // @Security     ApiKeyAuth
@@ -54,7 +54,7 @@ func raftJoinHandler(c *fiber.Ctx) error {
 func raftLeaveHandler(c *fiber.Ctx) error {
 	uCtx := unpackCtx(c)
 
-	leaveReq := new(LeaveRequest)
+	leaveReq := new(RaftLeaveRequest)
 	if err := parseAndValidate(c, leaveReq); err != nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func raftLeaveHandler(c *fiber.Ctx) error {
 // @Summary      Return raft info
 // @Description  Return the raft cluster info with current server state and stats
 // @Tags         raft
-// @Success      200 {object} InfoResponse "Raft cluster info"
+// @Success      200 {object} Response{data=RaftInfoResponse} "Raft cluster info"
 // @Router       /raft/info [get]
 // @Param        include_stats query bool false "Include extended stats"
 // @Security     ApiKeyAuth
@@ -88,7 +88,7 @@ func raftInfoHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	data := &InfoResponse{}
+	data := &RaftInfoResponse{}
 	if err := copier.Copy(data, coInfo); err != nil {
 		return err
 	}

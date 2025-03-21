@@ -51,7 +51,19 @@
                     "200": {
                         "description": "Raft cluster info",
                         "schema": {
-                            "$ref": "#/definitions/RaftInfoResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/RaftInfoResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         },
                         "headers": {
                             "X-API-Version": {
