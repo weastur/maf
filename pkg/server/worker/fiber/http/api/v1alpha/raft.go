@@ -101,7 +101,7 @@ func raftInfoHandler(c *fiber.Ctx) error {
 // @Summary      Return value of the key
 // @Description  Return value for the key from kv store
 // @Tags         raft
-// @Success      200 {object} KVGetResponse "KV get response"
+// @Success      200 {object} Response{data=KVGetResponse} "KV get response"
 // @Router       /raft/kv/{key} [get]
 // @Param        key path string true "Key to receive value"
 // @Security     ApiKeyAuth
@@ -143,6 +143,32 @@ func raftKVSetHandler(c *fiber.Ctx) error {
 	}
 
 	if err := uCtx.co.Set(setReq.Key, setReq.Value); err != nil {
+		return err
+	}
+
+	return v1alphaUtils.WrapResponse(c, v1alphaUtils.StatusSuccess, nil, nil)
+}
+
+// Delete value from kv store
+//
+// @Summary      Delete value for key
+// @Description  Delete value in kv store for the key
+// @Tags         raft
+// @Success      200 {object} Response "Response with error details or success code"
+// @Router       /raft/kv/{key} [delete]
+// @Param        key path string true "Key to delete value for"
+// @Security     ApiKeyAuth
+// @Header       all {string} X-Request-ID "UUID of the request"
+// @Header       all {string} X-API-Version "API version, e.g. v1alpha"
+// @Header       all {int} X-Ratelimit-Limit "Rate limit value"
+// @Header       all {int} X-Ratelimit-Remaining "Rate limit remaining"
+// @Header       all {int} X-Ratelimit-Reset "Rate limit reset interval in seconds"
+func raftKVDeleteHandler(c *fiber.Ctx) error {
+	uCtx := unpackCtx(c)
+
+	key := c.Params("key")
+
+	if err := uCtx.co.Delete(key); err != nil {
 		return err
 	}
 

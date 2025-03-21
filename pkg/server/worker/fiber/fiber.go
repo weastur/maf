@@ -58,7 +58,7 @@ func New(config *Config, co Consensus) *Fiber {
 		fiber.Config{
 			AppName:               "maf-server " + utils.AppVersion(),
 			ServerHeader:          "maf-server/" + utils.AppVersion(),
-			RequestMethods:        []string{fiber.MethodGet, fiber.MethodHead, fiber.MethodPost},
+			RequestMethods:        []string{fiber.MethodGet, fiber.MethodHead, fiber.MethodPost, fiber.MethodDelete},
 			ReadTimeout:           f.config.ReadTimeout,
 			WriteTimeout:          f.config.WriteTimeout,
 			IdleTimeout:           f.config.IdleTimeout,

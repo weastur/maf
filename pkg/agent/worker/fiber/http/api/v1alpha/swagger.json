@@ -45,7 +45,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "Data": {
+                                        "data": {
                                             "$ref": "#/definitions/VersionResponse"
                                         }
                                     }
@@ -86,10 +86,7 @@
             "properties": {
                 "data": {
                     "description": "Any structured data or null",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "object"
-                    }
+                    "type": "object"
                 },
                 "error": {
                     "description": "Error message. If status is not success, this field must be filled by a string with error message",

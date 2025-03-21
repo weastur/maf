@@ -13,7 +13,7 @@ type Response struct {
 	// * warning - something went wrong, but it's not critical
 	Status Status `enums:"success,error,warning" example:"success" json:"status"`
 	// Any structured data or null
-	Data any `json:"data" swaggertype:"object,object"`
+	Data any `json:"data" swaggertype:"object"`
 	// Error message. If status is not success, this field must be filled by a string with error message
 	Error error `example:"null" json:"error" swaggertype:"string"`
 } // @Name Response
