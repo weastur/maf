@@ -1,6 +1,8 @@
 package v1alpha
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type Status int
 
@@ -12,10 +14,10 @@ type Response struct {
 	// * error   - something went wrong
 	// * warning - something went wrong, but it's not critical
 	Status Status `enums:"success,error,warning" example:"success" json:"status"`
-	// Any structured data or null
+	// Any structured data
 	Data any `json:"data" swaggertype:"object"`
 	// Error message. If status is not success, this field must be filled by a string with error message
-	Error error `example:"null" json:"error" swaggertype:"string"`
+	Error error `example:"" json:"error" swaggertype:"string"`
 } // @Name Response
 
 // Version
@@ -47,18 +49,28 @@ func (rs Status) MarshalJSON() ([]byte, error) {
 func (r Response) MarshalJSON() ([]byte, error) {
 	type Alias Response
 
-	var errMsg *string
+	var data any
+
+	errMsg := ""
+
+	if r.Data != nil {
+		data = r.Data
+	} else {
+		data = struct{}{}
+	}
 
 	if r.Error != nil {
 		msg := r.Error.Error()
-		errMsg = &msg
+		errMsg = msg
 	}
 
 	return json.Marshal(&struct {
-		Error *string `json:"error"`
+		Error string `json:"error"`
+		Data  any    `json:"data"`
 		*Alias
 	}{
 		Error: errMsg,
+		Data:  data,
 		Alias: (*Alias)(&r),
 	})
 }

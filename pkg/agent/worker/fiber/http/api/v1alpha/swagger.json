@@ -85,13 +85,13 @@
             "type": "object",
             "properties": {
                 "data": {
-                    "description": "Any structured data or null",
+                    "description": "Any structured data",
                     "type": "object"
                 },
                 "error": {
                     "description": "Error message. If status is not success, this field must be filled by a string with error message",
                     "type": "string",
-                    "example": "null"
+                    "example": ""
                 },
                 "status": {
                     "description": "Response status\n* success - everything is OK\n* error   - something went wrong\n* warning - something went wrong, but it's not critical",
