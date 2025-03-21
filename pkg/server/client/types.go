@@ -21,6 +21,11 @@ type raftKVGetRequest struct {
 	Key string `json:"key"`
 }
 
+type raftKVSetRequest struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type raftKVGetResponse struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`

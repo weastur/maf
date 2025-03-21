@@ -204,3 +204,26 @@ func (c *Client) RaftKVGet(key string) (string, bool, error) {
 
 	return kvData.Value, kvData.Exist, nil
 }
+
+func (c *Client) RaftKVSet(key, value string) error {
+	res, err := c.rclient.R().
+		SetBody(&raftKVSetRequest{
+			Key:   key,
+			Value: value,
+		}).
+		SetResult(&response{}).
+		Post(c.makeURL(raftKVPath))
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform KV set request")
+
+		return fmt.Errorf("failed to perform KV set request: %w", err)
+	}
+
+	if _, err := c.parseResponse(res); err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform KV set request")
+
+		return err
+	}
+
+	return nil
+}

@@ -16,6 +16,7 @@ const (
 
 type ServerAPIClient interface {
 	RaftKVGet(key string) (string, bool, error)
+	RaftKVSet(key, value string) error
 }
 
 func getServerAPIClient() ServerAPIClient {
