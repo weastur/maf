@@ -60,11 +60,23 @@ func readLeaderAddr() (string, error) {
 	return addr, nil
 }
 
-func getServerAPIClient() ServerAPIClient {
-	tlsConfig := clientTLSConfig()
-	addr, err := readLeaderAddr()
+func getServerAPIClient(leader bool) ServerAPIClient {
+	var addr string
 
-	cobra.CheckErr(err)
+	var err error
+
+	if leader {
+		addr, err = readLeaderAddr()
+		cobra.CheckErr(err)
+	} else {
+		var cfg Config = config.Get()
+
+		viper := cfg.Viper()
+
+		addr = viper.GetString("server.http.advertise")
+	}
+
+	tlsConfig := clientTLSConfig()
 
 	return serverAPIClient.NewWithAutoTLS(addr, tlsConfig, false)
 }

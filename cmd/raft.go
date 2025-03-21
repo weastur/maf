@@ -21,10 +21,10 @@ var kvCmd = &cobra.Command{
 
 var getCmd = &cobra.Command{
 	Use:   "get [key]",
-	Short: "Get value for key",
+	Short: "Get value for key (from local in-memory store)",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := getServerAPIClient()
+		client := getServerAPIClient(false)
 		value, ok, err := client.RaftKVGet(args[0])
 		cobra.CheckErr(err)
 		if !ok {
@@ -39,7 +39,7 @@ var setCmd = &cobra.Command{
 	Short: "Set value for key",
 	Args:  cobra.ExactArgs(2), //nolint:mnd
 	Run: func(_ *cobra.Command, args []string) {
-		client := getServerAPIClient()
+		client := getServerAPIClient(true)
 		cobra.CheckErr(client.RaftKVSet(args[0], args[1]))
 	},
 }
@@ -49,7 +49,7 @@ var delCmd = &cobra.Command{
 	Short: "Delete value by key",
 	Args:  cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := getServerAPIClient()
+		client := getServerAPIClient(true)
 		cobra.CheckErr(client.RaftKVDelete(args[0]))
 	},
 }
@@ -61,7 +61,7 @@ var forgetCmd = &cobra.Command{
 Make sure you know what you are doing and will have enough servers to keep the quorum.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		client := getServerAPIClient()
+		client := getServerAPIClient(true)
 		cobra.CheckErr(client.RaftForget(args[0]))
 	},
 }
