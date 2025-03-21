@@ -17,6 +17,10 @@ type raftJoinRequest struct {
 	Addr     string `json:"addr"`
 }
 
+type raftForgetRequest struct {
+	ServerID string `json:"serverId"`
+}
+
 type raftKVGetRequest struct {
 	Key string `json:"key"`
 }

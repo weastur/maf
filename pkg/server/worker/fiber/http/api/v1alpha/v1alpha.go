@@ -20,7 +20,7 @@ const (
 type Consensus interface {
 	IsLeader() bool
 	Join(serverID, addr string) error
-	Leave(serverID string) error
+	Forget(serverID string) error
 	GetInfo(verbose bool) (*raft.Info, error)
 	Get(key string) (string, bool)
 	Set(key, value string) error
@@ -101,7 +101,7 @@ func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger, co Co
 	router.Get("/version", v1alphaUtils.VersionHandler)
 
 	router.Post("/raft/join", raftJoinHandler)
-	router.Post("/raft/leave", raftLeaveHandler)
+	router.Post("/raft/forget", raftForgetHandler)
 	router.Get("/raft/info", raftInfoHandler)
 	router.Get("/raft/kv/:key", raftKVGetHandler)
 	router.Post("/raft/kv", raftKVSetHandler)

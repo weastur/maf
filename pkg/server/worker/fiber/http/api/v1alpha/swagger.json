@@ -27,6 +27,61 @@
     "host": "127.0.0.1:7080",
     "basePath": "/api/v1alpha",
     "paths": {
+        "/raft/forget": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Forget the server. The server becomes non-voter and forgotten by the cluster in case of success\nand will not participate in the consensus",
+                "tags": [
+                    "raft"
+                ],
+                "summary": "Forget the server",
+                "parameters": [
+                    {
+                        "description": "Forget request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RaftForgetRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Response with error details or success code",
+                        "schema": {
+                            "$ref": "#/definitions/Response"
+                        },
+                        "headers": {
+                            "X-API-Version": {
+                                "type": "string",
+                                "description": "API version, e.g. v1alpha"
+                            },
+                            "X-Ratelimit-Limit": {
+                                "type": "int",
+                                "description": "Rate limit value"
+                            },
+                            "X-Ratelimit-Remaining": {
+                                "type": "int",
+                                "description": "Rate limit remaining"
+                            },
+                            "X-Ratelimit-Reset": {
+                                "type": "int",
+                                "description": "Rate limit reset interval in seconds"
+                            },
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "UUID of the request"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/raft/info": {
             "get": {
                 "security": [
@@ -317,61 +372,6 @@
                 }
             }
         },
-        "/raft/leave": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Leave the cluster. The server becomes non-voter in case of success\nand will not participate in the consensus",
-                "tags": [
-                    "raft"
-                ],
-                "summary": "Leave the cluster",
-                "parameters": [
-                    {
-                        "description": "Leave request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/RaftLeaveRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Response with error details or success code",
-                        "schema": {
-                            "$ref": "#/definitions/Response"
-                        },
-                        "headers": {
-                            "X-API-Version": {
-                                "type": "string",
-                                "description": "API version, e.g. v1alpha"
-                            },
-                            "X-Ratelimit-Limit": {
-                                "type": "int",
-                                "description": "Rate limit value"
-                            },
-                            "X-Ratelimit-Remaining": {
-                                "type": "int",
-                                "description": "Rate limit remaining"
-                            },
-                            "X-Ratelimit-Reset": {
-                                "type": "int",
-                                "description": "Rate limit reset interval in seconds"
-                            },
-                            "X-Request-ID": {
-                                "type": "string",
-                                "description": "UUID of the request"
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/version": {
             "get": {
                 "description": "Return the version of running app. Not the API version, but the application",
@@ -457,6 +457,19 @@
                 }
             }
         },
+        "RaftForgetRequest": {
+            "description": "Raft forget request with server metadata",
+            "type": "object",
+            "required": [
+                "serverId"
+            ],
+            "properties": {
+                "serverId": {
+                    "type": "string",
+                    "example": "maf-2"
+                }
+            }
+        },
         "RaftInfoResponse": {
             "description": "Satatus of the raft cluster with servers metadata",
             "type": "object",
@@ -509,19 +522,6 @@
                     "type": "string",
                     "example": "10.1.2.3:7081"
                 },
-                "serverId": {
-                    "type": "string",
-                    "example": "maf-2"
-                }
-            }
-        },
-        "RaftLeaveRequest": {
-            "description": "Raft leave request with server metadata",
-            "type": "object",
-            "required": [
-                "serverId"
-            ],
-            "properties": {
                 "serverId": {
                     "type": "string",
                     "example": "maf-2"

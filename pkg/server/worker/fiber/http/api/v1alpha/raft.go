@@ -36,30 +36,30 @@ func raftJoinHandler(c *fiber.Ctx) error {
 	return v1alphaUtils.WrapResponse(c, v1alphaUtils.StatusSuccess, nil, nil)
 }
 
-// Leave the cluster
+// Forget the server
 //
-// @Summary      Leave the cluster
-// @Description  Leave the cluster. The server becomes non-voter in case of success
+// @Summary      Forget the server
+// @Description  Forget the server. The server becomes non-voter and forgotten by the cluster in case of success
 // @Description  and will not participate in the consensus
 // @Tags         raft
-// @Param        request body RaftLeaveRequest true "Leave request"
+// @Param        request body RaftForgetRequest true "Forget request"
 // @Success      200 {object} Response "Response with error details or success code"
-// @Router       /raft/leave [post]
+// @Router       /raft/forget [post]
 // @Security     ApiKeyAuth
 // @Header       all {string} X-Request-ID "UUID of the request"
 // @Header       all {string} X-API-Version "API version, e.g. v1alpha"
 // @Header       all {int} X-Ratelimit-Limit "Rate limit value"
 // @Header       all {int} X-Ratelimit-Remaining "Rate limit remaining"
 // @Header       all {int} X-Ratelimit-Reset "Rate limit reset interval in seconds"
-func raftLeaveHandler(c *fiber.Ctx) error {
+func raftForgetHandler(c *fiber.Ctx) error {
 	uCtx := unpackCtx(c)
 
-	leaveReq := new(RaftLeaveRequest)
-	if err := parseAndValidate(c, leaveReq); err != nil {
+	forgetReq := new(RaftForgetRequest)
+	if err := parseAndValidate(c, forgetReq); err != nil {
 		return err
 	}
 
-	if err := uCtx.co.Leave(leaveReq.ServerID); err != nil {
+	if err := uCtx.co.Forget(forgetReq.ServerID); err != nil {
 		return err
 	}
 

@@ -24,6 +24,7 @@ type ServerAPIClient interface {
 	RaftKVGet(key string) (string, bool, error)
 	RaftKVSet(key, value string) error
 	RaftKVDelete(key string) error
+	RaftForget(serverID string) error
 }
 
 func clientTLSConfig() *serverAPIClient.TLSConfig {

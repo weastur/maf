@@ -325,8 +325,21 @@ func (r *Raft) Join(serverID, addr string) error {
 	return nil
 }
 
-func (r *Raft) Leave(serverID string) error {
-	r.logger.Trace().Msgf("Leaving %s", serverID)
+func (r *Raft) Forget(serverID string) error {
+	r.logger.Trace().Msgf("Forget %s", serverID)
+
+	if !r.IsLeader() {
+		r.logger.Warn().Msg("I'm not a leader, can't proceed with join")
+
+		return ErrNotALeader
+	}
+
+	idxFuture := r.raftInstance.RemoveServer(hraft.ServerID(serverID), 0, 0)
+	if err := idxFuture.Error(); err != nil {
+		r.logger.Err(err).Msgf("Failed to remove existing node %s", serverID)
+
+		return fmt.Errorf("failed to remove existing node %s: %w", serverID, err)
+	}
 
 	return nil
 }

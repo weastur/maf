@@ -7,11 +7,11 @@ type RaftJoinRequest struct {
 	Addr     string `example:"10.1.2.3:7081" json:"addr"     validate:"required,tcp_addr"`
 } // @Name RaftJoinRequest
 
-// Leave request
-// @Description Raft leave request with server metadata
-type RaftLeaveRequest struct {
+// Forget request
+// @Description Raft forget request with server metadata
+type RaftForgetRequest struct {
 	ServerID string `example:"maf-2" json:"serverId" validate:"required"`
-} // @Name RaftLeaveRequest
+} // @Name RaftForgetRequest
 
 // RaftServer metadata
 // @Description Metadata of the server in the raft cluster

@@ -24,6 +24,7 @@ const (
 	defaultCircuitBreakerTimeout = 10 * time.Second
 	raftJoinPath                 = "/raft/join"
 	raftKVPath                   = "/raft/kv"
+	raftForgetPath               = "/raft/forget"
 )
 
 type Client struct {
@@ -168,6 +169,28 @@ func (c *Client) RaftJoin(serverID, addr string) error {
 
 	if _, err := c.parseResponse(res); err != nil {
 		c.logger.Error().Err(err).Msg("Failed to perform join request")
+
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) RaftForget(serverID string) error {
+	res, err := c.rclient.R().
+		SetBody(&raftForgetRequest{
+			ServerID: serverID,
+		}).
+		SetResult(&response{}).
+		Post(c.makeURL(raftForgetPath))
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform forget request")
+
+		return fmt.Errorf("failed to perform forget request: %w", err)
+	}
+
+	if _, err := c.parseResponse(res); err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform forget request")
 
 		return err
 	}
