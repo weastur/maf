@@ -6,11 +6,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var raftCmd = &cobra.Command{
+	Use:   "raft",
+	Short: "Low-level Raft commands",
+	Long: `Commands to interact with the raft consensus mechanism.
+It's highly recommended to use these commands ONLY for debugging purposes.`,
+}
+
 var kvCmd = &cobra.Command{
 	Use:   "kv",
 	Short: "Key-value store commands",
-	Long: `Commands to interact with the key-value store.
-It's highly recommended to use these commands ONLY for debugging purposes.`,
+	Long:  `Commands to interact with the key-value store.`,
 }
 
 var getCmd = &cobra.Command{
@@ -48,8 +54,23 @@ var delCmd = &cobra.Command{
 	},
 }
 
+var forgetCmd = &cobra.Command{
+	Use:   "forget [serverID]",
+	Short: "Forget server",
+	Long: `Remove server from the cluster. Server will be demoted and removed.
+Make sure you know what you are doing and will have enough servers to keep the quorum.`,
+	Args: cobra.ExactArgs(1),
+	Run: func(_ *cobra.Command, args []string) {
+		client := getServerAPIClient()
+		cobra.CheckErr(client.RaftForget(args[0]))
+	},
+}
+
 func init() {
-	serverCmd.AddCommand(kvCmd)
+	serverCmd.AddCommand(raftCmd)
+
+	raftCmd.AddCommand(kvCmd)
+	raftCmd.AddCommand(forgetCmd)
 
 	kvCmd.AddCommand(getCmd)
 	kvCmd.AddCommand(setCmd)
