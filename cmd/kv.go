@@ -41,8 +41,10 @@ var setCmd = &cobra.Command{
 var delCmd = &cobra.Command{
 	Use:   "delete [key]",
 	Short: "Delete value by key",
-	Run: func(_ *cobra.Command, _ []string) {
-		fmt.Println("delete called")
+	Args:  cobra.ExactArgs(1),
+	Run: func(_ *cobra.Command, args []string) {
+		client := getServerAPIClient()
+		cobra.CheckErr(client.RaftKVDelete(args[0]))
 	},
 }
 

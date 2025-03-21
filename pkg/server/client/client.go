@@ -227,3 +227,22 @@ func (c *Client) RaftKVSet(key, value string) error {
 
 	return nil
 }
+
+func (c *Client) RaftKVDelete(key string) error {
+	res, err := c.rclient.R().
+		SetResult(&response{}).
+		Delete(c.makeURL(raftKVPath, key))
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform KV delete request")
+
+		return fmt.Errorf("failed to perform KV delete request: %w", err)
+	}
+
+	if _, err := c.parseResponse(res); err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform KV delete request")
+
+		return err
+	}
+
+	return nil
+}
