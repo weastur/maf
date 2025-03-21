@@ -1,7 +1,10 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/url"
+	"path"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -19,6 +22,8 @@ const (
 	defaultRetryWaitTime         = 1 * time.Second
 	defaultRetryMaxWaitTime      = 3 * time.Second
 	defaultCircuitBreakerTimeout = 10 * time.Second
+	raftJoinPath                 = "/raft/join"
+	raftKVPath                   = "/raft/kv"
 )
 
 type Client struct {
@@ -29,7 +34,7 @@ type Client struct {
 	logger    zerolog.Logger
 }
 
-func New(host string) *Client {
+func New(host string, loggingEnabled bool) *Client {
 	client := &Client{
 		Host:      host,
 		AuthToken: apiKey,
@@ -37,6 +42,10 @@ func New(host string) *Client {
 		urlPerfix: host + "/api/v1alpha",
 		logger:    log.With().Str(logging.ComponentCtxKey, "server-client").Logger(),
 	}
+	if !loggingEnabled {
+		client.logger = client.logger.Level(zerolog.Disabled)
+	}
+
 	cb := resty.NewCircuitBreaker().SetTimeout(defaultCircuitBreakerTimeout)
 
 	client.rclient.SetHeaderAuthorizationKey(authHeader)
@@ -64,16 +73,16 @@ func New(host string) *Client {
 	return client
 }
 
-func NewWithTLS(host, serverCertFile string) *Client {
-	client := New(host)
+func NewWithTLS(host, serverCertFile string, loggingEnabled bool) *Client {
+	client := New(host, loggingEnabled)
 
 	client.rclient.SetRootCertificates(serverCertFile)
 
 	return client
 }
 
-func NewWithMutualTLS(host, certFile, keyFile, serverCertFile string) *Client {
-	client := New(host)
+func NewWithMutualTLS(host, certFile, keyFile, serverCertFile string, loggingEnabled bool) *Client {
+	client := New(host, loggingEnabled)
 
 	client.rclient.SetRootCertificates(serverCertFile)
 	client.rclient.SetCertificateFromFile(certFile, keyFile)
@@ -81,14 +90,14 @@ func NewWithMutualTLS(host, certFile, keyFile, serverCertFile string) *Client {
 	return client
 }
 
-func NewWithAutoTLS(host string, config *TLSConfig) *Client {
+func NewWithAutoTLS(host string, config *TLSConfig, loggingEnabled bool) *Client {
 	if config == nil || (config.CertFile == "" && config.KeyFile == "" && config.ServerCertFile == "") {
-		return New(host)
+		return New(host, loggingEnabled)
 	} else if config.CertFile == "" && config.KeyFile == "" {
-		return NewWithTLS(host, config.ServerCertFile)
+		return NewWithTLS(host, config.ServerCertFile, loggingEnabled)
 	}
 
-	return NewWithMutualTLS(host, config.CertFile, config.KeyFile, config.ServerCertFile)
+	return NewWithMutualTLS(host, config.CertFile, config.KeyFile, config.ServerCertFile, loggingEnabled)
 }
 
 func (c *Client) Close() {
@@ -116,14 +125,41 @@ func (c *Client) parseResponse(res *resty.Response) (any, error) {
 	return data.Data, nil
 }
 
-func (c *Client) Join(serverID, addr string) error {
+func (c *Client) parseRaftKVGetResponse(data any) (*raftKVGetResponse, error) {
+	dataBytes, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	var raftResp raftKVGetResponse
+
+	err = json.Unmarshal(dataBytes, &raftResp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &raftResp, nil
+}
+
+func (c *Client) makeURL(elem ...string) string {
+	baseURL, err := url.Parse(c.urlPerfix)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to parse base URL. Can't continue")
+	}
+
+	baseURL.Path = path.Join(baseURL.Path, path.Join(elem...))
+
+	return baseURL.String()
+}
+
+func (c *Client) RaftJoin(serverID, addr string) error {
 	res, err := c.rclient.R().
-		SetBody(&joinRequest{
+		SetBody(&raftJoinRequest{
 			ServerID: serverID,
 			Addr:     addr,
 		}).
 		SetResult(&response{}).
-		Post(c.urlPerfix + "/raft/join")
+		Post(c.makeURL(raftJoinPath))
 	if err != nil {
 		c.logger.Error().Err(err).Msg("Failed to perform join request")
 
@@ -137,4 +173,34 @@ func (c *Client) Join(serverID, addr string) error {
 	}
 
 	return nil
+}
+
+func (c *Client) RaftKVGet(key string) (string, bool, error) {
+	res, err := c.rclient.R().
+		SetBody(&raftKVGetRequest{
+			Key: key,
+		}).
+		SetResult(&response{}).
+		Get(c.makeURL(raftKVPath, key))
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform KV get request")
+
+		return "", false, fmt.Errorf("failed to perform KV get request: %w", err)
+	}
+
+	wrappedRes, err := c.parseResponse(res)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Failed to perform KV get request")
+
+		return "", false, err
+	}
+
+	kvData, err := c.parseRaftKVGetResponse(wrappedRes)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Failed to parse KV get response")
+
+		return "", false, ErrUnknownResponseFormat
+	}
+
+	return kvData.Value, kvData.Exist, nil
 }

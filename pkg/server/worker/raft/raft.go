@@ -141,8 +141,8 @@ func (r *Raft) retryJoin() {
 				continue
 			}
 
-			api := apiClient.NewWithAutoTLS(peer, r.config.ServerAPITLSConfig)
-			if err := api.Join(r.config.NodeID, r.config.Addr); err != nil {
+			api := apiClient.NewWithAutoTLS(peer, r.config.ServerAPITLSConfig, true)
+			if err := api.RaftJoin(r.config.NodeID, r.config.Addr); err != nil {
 				r.logger.Warn().Err(err).Msgf("Failed to join peer %s", peer)
 				api.Close()
 			} else {

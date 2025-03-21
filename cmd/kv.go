@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 )
+
+var errRequiredAtLeastOneArg = errors.New("requires at least one arg")
 
 var kvCmd = &cobra.Command{
 	Use:   "kv",
@@ -16,8 +19,21 @@ It's highly recommended to use these commands ONLY for debugging purposes.`,
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get value for key",
-	Run: func(_ *cobra.Command, _ []string) {
-		fmt.Println("get called")
+	Args: func(_ *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return errRequiredAtLeastOneArg
+		}
+
+		return nil
+	},
+	Run: func(_ *cobra.Command, args []string) {
+		client := getServerAPIClient()
+		value, ok, err := client.RaftKVGet(args[0])
+		cobra.CheckErr(err)
+		if !ok {
+			return
+		}
+		fmt.Println(value)
 	},
 }
 
@@ -38,7 +54,7 @@ var delCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(kvCmd)
+	serverCmd.AddCommand(kvCmd)
 
 	kvCmd.AddCommand(getCmd)
 	kvCmd.AddCommand(setCmd)

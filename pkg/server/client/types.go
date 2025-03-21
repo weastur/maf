@@ -12,9 +12,19 @@ type response struct {
 	Error  string `json:"error,omitempty"`
 }
 
-type joinRequest struct {
+type raftJoinRequest struct {
 	ServerID string `json:"serverId"`
 	Addr     string `json:"addr"`
+}
+
+type raftKVGetRequest struct {
+	Key string `json:"key"`
+}
+
+type raftKVGetResponse struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+	Exist bool   `json:"exist"`
 }
 
 type TLSConfig struct {
