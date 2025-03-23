@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/weastur/maf/pkg/utils"
 	"github.com/weastur/maf/pkg/utils/logging"
+	restyzerolog "github.com/weastur/resty-zerolog"
 	"resty.dev/v3"
 )
 
@@ -60,7 +61,7 @@ func New(host string, loggingEnabled bool) *Client {
 	client.rclient.SetRetryWaitTime(defaultRetryWaitTime)
 	client.rclient.SetRetryMaxWaitTime(defaultRetryMaxWaitTime)
 	client.rclient.SetCircuitBreaker(cb)
-	client.rclient.SetLogger(NewRestyLogger(client.logger))
+	client.rclient.SetLogger(restyzerolog.New(client.logger))
 	client.rclient.AddContentDecompresser("br", decompressBrotli)
 
 	if e := client.logger.Debug(); e.Enabled() {
