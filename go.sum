@@ -311,8 +311,8 @@ github.com/valyala/histogram v1.2.0 h1:wyYGAZZt3CpwUiIb9AU/Zbllg1llXyrtApRS815OL
 github.com/valyala/histogram v1.2.0/go.mod h1:Hb4kBwb4UxsaNbbbh+RRz8ZR6pdodR57tzWUS3BUzXY=
 github.com/vrecan/death/v3 v3.0.3 h1:BxwLAe5f3/zyRKlJIe2v5Ca6YEfEHfTbg76WvaEAO5I=
 github.com/vrecan/death/v3 v3.0.3/go.mod h1:pIjPSMpSoB8B87r4Q+3vXC6lIf1d/fFQgfwZQUiTqec=
-github.com/weastur/resty-zerolog v0.0.0-dev1 h1:ilUpKOS0OLhhjyKTJyNC8/yRPE27FwBJFtxwRd4SiAU=
-github.com/weastur/resty-zerolog v0.0.0-dev1/go.mod h1:8zSrE7w05Hs0ll6U3qIbfGiRbmTpFHdAFajdcq92EXw=
+github.com/weastur/resty-zerolog v1.0.0 h1:MSEb2jYXGKahhXXH/IL3Dw7iLU2IcjxKX3kMmNunLA0=
+github.com/weastur/resty-zerolog v1.0.0/go.mod h1:8zSrE7w05Hs0ll6U3qIbfGiRbmTpFHdAFajdcq92EXw=
 github.com/xdg-go/pbkdf2 v1.0.0/go.mod h1:jrpuAogTd400dnrH08LKmI/xc1MbPOebTwRqcT5RDeI=
 github.com/xdg-go/scram v1.1.1/go.mod h1:RaEWvsqvNKKvBPvcKeFjrG2cJqOkHTiyTpzz23ni57g=
 github.com/xdg-go/scram v1.1.2/go.mod h1:RT/sEzTbU5y00aCK8UOx6R7YryM0iF1N2MOmC3kKLN4=
