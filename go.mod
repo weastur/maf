@@ -20,7 +20,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.0
 	github.com/vrecan/death/v3 v3.0.3
-	github.com/weastur/resty-zerolog v0.0.0-dev1
+	github.com/weastur/resty-zerolog v1.0.0
 	resty.dev/v3 v3.0.0-beta.2
 )
 
