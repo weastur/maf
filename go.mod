@@ -13,7 +13,7 @@ require (
 	github.com/gofiber/contrib/swagger v1.2.0
 	github.com/gofiber/fiber/v2 v2.52.6
 	github.com/hashicorp/go-hclog v1.6.3
-	github.com/hashicorp/raft v1.7.2
+	github.com/hashicorp/raft v1.7.3
 	github.com/hashicorp/raft-boltdb/v2 v2.3.1
 	github.com/jinzhu/copier v0.4.0
 	github.com/rs/zerolog v1.33.0
