@@ -32,7 +32,7 @@ const (
 
 type Client struct {
 	Host      string
-	urlPerfix string
+	urlPrefix string
 	AuthToken string
 	rclient   *resty.Client
 	logger    zerolog.Logger
@@ -43,7 +43,7 @@ func New(host string, loggingEnabled bool) *Client {
 		Host:      host,
 		AuthToken: apiKey,
 		rclient:   resty.New(),
-		urlPerfix: host + "/api/v1alpha",
+		urlPrefix: host + "/api/v1alpha",
 		logger:    log.With().Str(logging.ComponentCtxKey, "server-client").Logger(),
 	}
 	if !loggingEnabled {
@@ -146,7 +146,7 @@ func (c *Client) parseRaftKVGetResponse(data any) (*raftKVGetResponse, error) {
 }
 
 func (c *Client) makeURL(elem ...string) string {
-	baseURL, err := url.Parse(c.urlPerfix)
+	baseURL, err := url.Parse(c.urlPrefix)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to parse base URL. Can't continue")
 	}
