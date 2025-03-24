@@ -1,65 +1,84 @@
----
+version: "2"
 run:
   modules-download-mode: readonly
 linters:
-  enable-all: true
+  default: all
   disable:
+    - dupl
     - exhaustruct
     - gochecknoglobals
     - gochecknoinits
-    - ireturn
-    - testpackage
-    - tenv
-    - gci
     - godot
-    - wrapcheck
-    - reassign
     - godox
-    - dupl
+    - ireturn
+    - reassign
+    - testpackage
     - varnamelen
-
-linters-settings:
-  depguard:
-    rules:
-      main:
-        list-mode: strict
-        allow:
-          - $gostd
-          - github.com/weastur
-          - github.com/spf13/cobra
-          - github.com/spf13/viper
-          - github.com/gofiber/fiber/v2
-          - github.com/vrecan/death/v3
-          - github.com/VictoriaMetrics/metrics
-          - github.com/gofiber/contrib/swagger
-          - github.com/rs/zerolog
-          - github.com/gofiber/contrib/fiberzerolog
-          - github.com/getsentry/sentry-go
-          - github.com/gofiber/contrib/fibersentry
-          - github.com/hashicorp/raft
-          - github.com/hashicorp/raft-boltdb/v2
-          - github.com/hashicorp/go-hclog
-          - github.com/go-playground/validator/v10
-          - github.com/jinzhu/copier
-          - resty.dev/v3
-          - github.com/andybalholm/brotli
-        deny:
-          - pkg: "math/rand$"
-            desc: use math/rand/v2
-  forbidigo:
-    forbid:
-      - ^print(ln)?$
-    exclude-godoc-examples: true
-    analyze-types: true
-  paralleltest:
-    ignore-missing: true
-    ignore-missing-subtests: true
-  errcheck:
-    disable-default-exclusions: true
-    exclude-functions:
-      - (*github.com/spf13/viper.Viper).BindPFlag
-      - (*github.com/spf13/cobra.Command).MarkFlagFilename
-  wsl:
-    allow-cuddle-with-calls:
-      - Done
-      - Add
+    - wrapcheck
+  settings:
+    depguard:
+      rules:
+        main:
+          list-mode: strict
+          allow:
+            - $gostd
+            - github.com/weastur
+            - github.com/spf13/cobra
+            - github.com/spf13/viper
+            - github.com/gofiber/fiber/v2
+            - github.com/vrecan/death/v3
+            - github.com/VictoriaMetrics/metrics
+            - github.com/gofiber/contrib/swagger
+            - github.com/rs/zerolog
+            - github.com/gofiber/contrib/fiberzerolog
+            - github.com/getsentry/sentry-go
+            - github.com/gofiber/contrib/fibersentry
+            - github.com/hashicorp/raft
+            - github.com/hashicorp/raft-boltdb/v2
+            - github.com/hashicorp/go-hclog
+            - github.com/go-playground/validator/v10
+            - github.com/jinzhu/copier
+            - resty.dev/v3
+            - github.com/andybalholm/brotli
+          deny:
+            - pkg: math/rand$
+              desc: use math/rand/v2
+    errcheck:
+      disable-default-exclusions: true
+      exclude-functions:
+        - (*github.com/spf13/viper.Viper).BindPFlag
+        - (*github.com/spf13/cobra.Command).MarkFlagFilename
+    forbidigo:
+      forbid:
+        - pattern: ^print(ln)?$
+      exclude-godoc-examples: true
+      analyze-types: true
+    paralleltest:
+      ignore-missing: true
+      ignore-missing-subtests: true
+    wsl:
+      allow-cuddle-with-calls:
+        - Done
+        - Add
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
