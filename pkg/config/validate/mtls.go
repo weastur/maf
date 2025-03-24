@@ -19,14 +19,14 @@ func NewMutualTLS() *MutualTLS {
 func (v *MutualTLS) Validate(viperInstance *viper.Viper) error {
 	for _, key := range []string{"agent.http", "server.http"} {
 		if viperInstance.IsSet(key+".client_cert_file") &&
-			!(viperInstance.IsSet(key+".cert_file") && viperInstance.IsSet(key+".key_file")) {
+			(!viperInstance.IsSet(key+".cert_file") || !viperInstance.IsSet(key+".key_file")) {
 			return ErrMutualTLS
 		}
 	}
 
 	for _, key := range []string{"server.http.clients.server", "server.http.clients.agent"} {
 		if viperInstance.IsSet(key+".server_cert_file") &&
-			!(viperInstance.IsSet(key+".cert_file") && viperInstance.IsSet(key+".key_file")) {
+			(!viperInstance.IsSet(key+".cert_file") || !viperInstance.IsSet(key+".key_file")) {
 			return ErrMutualTLS
 		}
 	}
