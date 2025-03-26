@@ -31,9 +31,12 @@ dist/
 
 .maf.yaml
 .maf-*.yaml
+.maf.yml
+.maf-*.yml
 /man
 /mafdoc
 /build/completions
 /build/manpages
 /.ansible
 /devenv/local
+/.vscode/settings.json

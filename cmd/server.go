@@ -148,7 +148,7 @@ func init() { //nolint:funlen
 	viper.BindPFlag("server.http.clients.agent.cert_file", serverCmd.Flags().Lookup("http-clients-agent-cert-file"))
 	viper.BindPFlag(
 		"server.http.clients.agent.key_file",
-		serverCmd.Flags().Lookup("http-clients-aget-key-file"),
+		serverCmd.Flags().Lookup("http-clients-agent-key-file"),
 	)
 	viper.BindPFlag(
 		"server.http.clients.agent.server_cert_file",

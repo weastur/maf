@@ -33,7 +33,7 @@ It is designed to run on the same host as the MySQL instance.`,
 			ReadTimeout:     viper.GetDuration("agent.http.read_timeout"),
 			WriteTimeout:    viper.GetDuration("agent.http.write_timeout"),
 			IdleTimeout:     viper.GetDuration("agent.http.idle_timeout"),
-			ShutdownTimeout: viper.GetDuration("servagenter.http.graceful_shutdown_timeout"),
+			ShutdownTimeout: viper.GetDuration("agent.http.graceful_shutdown_timeout"),
 		}
 
 		agent := agent.Get(agentConfig, fiberConfig)
