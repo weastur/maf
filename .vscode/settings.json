@@ -30,6 +30,7 @@
     "Sapezhka",
     "sentryzerolog",
     "ServerAPITLSConfig",
+    "stretchr",
     "swaggo",
     "vrecan"
   ]
