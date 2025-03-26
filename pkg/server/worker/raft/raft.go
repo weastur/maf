@@ -16,6 +16,7 @@ import (
 	raftboltdb "github.com/hashicorp/raft-boltdb/v2"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	hclogzerolog "github.com/weastur/hclog-zerolog"
 	apiClient "github.com/weastur/maf/pkg/server/client"
 	"github.com/weastur/maf/pkg/utils/logging"
 	sentryUtils "github.com/weastur/maf/pkg/utils/sentry"
@@ -67,7 +68,7 @@ func New(config *Config) *Raft {
 		config:                    config,
 		done:                      make(chan struct{}),
 		logger:                    log.With().Str(logging.ComponentCtxKey, "raft").Logger(),
-		hlogger:                   NewHCZeroLogger(log.With().Str(logging.ComponentCtxKey, "hraft").Logger()),
+		hlogger:                   hclogzerolog.New(log.With().Str(logging.ComponentCtxKey, "hraft").Logger()),
 		leadershipChangesChannels: make([]LeadershipChangesCh, 0),
 	}
 }
