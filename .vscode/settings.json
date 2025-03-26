@@ -3,9 +3,13 @@
     "apikey",
     "APIV1Alpha",
     "boltdb",
+    "coverpkg",
+    "deleter",
     "Devmode",
+    "extldflags",
     "fibersentry",
     "fiberzerolog",
+    "gcflags",
     "getsentry",
     "gofiber",
     "healthcheck",
@@ -15,7 +19,9 @@
     "hrconfig",
     "Inmem",
     "jinzhu",
+    "netgo",
     "neturl",
+    "osusergo",
     "Pavel",
     "raftboltdb",
     "Repanic",
@@ -24,6 +30,7 @@
     "Sapezhka",
     "sentryzerolog",
     "ServerAPITLSConfig",
+    "swaggo",
     "vrecan"
   ]
 }

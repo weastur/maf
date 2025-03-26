@@ -40,6 +40,7 @@ linters:
             - github.com/jinzhu/copier
             - resty.dev/v3
             - github.com/andybalholm/brotli
+            - github.com/google/go-cmp/cmp
           deny:
             - pkg: math/rand$
               desc: use math/rand/v2
