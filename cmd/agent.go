@@ -3,10 +3,10 @@ package cmd
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/weastur/maf/pkg/agent"
-	"github.com/weastur/maf/pkg/config"
+	"github.com/weastur/maf/internal/agent"
+	"github.com/weastur/maf/internal/config"
 
-	"github.com/weastur/maf/pkg/agent/worker/fiber"
+	"github.com/weastur/maf/internal/agent/worker/fiber"
 )
 
 var agentCmd = &cobra.Command{

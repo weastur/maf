@@ -10,14 +10,14 @@ ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 build: swagger ## Build the binary
 	@mkdir -p $(BIN_DIR)
-	CGO_ENABLED=0 go build -tags netgo,static_build,osusergo,feature -ldflags "-extldflags "-static" -X github.com/weastur/maf/pkg/utils.version=v0.0.0-dev" -gcflags=all="-N -l" -o $(BIN_DIR)/$(BINARY_NAME)
+	CGO_ENABLED=0 go build -tags netgo,static_build,osusergo,feature -ldflags "-extldflags "-static" -X github.com/weastur/maf/internal/utils.version=v0.0.0-dev" -gcflags=all="-N -l" -o $(BIN_DIR)/$(BINARY_NAME)
 
 generate: ## Generate code
 	@PATH=$(ROOT_DIR)/gen:$(PATH) go generate ./...
 
 swagger: go-build-deps generate ## Generate swagger docs
-	@swag init --quiet --generalInfo v1alpha.go --dir pkg/agent/worker/fiber/http/api/v1alpha,pkg/utils/http --output pkg/agent/worker/fiber/http/api/v1alpha --outputTypes json
-	@swag init --quiet --generalInfo v1alpha.go --dir pkg/server/worker/fiber/http/api/v1alpha,pkg/utils/http --output pkg/server/worker/fiber/http/api/v1alpha --outputTypes json
+	@swag init --quiet --generalInfo v1alpha.go --dir internal/agent/worker/fiber/http/api/v1alpha,internal/utils/http --output internal/agent/worker/fiber/http/api/v1alpha --outputTypes json
+	@swag init --quiet --generalInfo v1alpha.go --dir internal/server/worker/fiber/http/api/v1alpha,internal/utils/http --output internal/server/worker/fiber/http/api/v1alpha --outputTypes json
 
 clean: ## Cleanup
 	@rm -rf $(DIST_DIR)

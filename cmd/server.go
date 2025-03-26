@@ -3,11 +3,11 @@ package cmd
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/weastur/maf/pkg/config"
-	"github.com/weastur/maf/pkg/server"
-	serverAPIClient "github.com/weastur/maf/pkg/server/client"
-	"github.com/weastur/maf/pkg/server/worker/fiber"
-	"github.com/weastur/maf/pkg/server/worker/raft"
+	"github.com/weastur/maf/internal/config"
+	"github.com/weastur/maf/internal/server"
+	serverAPIClient "github.com/weastur/maf/internal/server/client"
+	"github.com/weastur/maf/internal/server/worker/fiber"
+	"github.com/weastur/maf/internal/server/worker/raft"
 )
 
 var serverCmd = &cobra.Command{

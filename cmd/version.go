@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/weastur/maf/pkg/utils"
+	"github.com/weastur/maf/internal/utils"
 )
 
 var versionCmd = &cobra.Command{

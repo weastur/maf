@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/weastur/maf/pkg/config"
-	serverAPIClient "github.com/weastur/maf/pkg/server/client"
-	"github.com/weastur/maf/pkg/server/worker/fiber"
+	"github.com/weastur/maf/internal/config"
+	serverAPIClient "github.com/weastur/maf/internal/server/client"
+	"github.com/weastur/maf/internal/server/worker/fiber"
 )
 
 var errLeaderAddrNotFound = errors.New("leader API address not found")

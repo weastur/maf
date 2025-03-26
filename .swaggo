@@ -1,1 +1,1 @@
-replace github.com/weastur/maf/pkg/utils/http/api/v1alpha.Status string
+replace github.com/weastur/maf/internal/utils/http/api/v1alpha.Status string
