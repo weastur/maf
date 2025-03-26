@@ -30,7 +30,7 @@ func Init(dsn string) error {
 }
 
 func Flush() {
-	if !IsConfgured() {
+	if !IsConfigured() {
 		log.Trace().Msg("Sentry is not configured, skipping flushing")
 
 		return
@@ -38,11 +38,11 @@ func Flush() {
 
 	log.Trace().Msg("Flushing sentry")
 
-	sentry.Flush(utils.SentryFlushTtimeout)
+	sentry.Flush(utils.SentryFlushTimeout)
 }
 
 func Recover(hub *sentry.Hub) {
-	if !IsConfgured() {
+	if !IsConfigured() {
 		log.Trace().Msg("Sentry is not configured, skipping recovery")
 
 		return
@@ -63,7 +63,7 @@ func Recover(hub *sentry.Hub) {
 }
 
 func Fork(scopeTag string) *sentry.Hub {
-	if !IsConfgured() {
+	if !IsConfigured() {
 		log.Trace().Msg("Sentry is not configured, skipping fork")
 
 		// As soon as sentry is not configured, we don't need to multiply hubs
@@ -78,6 +78,6 @@ func Fork(scopeTag string) *sentry.Hub {
 	return localHub
 }
 
-func IsConfgured() bool {
+func IsConfigured() bool {
 	return sentry.CurrentHub().Client() != nil
 }

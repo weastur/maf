@@ -17,7 +17,7 @@ const ComponentCtxKey = "component"
 func Init(level string, pretty bool) error {
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stderr}
 
-	if sentryUtils.IsConfgured() {
+	if sentryUtils.IsConfigured() {
 		var multiLevelWriter zerolog.LevelWriter
 
 		sentryWriter, err := sentryzerolog.NewWithHub(
@@ -25,7 +25,7 @@ func Init(level string, pretty bool) error {
 			sentryzerolog.Options{
 				Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
 				WithBreadcrumbs: true,
-				FlushTimeout:    utils.SentryFlushTtimeout,
+				FlushTimeout:    utils.SentryFlushTimeout,
 			},
 		)
 		if err != nil {

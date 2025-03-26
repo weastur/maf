@@ -1,0 +1,29 @@
+{
+  "cSpell.words": [
+    "apikey",
+    "APIV1Alpha",
+    "boltdb",
+    "Devmode",
+    "fibersentry",
+    "fiberzerolog",
+    "getsentry",
+    "gofiber",
+    "healthcheck",
+    "healthchecker",
+    "hlogger",
+    "hraft",
+    "hrconfig",
+    "Inmem",
+    "jinzhu",
+    "neturl",
+    "Pavel",
+    "raftboltdb",
+    "Repanic",
+    "rlog",
+    "safestorage",
+    "Sapezhka",
+    "sentryzerolog",
+    "ServerAPITLSConfig",
+    "vrecan"
+  ]
+}

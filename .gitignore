@@ -39,4 +39,3 @@ dist/
 /build/manpages
 /.ansible
 /devenv/local
-/.vscode/settings.json
