@@ -78,6 +78,7 @@ linters:
         linters:
           - bodyclose
           - noctx
+          - err113
 formatters:
   enable:
     - gofmt
