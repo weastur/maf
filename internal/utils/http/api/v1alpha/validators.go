@@ -29,10 +29,12 @@ func NewXValidator() *XValidator {
 func (v *XValidator) Validate(data any) error {
 	var validationErrors validator.ValidationErrors
 
+	var invalidValidationError *validator.InvalidValidationError
+
 	err := v.validator.Struct(data)
 
 	switch {
-	case errors.Is(err, &validator.InvalidValidationError{}):
+	case errors.As(err, &invalidValidationError):
 		return fmt.Errorf("validation failed: %w", err)
 	case errors.As(err, &validationErrors):
 		errs := make([]error, 0, len(validationErrors))
