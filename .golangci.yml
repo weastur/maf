@@ -79,6 +79,7 @@ linters:
           - bodyclose
           - noctx
           - err113
+          - funlen
 formatters:
   enable:
     - gofmt
