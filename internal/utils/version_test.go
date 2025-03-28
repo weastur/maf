@@ -1,12 +1,17 @@
 package utils
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestAppVersion(t *testing.T) {
-	expected := "v0.0.1-dev0"
+	t.Parallel()
+
+	version = "v1.0.0" // Set the version to a known value for testing
+	expected := "v1.0.0"
 	actual := AppVersion()
 
-	if actual != expected {
-		t.Errorf("AppVersion() = %v; want %v", actual, expected)
-	}
+	assert.Equal(t, expected, actual, "expected version to be %s, but got %s", expected, actual)
 }
