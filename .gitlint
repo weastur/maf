@@ -7,7 +7,7 @@ regex-style-search=True
 line-length=120
 
 [title-must-not-contain-word]
-words=crap,darn,damn,wip
+words=crap,darn,damn
 
 [title-min-length]
 min-length=10

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/hashicorp/go-hclog"
@@ -57,7 +58,7 @@ type Raft struct {
 	fsm                       hraft.FSM
 	storage                   Storage
 	raftInstance              *hraft.Raft
-	initCompleted             bool
+	initCompleted             atomic.Bool
 	leadershipChangesChannels []LeadershipChangesCh
 }
 
@@ -74,7 +75,7 @@ func New(config *Config) *Raft {
 }
 
 func (r *Raft) IsReady() bool {
-	return r.initCompleted
+	return r.initCompleted.Load()
 }
 
 func (r *Raft) IsLive() bool {
@@ -98,8 +99,6 @@ func (r *Raft) init() {
 	} else {
 		go r.retryJoin()
 	}
-
-	r.initCompleted = true
 }
 
 func (r *Raft) bootstrap() {
@@ -115,10 +114,15 @@ func (r *Raft) bootstrap() {
 	r.logger.Info().Msg("Bootstrapping raft cluster with configuration")
 
 	err := r.raftInstance.BootstrapCluster(configuration).Error()
-	if errors.Is(err, hraft.ErrCantBootstrap) {
+
+	switch {
+	case errors.Is(err, hraft.ErrCantBootstrap):
 		r.logger.Warn().Msg("Can't bootstrap cluster as it already exists. Ignoring")
-	} else if err != nil {
-		r.logger.Fatal().Err(err).Msg("Failed to bootstrap cluster")
+		r.initCompleted.Store(true)
+	case err != nil:
+		panic("Failed to bootstrap cluster")
+	default:
+		r.initCompleted.Store(true)
 	}
 }
 
@@ -149,6 +153,7 @@ func (r *Raft) retryJoin() {
 			} else {
 				r.logger.Info().Msgf("Successfully joined peer %s", peer)
 				api.Close()
+				r.initCompleted.Store(true)
 
 				return
 			}
@@ -163,7 +168,7 @@ func (r *Raft) initRaftInstance() {
 
 	r.raftInstance, err = hraft.NewRaft(r.hrconfig, r.fsm, r.logStore, r.stableStore, r.snapshotStore, r.transport)
 	if err != nil {
-		r.logger.Fatal().Err(err).Msg("Failed to create raft")
+		panic("Failed to create raft")
 	}
 }
 
@@ -186,7 +191,7 @@ func (r *Raft) initStore() {
 			Path: filepath.Join(r.config.Datadir, dbName),
 		})
 		if err != nil {
-			r.logger.Fatal().Err(err).Msg("Failed to create boltDB")
+			panic("Failed to create boltDB")
 		}
 
 		r.logStore = boltDB
@@ -201,7 +206,7 @@ func (r *Raft) initSnapshotStore() {
 
 	r.snapshotStore, err = hraft.NewFileSnapshotStoreWithLogger(r.config.Datadir, snapshotRetain, r.hlogger)
 	if err != nil {
-		r.logger.Fatal().Err(err).Msg("Failed to create snapshot store")
+		panic("Failed to create snapshot store")
 	}
 }
 
@@ -210,12 +215,12 @@ func (r *Raft) initTransport() {
 
 	addr, err := net.ResolveTCPAddr("tcp", r.config.Addr)
 	if err != nil {
-		r.logger.Fatal().Err(err).Msg("Failed to resolve TCP address")
+		panic("Failed to resolve TCP address")
 	}
 
 	r.transport, err = hraft.NewTCPTransportWithLogger(r.config.Addr, addr, transportMaxPool, transportTimeout, r.hlogger)
 	if err != nil {
-		r.logger.Fatal().Err(err).Msg("Failed to create TCP transport")
+		panic("Failed to create TCP transport")
 	}
 }
 
@@ -233,7 +238,7 @@ func (r *Raft) ensureDatadir() {
 		r.logger.Info().Msgf("Using raft data directory: %s", r.config.Datadir)
 
 		if err := os.MkdirAll(r.config.Datadir, datadirPerms); err != nil {
-			r.logger.Fatal().Err(err).Msg("Failed to create raft data directory")
+			panic("Failed to create raft data directory")
 		}
 	}
 }
@@ -254,6 +259,12 @@ func (r *Raft) Run(wg *sync.WaitGroup) {
 
 func (r *Raft) Stop() {
 	r.logger.Info().Msg("Stopping")
+
+	if !r.initCompleted.Load() {
+		r.logger.Warn().Msg("Raft not initialized, skipping stop")
+
+		return
+	}
 
 	if r.IsLeader() {
 		r.logger.Info().Msg("I'm the leader, stepping down")
