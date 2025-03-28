@@ -182,7 +182,7 @@ func TestFSMSnapshot_Persist_Error(t *testing.T) {
 }
 
 func TestFSMSnapshot_Release(_ *testing.T) {
+	// No assertions needed, just ensure no panic occurs.
 	snapshot := &FSMSnapshot{}
 	snapshot.Release()
-	// No assertions needed, just ensure no panic occurs.
 }
