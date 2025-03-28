@@ -104,8 +104,8 @@ func NewWithAutoTLS(host string, config *TLSConfig, loggingEnabled bool) *Client
 	return NewWithMutualTLS(host, config.CertFile, config.KeyFile, config.ServerCertFile, loggingEnabled)
 }
 
-func (c *Client) Close() {
-	c.rclient.Close()
+func (c *Client) Close() error {
+	return c.rclient.Close()
 }
 
 func (c *Client) parseResponse(res *resty.Response) (any, error) {
@@ -148,7 +148,7 @@ func (c *Client) parseRaftKVGetResponse(data any) (*raftKVGetResponse, error) {
 func (c *Client) makeURL(elem ...string) string {
 	baseURL, err := url.Parse(c.urlPrefix)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to parse base URL. Can't continue")
+		panic("Failed to parse base URL. Can't continue")
 	}
 
 	baseURL.Path = path.Join(baseURL.Path, path.Join(elem...))
