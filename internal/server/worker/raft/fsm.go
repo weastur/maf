@@ -39,7 +39,7 @@ func NewFSM(storage Storage) *FSM {
 func (f *FSM) Apply(rlog *raft.Log) any {
 	var cmd Command
 	if err := json.Unmarshal(rlog.Data, &cmd); err != nil {
-		f.logger.Fatal().Err(err).Msg("failed to unmarshal command")
+		panic("failed to unmarshal command")
 	}
 
 	switch cmd.Op {
@@ -48,7 +48,7 @@ func (f *FSM) Apply(rlog *raft.Log) any {
 	case OpDelete:
 		f.storage.Delete(cmd.Key)
 	default:
-		f.logger.Fatal().Msgf("unrecognized command %d", cmd.Op)
+		panic("unrecognized command " + cmd.Op.String())
 	}
 
 	return nil

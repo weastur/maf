@@ -80,6 +80,7 @@ linters:
           - noctx
           - err113
           - funlen
+          - errchkjson
 formatters:
   enable:
     - gofmt
