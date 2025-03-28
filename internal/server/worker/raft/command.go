@@ -8,7 +8,11 @@ const (
 )
 
 func (op OpType) String() string {
-	return [...]string{"get", "set", "delete"}[op]
+	if op < OpSet || op > OpDelete {
+		return ""
+	}
+
+	return [...]string{"set", "delete"}[op]
 }
 
 type Command struct {
