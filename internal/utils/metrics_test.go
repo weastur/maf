@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +12,8 @@ import (
 )
 
 func TestConfigureMetrics(t *testing.T) {
+	t.Parallel()
+
 	app := fiber.New()
 	ConfigureMetrics(app)
 
@@ -18,10 +21,10 @@ func TestConfigureMetrics(t *testing.T) {
 	resp, err := app.Test(req)
 
 	require.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "expected status code 200")
+	assert.Contains(t, resp.Header.Get("Content-Type"), "text/plain", "expected content type to be text/plain")
 
-	body := make([]byte, resp.ContentLength)
-	_, err = resp.Body.Read(body)
+	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Contains(t, string(body), "maf_version")
 }
