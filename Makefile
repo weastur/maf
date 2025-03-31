@@ -33,9 +33,6 @@ unit-tests-cov: ## Run unit tests with coverage
 	go test -race -v -coverpkg=./internal/... -coverprofile=coverage.txt ./...
 	go tool cover -html=coverage.txt -o coverage.html
 
-version: ## Create new version. Bump, tag, commit, create tag
-	@bump-my-version bump --verbose $(filter-out $@,$(MAKECMDGOALS))
-
 go-build-deps: ## Install go deps to build the project
 	@go install github.com/swaggo/swag/cmd/swag@latest
 	@go install github.com/weastur/replacer/cmd/replacer@v0.0.0-dev2
