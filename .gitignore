@@ -24,7 +24,9 @@ go.work.sum
 # env file
 .env
 
-/bin/
+/.task
+/maf
+/maf.exe
 /coverage.txt
 /coverage.html
 # Added by goreleaser init:

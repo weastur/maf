@@ -1,0 +1,65 @@
+version: "3"
+
+vars:
+  BUILD_FLAGS: '-tags netgo,static_build,osusergo,feature -ldflags "-extldflags "-static" -X github.com/weastur/maf/internal/utils.version=v0.0.0-dev" -gcflags=all="-N -l"'
+
+tasks:
+  build:
+    desc: Build the binary
+    deps: [swagger]
+    env:
+      CGO_ENABLED: 0
+    cmds:
+      - go build {{.BUILD_FLAGS}} -o maf{{exeExt}}
+    sources:
+      - ./**/*.go
+    generates:
+      - maf{{exeExt}}
+    silent: false
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test {{.BUILD_FLAGS}} -v ./...
+
+  test-with-coverage:
+    desc: Run tests with coverage
+    env:
+      CGO_ENABLED: 1
+    cmds:
+      - go test {{.BUILD_FLAGS}} -race -v -coverpkg=./internal/... -coverprofile=coverage.txt ./...
+      - go tool cover -html=coverage.txt -o coverage.html
+    sources:
+      - ./**/*.go
+    generates:
+      - coverage.out
+      - coverage.html
+
+  swagger:
+    desc: Generate swagger docs
+    deps: [go-generate]
+    cmds:
+      - swag init --quiet --generalInfo v1alpha.go --dir internal/agent/worker/fiber/http/api/v1alpha,internal/utils/http --output internal/agent/worker/fiber/http/api/v1alpha --outputTypes json
+      - swag init --quiet --generalInfo v1alpha.go --dir internal/server/worker/fiber/http/api/v1alpha,internal/utils/http --output internal/server/worker/fiber/http/api/v1alpha --outputTypes json
+    sources:
+      - ./**/*.go
+    generates:
+      - internal/agent/worker/fiber/http/api/v1alpha/swagger.json
+      - internal/server/worker/fiber/http/api/v1alpha/swagger.json
+    silent: false
+
+  go-generate:
+    desc: Run go generate
+    deps: [install-build-deps]
+    cmds:
+      - go generate ./...
+    sources:
+      - ./**/*.go
+    silent: false
+
+  install-build-deps:
+    desc: Install deps to build the project
+    cmds:
+      - go install github.com/swaggo/swag/cmd/swag@v1.16.4
+      - go install github.com/weastur/replacer/cmd/replacer@v1.0.0
+    silent: false

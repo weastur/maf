@@ -26,7 +26,7 @@ for everyone. Please follow the guidelines below to ensure a smooth contribution
 
 ## 3. Commit and Push
 
-1. **Follow commit style (gitlint will do all checks, just ensure git hooks are installed)**:
+1. **Commit**:
 
    ```sh
    git commit -m "Add new awesome feature"
