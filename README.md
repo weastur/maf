@@ -4,7 +4,6 @@
 [![codecov](https://codecov.io/gh/weastur/maf/graph/badge.svg?token=QANQ7BIQY9)](https://codecov.io/gh/weastur/maf)
 [![test](https://github.com/weastur/maf/actions/workflows/test.yaml/badge.svg)](https://github.com/weastur/maf/actions/workflows/test.yaml)
 [![lint](https://github.com/weastur/maf/actions/workflows/lint.yaml/badge.svg)](https://github.com/weastur/maf/actions/workflows/lint.yaml)
-[![gitlint](https://github.com/weastur/maf/actions/workflows/gitlint.yaml/badge.svg)](https://github.com/weastur/maf/actions/workflows/gitlint.yaml)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/weastur/maf/main.svg)](https://results.pre-commit.ci/latest/github/weastur/maf/main)
 [![docs](https://github.com/weastur/maf/actions/workflows/publish-wiki.yaml/badge.svg)](https://github.com/weastur/maf/actions/workflows/publish-wiki.yaml)</br>
 ![GitHub Release](https://img.shields.io/github/v/release/weastur/maf)
