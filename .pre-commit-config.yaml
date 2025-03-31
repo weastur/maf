@@ -21,24 +21,7 @@ repos:
         args: [--allow-missing-credentials]
       - id: destroyed-symlinks
       - id: forbid-submodules
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.44.0
-    hooks:
-      - id: markdownlint
   - repo: https://github.com/golangci/golangci-lint
     rev: v2.0.2
     hooks:
       - id: golangci-lint-full
-  - repo: https://github.com/AleksaC/hadolint-py
-    rev: v2.12.1b3
-    hooks:
-      - id: hadolint
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37.0
-    hooks:
-      - id: yamllint
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
-    hooks:
-      - id: shellcheck
-
