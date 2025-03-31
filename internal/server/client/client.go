@@ -18,7 +18,7 @@ import (
 
 const (
 	authHeader                   = "X-Auth-Token"
-	apiKey                       = "root" // pragma: allowlist secret
+	apiKey                       = "root"
 	defaultTimeout               = 10 * time.Second
 	defaultRetryCount            = 3
 	defaultRetryWaitTime         = 1 * time.Second

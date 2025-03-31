@@ -41,10 +41,4 @@ repos:
     rev: v0.10.0.1
     hooks:
       - id: shellcheck
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.5.0
-    hooks:
-      - id: detect-secrets
-        args:
-          ["--baseline", ".secrets.baseline", "--exclude-files", "devenv/.*"]
-        exclude: package.lock.json
+

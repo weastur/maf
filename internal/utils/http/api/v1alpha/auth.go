@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	apiKey          = "root" // pragma: allowlist secret
+	apiKey          = "root"
 	unprotectedURLs = []*regexp.Regexp{
 		regexp.MustCompile(`.*\/version$`),
 	}
