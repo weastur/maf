@@ -19,7 +19,7 @@ require (
 	github.com/jinzhu/copier v0.4.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
-	github.com/spf13/viper v1.20.0
+	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
 	github.com/vrecan/death/v3 v3.0.3
 	github.com/weastur/hclog-zerolog v0.0.0-dev1
