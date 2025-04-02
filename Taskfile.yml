@@ -2,6 +2,10 @@ version: "3"
 
 vars:
   BUILD_FLAGS: '-tags netgo,static_build,osusergo,feature -ldflags "-extldflags "-static" -X github.com/weastur/maf/internal/utils.version=v0.0.0-dev" -gcflags=all="-N -l"'
+  SWAGGO_VERSION: "v1.16.4"
+  REPLACER_VERSION: "v1.0.0"
+  COBRA_CLI_VERSION: "latest"
+  GOLANGCI_LINT_VERSION: "v2.0.2"
 
 tasks:
   build:
@@ -59,8 +63,16 @@ tasks:
   install-build-deps:
     desc: Install deps to build the project
     cmds:
-      - go install github.com/swaggo/swag/cmd/swag@v1.16.4
-      - go install github.com/weastur/replacer/cmd/replacer@v1.0.0
+      - go install github.com/swaggo/swag/cmd/swag@{{.SWAGGO_VERSION}}
+      - go install github.com/weastur/replacer/cmd/replacer@{{.REPLACER_VERSION}}
+    silent: true
+
+  install-deps:
+    desc: Install deps
+    deps: [install-build-deps]
+    cmds:
+      - go install github.com/spf13/cobra-cli@{{.COBRA_CLI_VERSION}}
+      - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOPATH)/bin {{.GOLANGCI_LINT_VERSION}}
     silent: true
 
   clean:
