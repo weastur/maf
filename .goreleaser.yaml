@@ -5,9 +5,9 @@ version: 2
 
 before:
   hooks:
-    - make clean
+    - task clean
     - go mod tidy
-    - make build
+    - task build
     - ./build/scripts/completions.sh
     - ./build/scripts/manpages.sh
 
