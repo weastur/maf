@@ -4,11 +4,12 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestLogLevel_Validate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		config    map[string]string
@@ -55,6 +56,8 @@ func TestLogLevel_Validate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			v := viper.New()
 			for key, value := range tt.config {
 				v.Set(key, value)
@@ -64,8 +67,7 @@ func TestLogLevel_Validate(t *testing.T) {
 			err := logLevelValidator.Validate(v)
 
 			if tt.expectErr {
-				require.Error(t, err)
-				assert.Equal(t, ErrLogLevel, err)
+				require.ErrorIs(t, err, ErrLogLevel)
 			} else {
 				require.NoError(t, err)
 			}
