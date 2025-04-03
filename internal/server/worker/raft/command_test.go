@@ -2,9 +2,13 @@ package raft
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestOpTypeString(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		op       OpType
 		expected string
@@ -15,14 +19,13 @@ func TestOpTypeString(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		result := tt.op.String()
-		if result != tt.expected {
-			t.Errorf("OpType.String() = %q, want %q", result, tt.expected)
-		}
+		assert.Equal(t, tt.expected, tt.op.String())
 	}
 }
 
 func TestMakeCommand(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		op       OpType
 		key      string
@@ -35,8 +38,6 @@ func TestMakeCommand(t *testing.T) {
 
 	for _, tt := range tests {
 		result := makeCommand(tt.op, tt.key, tt.value)
-		if result.Op != tt.expected.Op || result.Key != tt.expected.Key || result.Value != tt.expected.Value {
-			t.Errorf("makeCommand(%v, %q, %q) = %+v, want %+v", tt.op, tt.key, tt.value, result, tt.expected)
-		}
+		assert.Equal(t, tt.expected, result)
 	}
 }
