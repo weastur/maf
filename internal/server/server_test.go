@@ -152,8 +152,6 @@ func TestRun(t *testing.T) {
 }
 
 func TestInit(t *testing.T) {
-	t.Parallel()
-
 	config := &Config{
 		LogLevel:  "debug",
 		LogPretty: true,
