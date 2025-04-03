@@ -22,6 +22,8 @@ func (m *MockValidator) Validate(viperInstance *viper.Viper) error {
 }
 
 func TestGetSingletonInstance(t *testing.T) {
+	t.Parallel()
+
 	config1 := Get()
 	config2 := Get()
 
@@ -29,6 +31,8 @@ func TestGetSingletonInstance(t *testing.T) {
 }
 
 func TestInitWithConfigFile(t *testing.T) {
+	t.Parallel()
+
 	mockValidator := new(MockValidator)
 	mockValidator.On("Validate", mock.Anything).Return(nil)
 
@@ -52,6 +56,8 @@ func TestInitWithConfigFile(t *testing.T) {
 }
 
 func TestInitWithoutConfigFile(t *testing.T) {
+	t.Parallel()
+
 	mockValidator := new(MockValidator)
 	mockValidator.On("Validate", mock.Anything).Return(nil)
 
@@ -67,6 +73,8 @@ func TestInitWithoutConfigFile(t *testing.T) {
 }
 
 func TestInitWithInvalidConfigFile(t *testing.T) {
+	t.Parallel()
+
 	mockValidator := new(MockValidator)
 
 	config := &Config{
@@ -79,6 +87,8 @@ func TestInitWithInvalidConfigFile(t *testing.T) {
 }
 
 func TestValidateSuccess(t *testing.T) {
+	t.Parallel()
+
 	mockValidator1 := new(MockValidator)
 	mockValidator2 := new(MockValidator)
 
@@ -98,11 +108,15 @@ func TestValidateSuccess(t *testing.T) {
 }
 
 func TestValidateFailure(t *testing.T) {
+	t.Parallel()
+
 	mockValidator1 := new(MockValidator)
 	mockValidator2 := new(MockValidator)
 
+	validationError := errors.New("validation error")
+
 	mockValidator1.On("Validate", mock.Anything).Return(nil)
-	mockValidator2.On("Validate", mock.Anything).Return(errors.New("validation error"))
+	mockValidator2.On("Validate", mock.Anything).Return(validationError)
 
 	config := &Config{
 		viperInstance: viper.New(),
@@ -110,19 +124,19 @@ func TestValidateFailure(t *testing.T) {
 	}
 
 	err := config.validate()
-	require.Error(t, err, "validate should return an error when a validator fails")
-	assert.Contains(t, err.Error(), "validation error", "Error message should contain the validation error")
+	require.ErrorIs(t, err, validationError, "validate should return the validation error from the second validator")
 
 	mockValidator1.AssertCalled(t, "Validate", mock.Anything)
 	mockValidator2.AssertCalled(t, "Validate", mock.Anything)
 }
 
 func TestViper(t *testing.T) {
+	t.Parallel()
+
 	config := &Config{
 		viperInstance: viper.New(),
 	}
 
 	viperInstance := config.Viper()
-	assert.NotNil(t, viperInstance, "Viper() should return a non-nil viper instance")
 	assert.Equal(t, config.viperInstance, viperInstance, "Viper() should return the same viper instance as in the config")
 }
