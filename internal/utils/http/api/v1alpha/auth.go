@@ -33,10 +33,6 @@ func authFilter(c *fiber.Ctx) bool {
 	return false
 }
 
-func errorHandler(c *fiber.Ctx, err error) error {
-	return WrapResponse(c, StatusError, nil, err)
-}
-
 func validateAPIKey(c *fiber.Ctx, key string) (bool, error) {
 	hashedAPIKey := sha256.Sum256([]byte(apiKey))
 	hashedKey := sha256.Sum256([]byte(key))
@@ -53,7 +49,7 @@ func validateAPIKey(c *fiber.Ctx, key string) (bool, error) {
 
 func AuthMiddleware() fiber.Handler {
 	return keyauth.New(keyauth.Config{
-		ErrorHandler: errorHandler,
+		ErrorHandler: ErrorHandler,
 		Next:         authFilter,
 		Validator:    validateAPIKey,
 		KeyLookup:    "header:X-Auth-Token",

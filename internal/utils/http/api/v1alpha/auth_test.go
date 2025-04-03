@@ -12,6 +12,8 @@ import (
 )
 
 func TestAuthFilter(t *testing.T) {
+	t.Parallel()
+
 	expectedVersion := utils.AppVersion()
 
 	app := fiber.New()
@@ -43,6 +45,8 @@ func TestAuthFilter(t *testing.T) {
 }
 
 func TestApiKey(t *testing.T) {
+	t.Parallel()
+
 	app := fiber.New()
 	app.Use(AuthMiddleware())
 	app.Get("/protected", func(c *fiber.Ctx) error {
@@ -77,6 +81,8 @@ func TestApiKey(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			req, _ := http.NewRequest(http.MethodGet, "/protected", nil)
 			if test.apiKey != "" {
 				req.Header.Set("X-Auth-Token", test.apiKey)
