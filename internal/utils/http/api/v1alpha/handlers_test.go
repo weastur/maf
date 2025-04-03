@@ -14,6 +14,8 @@ import (
 )
 
 func TestVersionHandler(t *testing.T) {
+	t.Parallel()
+
 	expectedVersion := utils.AppVersion()
 
 	app := fiber.New()
@@ -32,6 +34,8 @@ func TestVersionHandler(t *testing.T) {
 }
 
 func TestErrorHandler(t *testing.T) {
+	t.Parallel()
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: ErrorHandler,
 	})
