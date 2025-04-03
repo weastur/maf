@@ -14,29 +14,30 @@ import (
 
 type MockStorage struct {
 	mock.Mock
-	data map[string]string
 }
 
 func (m *MockStorage) Get(key string) (string, bool) {
-	value, ok := m.data[key]
+	args := m.Called(key)
 
-	return value, ok
+	return args.String(0), args.Bool(1)
 }
 
 func (m *MockStorage) Set(key, value string) {
-	m.data[key] = value
+	m.Called(key, value)
 }
 
 func (m *MockStorage) Delete(key string) {
-	delete(m.data, key)
+	m.Called(key)
 }
 
 func (m *MockStorage) Snapshot() Mapping {
-	return Mapping(m.data)
+	args := m.Called()
+
+	return args.Get(0).(Mapping)
 }
 
 func (m *MockStorage) Restore(data Mapping) {
-	m.data = map[string]string(data)
+	m.Called(data)
 }
 
 type MockSnapshotSink struct {
@@ -62,26 +63,30 @@ func (m *MockSnapshotSink) Cancel() error {
 }
 
 func TestFSM_Apply(t *testing.T) {
-	storage := &MockStorage{data: make(map[string]string)}
+	t.Parallel()
+
+	storage := &MockStorage{}
 	fsm := NewFSM(storage)
 
 	// Test OpSet
 	cmd := Command{Op: OpSet, Key: "key1", Value: "value1"}
+	mockCall := storage.On("Set", "key1", "value1").Return()
 	data, _ := json.Marshal(cmd)
 	log := &raft.Log{Data: data}
 
 	fsm.Apply(log)
-	assert.Equal(t, "value1", storage.data["key1"])
+	storage.AssertExpectations(t)
+	mockCall.Unset()
 
 	// Test OpDelete
 	cmd = Command{Op: OpDelete, Key: "key1"}
+	mockCall = storage.On("Delete", "key1").Return()
 	data, _ = json.Marshal(cmd)
 	log = &raft.Log{Data: data}
 
 	fsm.Apply(log)
-
-	_, exists := storage.data["key1"]
-	assert.False(t, exists)
+	storage.AssertExpectations(t)
+	mockCall.Unset()
 
 	// Test unrecognized command
 	cmd = Command{Op: 999, Key: "key1"}
@@ -102,11 +107,16 @@ func TestFSM_Apply(t *testing.T) {
 }
 
 func TestFSM_Snapshot(t *testing.T) {
-	storage := &MockStorage{data: map[string]string{"key1": "value1"}}
+	t.Parallel()
+
+	storage := &MockStorage{}
 	fsm := NewFSM(storage)
+	storage.On("Snapshot").Return(Mapping{"key1": "value1"})
 
 	snapshot, err := fsm.Snapshot()
 	require.NoError(t, err)
+
+	storage.AssertExpectations(t)
 
 	fsmSnapshot, ok := snapshot.(*FSMSnapshot)
 	assert.True(t, ok)
@@ -114,8 +124,11 @@ func TestFSM_Snapshot(t *testing.T) {
 }
 
 func TestFSM_Restore(t *testing.T) {
-	storage := &MockStorage{data: make(map[string]string)}
+	t.Parallel()
+
+	storage := &MockStorage{}
 	fsm := NewFSM(storage)
+	storage.On("Restore", Mapping{"key1": "value1"}).Return()
 
 	data := map[string]string{"key1": "value1"}
 	buf := new(bytes.Buffer)
@@ -123,7 +136,7 @@ func TestFSM_Restore(t *testing.T) {
 
 	err := fsm.Restore(io.NopCloser(buf))
 	require.NoError(t, err)
-	assert.Equal(t, "value1", storage.data["key1"])
+	storage.AssertExpectations(t)
 
 	// Test invalid JSON
 	invalidData := []byte("invalid json")
@@ -133,6 +146,8 @@ func TestFSM_Restore(t *testing.T) {
 }
 
 func TestFSMSnapshot_Persist(t *testing.T) {
+	t.Parallel()
+
 	data := Mapping{"key1": "value1"}
 	snapshot := &FSMSnapshot{data: data}
 
@@ -146,6 +161,8 @@ func TestFSMSnapshot_Persist(t *testing.T) {
 }
 
 func TestFSMSnapshot_Persist_Error(t *testing.T) {
+	t.Parallel()
+
 	data := Mapping{"key1": "value1"}
 	snapshot := &FSMSnapshot{data: data}
 
@@ -181,7 +198,9 @@ func TestFSMSnapshot_Persist_Error(t *testing.T) {
 	mockSink.AssertExpectations(t)
 }
 
-func TestFSMSnapshot_Release(_ *testing.T) {
+func TestFSMSnapshot_Release(t *testing.T) {
+	t.Parallel()
+
 	// No assertions needed, just ensure no panic occurs.
 	snapshot := &FSMSnapshot{}
 	snapshot.Release()
