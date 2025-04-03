@@ -13,12 +13,16 @@ type TestStruct struct {
 }
 
 func TestNewXValidator(t *testing.T) {
+	t.Parallel()
+
 	validator := NewXValidator()
 	assert.NotNil(t, validator)
 	assert.NotNil(t, validator.validator)
 }
 
 func TestXValidator_Validate_Success(t *testing.T) {
+	t.Parallel()
+
 	validator := NewXValidator()
 
 	data := TestStruct{
@@ -31,6 +35,8 @@ func TestXValidator_Validate_Success(t *testing.T) {
 }
 
 func TestXValidator_Validate_ValidationErrors(t *testing.T) {
+	t.Parallel()
+
 	validator := NewXValidator()
 
 	data := TestStruct{
@@ -50,6 +56,8 @@ func TestXValidator_Validate_ValidationErrors(t *testing.T) {
 }
 
 func TestXValidator_Validate_InvalidValidationError(t *testing.T) {
+	t.Parallel()
+
 	validator := NewXValidator()
 
 	err := validator.Validate(nil)
