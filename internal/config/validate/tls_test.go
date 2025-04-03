@@ -4,18 +4,20 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTLSValidate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name          string
-		config        map[string]interface{}
+		config        map[string]string
 		expectedError error
 	}{
 		{
 			name: "Valid configuration for agent.http and server.http",
-			config: map[string]interface{}{
+			config: map[string]string{
 				"agent.http.cert_file":  "cert.pem",
 				"agent.http.key_file":   "key.pem",
 				"server.http.cert_file": "cert.pem",
@@ -25,7 +27,7 @@ func TestTLSValidate(t *testing.T) {
 		},
 		{
 			name: "Missing key_file for agent.http",
-			config: map[string]interface{}{
+			config: map[string]string{
 				"agent.http.cert_file":  "cert.pem",
 				"server.http.cert_file": "cert.pem",
 				"server.http.key_file":  "key.pem",
@@ -34,7 +36,7 @@ func TestTLSValidate(t *testing.T) {
 		},
 		{
 			name: "Missing cert_file for server.http",
-			config: map[string]interface{}{
+			config: map[string]string{
 				"agent.http.cert_file": "cert.pem",
 				"agent.http.key_file":  "key.pem",
 				"server.http.key_file": "key.pem",
@@ -43,7 +45,7 @@ func TestTLSValidate(t *testing.T) {
 		},
 		{
 			name: "Valid configuration for server.http.clients",
-			config: map[string]interface{}{
+			config: map[string]string{
 				"server.http.clients.server.cert_file": "cert.pem",
 				"server.http.clients.server.key_file":  "key.pem",
 				"server.http.clients.agent.cert_file":  "cert.pem",
@@ -53,7 +55,7 @@ func TestTLSValidate(t *testing.T) {
 		},
 		{
 			name: "Missing key_file for server.http.clients.server",
-			config: map[string]interface{}{
+			config: map[string]string{
 				"server.http.clients.server.cert_file": "cert.pem",
 				"server.http.clients.agent.cert_file":  "cert.pem",
 				"server.http.clients.agent.key_file":   "key.pem",
@@ -62,7 +64,7 @@ func TestTLSValidate(t *testing.T) {
 		},
 		{
 			name: "Missing cert_file for server.http.clients.agent",
-			config: map[string]interface{}{
+			config: map[string]string{
 				"server.http.clients.server.cert_file": "cert.pem",
 				"server.http.clients.server.key_file":  "key.pem",
 				"server.http.clients.agent.key_file":   "key.pem",
@@ -73,6 +75,8 @@ func TestTLSValidate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			v := viper.New()
 			for key, value := range tt.config {
 				v.Set(key, value)
@@ -80,7 +84,7 @@ func TestTLSValidate(t *testing.T) {
 
 			tlsValidator := NewTLS()
 			err := tlsValidator.Validate(v)
-			assert.Equal(t, tt.expectedError, err)
+			require.ErrorIs(t, err, tt.expectedError)
 		})
 	}
 }
