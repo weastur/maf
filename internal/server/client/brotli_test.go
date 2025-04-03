@@ -10,6 +10,8 @@ import (
 )
 
 func TestDecompressBrotli(t *testing.T) {
+	t.Parallel()
+
 	originalData := "This is a test string for Brotli compression."
 
 	var compressedData bytes.Buffer
@@ -41,6 +43,8 @@ func TestDecompressBrotli(t *testing.T) {
 }
 
 func TestBrotliReader_Close(t *testing.T) {
+	t.Parallel()
+
 	dummyReader := io.NopCloser(strings.NewReader("dummy data"))
 
 	br := &brotliReader{s: dummyReader, r: brotli.NewReader(dummyReader)}
