@@ -32,6 +32,10 @@ type Sentry interface {
 	Fork(scopeTag string) *sentryWrapper.Wrapper
 }
 
+type Death interface {
+	WaitForDeathWithFunc(f func())
+}
+
 type Config struct {
 	LogLevel  string
 	LogPretty bool
@@ -43,6 +47,9 @@ type Server struct {
 	raftConfig  *raft.Config
 	config      *Config
 	sentry      Sentry
+	workers     []Worker
+	death       Death
+	wg          sync.WaitGroup
 }
 
 var (
@@ -60,20 +67,36 @@ func Get(
 			config:      config,
 			fiberConfig: fiberConfig,
 			raftConfig:  raftConfig,
+			death:       DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM),
+			wg:          sync.WaitGroup{},
 		}
 	})
 
 	return instance
 }
 
-func (s *Server) Run() error {
+func (s *Server) onDeath() {
+	log.Trace().Msg("Death callback called")
+
+	slices.Reverse(s.workers)
+
+	for _, worker := range s.workers {
+		worker.Stop()
+	}
+
+	s.sentry.Flush()
+
+	log.Trace().Msg("Waiting for all workers to stop")
+	s.wg.Wait()
+}
+
+func (s *Server) Init() error {
 	var err error
 
 	s.sentry, err = sentryWrapper.New(s.config.SentryDSN)
 	if err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
-	defer s.sentry.Recover()
 
 	if err := loggingUtils.Init(s.config.LogLevel, s.config.LogPretty, s.sentry); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
@@ -81,29 +104,17 @@ func (s *Server) Run() error {
 
 	raftWorker := raft.New(s.raftConfig, s.sentry.Fork("raft"))
 	fiberWorker := fiber.New(s.fiberConfig, raftWorker, s.sentry.Fork("fiber"))
-	workers := []Worker{raftWorker, fiberWorker}
-
-	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
-	wg := sync.WaitGroup{}
-
-	for _, worker := range workers {
-		worker.Run(&wg)
-	}
-
-	death.WaitForDeathWithFunc(func() {
-		log.Trace().Msg("Death callback called")
-
-		slices.Reverse(workers)
-
-		for _, worker := range workers {
-			worker.Stop()
-		}
-
-		s.sentry.Flush()
-
-		log.Trace().Msg("Waiting for all workers to stop")
-		wg.Wait()
-	})
+	s.workers = []Worker{raftWorker, fiberWorker}
 
 	return nil
+}
+
+func (s *Server) Run() {
+	defer s.sentry.Recover()
+
+	for _, worker := range s.workers {
+		worker.Run(&s.wg)
+	}
+
+	s.death.WaitForDeathWithFunc(s.onDeath)
 }

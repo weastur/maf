@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/weastur/maf/internal/config"
 	"github.com/weastur/maf/internal/server"
@@ -53,10 +52,9 @@ It is designed to run on a separate host.`,
 		}
 
 		srv := server.Get(serverConfig, raftConfig, fiberConfig)
+		cobra.CheckErr(srv.Init())
 
-		if err := srv.Run(); err != nil {
-			log.Fatal().Err(err).Msg("server failed")
-		}
+		srv.Run()
 	},
 }
 
