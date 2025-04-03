@@ -5,9 +5,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -23,34 +24,32 @@ func TestMain(m *testing.M) {
 }
 
 func TestSafeStorage_GetSet(t *testing.T) {
+	t.Parallel()
+
 	storage := NewSafeStorage()
 
 	storage.Set(key, value)
 
 	got, ok := storage.Get(key)
-	if !ok {
-		t.Fatalf("expected key %s to exist", key)
-	}
-
-	if got != value {
-		t.Errorf("expected value %s, got %s", value, got)
-	}
+	require.True(t, ok, "expected key %s to exist", key)
+	assert.Equal(t, value, got, "expected value %s, got %s", value, got)
 }
 
 func TestSafeStorage_Delete(t *testing.T) {
+	t.Parallel()
+
 	storage := NewSafeStorage()
 
 	storage.Set(key, value)
-
 	storage.Delete(key)
 
 	_, ok := storage.Get(key)
-	if ok {
-		t.Errorf("expected key %s to be deleted", key)
-	}
+	assert.False(t, ok, "expected key %s to not exist", key)
 }
 
 func TestSafeStorage_Snapshot(t *testing.T) {
+	t.Parallel()
+
 	var data Mapping
 
 	storage := NewSafeStorage()
@@ -64,12 +63,12 @@ func TestSafeStorage_Snapshot(t *testing.T) {
 	}
 
 	snapshot := storage.Snapshot()
-	if !cmp.Equal(snapshot, data) {
-		t.Errorf("expected snapshot %v, got %v", data, snapshot)
-	}
+	assert.Equal(t, data, snapshot, "expected snapshot %v, got %v", data, snapshot)
 }
 
 func TestSafeStorage_Restore(t *testing.T) {
+	t.Parallel()
+
 	var data Mapping
 
 	storage := NewSafeStorage()
@@ -82,17 +81,14 @@ func TestSafeStorage_Restore(t *testing.T) {
 
 	for k, v := range data {
 		got, ok := storage.Get(k)
-		if !ok {
-			t.Fatalf("expected key %s to exist", k)
-		}
-
-		if got != v {
-			t.Errorf("expected value %s, got %s", v, got)
-		}
+		require.True(t, ok, "expected key %s to exist", k)
+		assert.Equal(t, v, got, "expected value %s, got %s", v, got)
 	}
 }
 
-func TestSafeStorage_ConcurrentAccess(_ *testing.T) {
+func TestSafeStorage_ConcurrentAccess(t *testing.T) {
+	t.Parallel()
+
 	storage := NewSafeStorage()
 
 	writer := func() {
