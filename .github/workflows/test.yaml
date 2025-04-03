@@ -24,7 +24,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Unit tests
-        run: task test-with-coverage
+        run: task test-with-race
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

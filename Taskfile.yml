@@ -22,13 +22,19 @@ tasks:
 
   test:
     desc: Run tests
-    cmds:
-      - go test {{.BUILD_FLAGS}} -v ./...
-
-  test-with-coverage:
-    desc: Run tests with coverage
     env:
-      CGO_ENABLED: 1
+      CGO_ENABLED: 0
+    cmds:
+      - go test {{.BUILD_FLAGS}} -v -coverpkg=./internal/... -coverprofile=coverage.txt ./...
+      - go tool cover -html=coverage.txt -o coverage.html
+    sources:
+      - ./**/*.go
+    generates:
+      - coverage.txt
+      - coverage.html
+
+  test-with-race:
+    desc: Run tests
     cmds:
       - go test {{.BUILD_FLAGS}} -race -v -coverpkg=./internal/... -coverprofile=coverage.txt ./...
       - go tool cover -html=coverage.txt -o coverage.html
