@@ -27,8 +27,14 @@ type API interface {
 	ErrorHandler(c *fiber.Ctx, err error) error
 }
 
+type Listener interface {
+	Listen(addr string) error
+	ListenTLS(addr, certFile, keyFile string) error
+	ListenMutualTLS(addr, certFile, keyFile, clientCertFile string) error
+}
+
 func Listen(
-	app *fiber.App,
+	app Listener,
 	logger zerolog.Logger,
 	addr string,
 	certFile string,
