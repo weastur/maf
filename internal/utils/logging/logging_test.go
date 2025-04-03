@@ -1,37 +1,63 @@
 package logging
 
 import (
+	"bytes"
 	"testing"
 
-	sentrygo "github.com/getsentry/sentry-go"
+	"github.com/getsentry/sentry-go"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	sentryUtils "github.com/weastur/maf/internal/utils/sentry"
+	sentryWrapper "github.com/weastur/maf/internal/utils/sentry"
 )
 
-func TestInit_WithValidLevelAndPretty(t *testing.T) {
-	sentrygo.CurrentHub().BindClient(nil) // Reset the hub
-
-	err := Init("debug", true)
-	assert.NoError(t, err, "Init should not return an error for valid level and pretty")
+type mockSentry struct {
+	configured bool
 }
 
-func TestInit_WithInvalidLevel(t *testing.T) {
-	sentrygo.CurrentHub().BindClient(nil) // Reset the hub
-
-	err := Init("unknown", true)
-	require.Error(t, err, "Init should return error for invalid level")
+func (m *mockSentry) IsConfigured() bool {
+	return m.configured
 }
 
-func TestInit_WithSentry(t *testing.T) {
-	err := sentryUtils.Init("https://examplePublicKey@o0.ingest.sentry.io/0")
-	require.NoError(t, err, "Sentry should be configured for valid DSN")
+func (m *mockSentry) Fork(_ string) *sentryWrapper.Wrapper {
+	return &sentryWrapper.Wrapper{Hub: sentry.CurrentHub().Clone()}
+}
 
-	for _, pretty := range []bool{true, false} {
-		err := Init("debug", pretty)
+func (m *mockSentry) GetHub() *sentry.Hub {
+	return sentry.CurrentHub()
+}
 
-		require.NoError(t, err,
-			"Init should not return an error for valid level, pretty equal to %t and sentry configured",
-			pretty)
+func TestInit(t *testing.T) {
+	tests := []struct {
+		name          string
+		level         string
+		pretty        bool
+		sentryEnabled bool
+		expectError   bool
+	}{
+		{"ValidLevelPrettySentryEnabled", "debug", true, true, false},
+		{"ValidLevelPrettySentryDisabled", "info", true, false, false},
+		{"ValidLevelNonPrettySentryEnabled", "warn", false, true, false},
+		{"ValidLevelNonPrettySentryDisabled", "error", false, false, false},
+		{"InvalidLevel", "invalid", false, false, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSentry := &mockSentry{configured: tt.sentryEnabled}
+
+			var buf bytes.Buffer
+			consoleWriter := zerolog.ConsoleWriter{Out: &buf}
+			log.Logger = zerolog.New(consoleWriter).With().Timestamp().Logger()
+
+			err := Init(tt.level, tt.pretty, mockSentry)
+			if tt.expectError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.level, zerolog.GlobalLevel().String())
+			}
+		})
 	}
 }

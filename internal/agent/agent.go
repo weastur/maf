@@ -11,7 +11,7 @@ import (
 	"github.com/weastur/maf/internal/agent/worker/fiber"
 
 	loggingUtils "github.com/weastur/maf/internal/utils/logging"
-	sentryUtils "github.com/weastur/maf/internal/utils/sentry"
+	sentryWrapper "github.com/weastur/maf/internal/utils/sentry"
 
 	SYS "syscall"
 
@@ -23,6 +23,14 @@ type Worker interface {
 	Stop()
 }
 
+type Sentry interface {
+	Flush()
+	Recover()
+	IsConfigured() bool
+	GetHub() *sentry.Hub
+	Fork(scopeTag string) *sentryWrapper.Wrapper
+}
+
 type Config struct {
 	LogLevel  string
 	LogPretty bool
@@ -32,6 +40,7 @@ type Config struct {
 type Agent struct {
 	config      *Config
 	fiberConfig *fiber.Config
+	sentry      Sentry
 }
 
 var (
@@ -54,16 +63,19 @@ func Get(
 }
 
 func (a *Agent) Run() error {
-	if err := sentryUtils.Init(a.config.SentryDSN); err != nil {
+	var err error
+
+	a.sentry, err = sentryWrapper.New(a.config.SentryDSN)
+	if err != nil {
+		return fmt.Errorf("failed to run server: %w", err)
+	}
+	defer a.sentry.Recover()
+
+	if err := loggingUtils.Init(a.config.LogLevel, a.config.LogPretty, a.sentry); err != nil {
 		return fmt.Errorf("failed to run agent: %w", err)
 	}
-	defer sentryUtils.Recover(sentry.CurrentHub())
 
-	if err := loggingUtils.Init(a.config.LogLevel, a.config.LogPretty); err != nil {
-		return fmt.Errorf("failed to run agent: %w", err)
-	}
-
-	fiberWorker := fiber.New(a.fiberConfig)
+	fiberWorker := fiber.New(a.fiberConfig, a.sentry.Fork("fiber"))
 	workers := []Worker{fiberWorker}
 
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
@@ -82,7 +94,7 @@ func (a *Agent) Run() error {
 			worker.Stop()
 		}
 
-		sentryUtils.Flush()
+		a.sentry.Flush()
 
 		log.Trace().Msg("Waiting for all goroutines to finish")
 		wg.Wait()

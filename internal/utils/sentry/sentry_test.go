@@ -4,7 +4,6 @@ import (
 	"os"
 	"testing"
 
-	sentrygo "github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -18,101 +17,103 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestInit(t *testing.T) {
-	t.Run("Empty DSN", func(t *testing.T) {
-		sentrygo.CurrentHub().BindClient(nil) // Reset the hub
+func TestNew(t *testing.T) {
+	t.Parallel()
 
-		err := Init("")
-		require.NoError(t, err, "Init should not return an error for empty DSN")
+	t.Run("Empty DSN", func(t *testing.T) {
+		t.Parallel()
+
+		wrapper, err := New("")
+		require.NoError(t, err)
+		assert.NotNil(t, wrapper)
+		assert.False(t, wrapper.IsConfigured())
 	})
 
 	t.Run("Invalid DSN", func(t *testing.T) {
-		sentrygo.CurrentHub().BindClient(nil) // Reset the hub
+		t.Parallel()
 
-		err := Init("https://not-a-valid-url")
-		require.Error(t, err, "Init should return error for invalid DSN")
-		assert.False(t, IsConfigured(), "Sentry should be configured after Init")
+		wrapper, err := New("invalid-dsn")
+		require.Error(t, err)
+		assert.Nil(t, wrapper)
 	})
 
 	t.Run("Valid DSN", func(t *testing.T) {
-		sentrygo.CurrentHub().BindClient(nil) // Reset the hub
+		t.Parallel()
 
-		err := Init("https://examplePublicKey@o0.ingest.sentry.io/0")
-		require.NoError(t, err, "Init should not return an error for valid DSN")
-		assert.True(t, IsConfigured(), "Sentry should be configured after Init")
+		wrapper, err := New("https://examplePublicKey@o0.ingest.sentry.io/0")
+		require.NoError(t, err)
+		assert.NotNil(t, wrapper)
+		assert.True(t, wrapper.IsConfigured())
 	})
 }
 
-func TestFlush(t *testing.T) {
-	t.Run("Not Configured", func(_ *testing.T) {
-		sentrygo.CurrentHub().BindClient(nil) // Reset the hub
-		Flush()                               // Should not panic or cause issues
-	})
+func TestWrapper_GetHub(t *testing.T) {
+	t.Parallel()
 
-	t.Run("Configured", func(_ *testing.T) {
-		sentrygo.CurrentHub().BindClient(nil) // Reset the hub
+	wrapper, err := New("")
+	require.NoError(t, err)
+	assert.Nil(t, wrapper.GetHub())
 
-		_ = Init("https://examplePublicKey@o0.ingest.sentry.io/0")
-
-		Flush() // Should not panic or cause issues
-	})
+	wrapper, err = New("https://examplePublicKey@o0.ingest.sentry.io/0")
+	require.NoError(t, err)
+	assert.NotNil(t, wrapper.GetHub())
 }
 
-func TestRecover(t *testing.T) {
-	t.Run("Not Configured", func(t *testing.T) {
-		sentrygo.CurrentHub().BindClient(nil) // Reset the hub
+func TestWrapper_Flush(t *testing.T) {
+	t.Parallel()
 
-		defer func() {
-			if r := recover(); r != nil {
-				t.Errorf("Recover should not panic when Sentry is not configured")
-			}
-		}()
-		Recover(sentrygo.CurrentHub())
+	wrapper, err := New("")
+	require.NoError(t, err)
+	wrapper.Flush() // Should not panic
+
+	wrapper, err = New("https://examplePublicKey@o0.ingest.sentry.io/0")
+	require.NoError(t, err)
+	wrapper.Flush() // Should not panic
+}
+
+func TestWrapper_Recover(t *testing.T) {
+	t.Parallel()
+
+	wrapper, err := New("")
+	require.NoError(t, err)
+	assert.Panics(t, func() {
+		defer wrapper.Recover()
+		panic("test panic")
 	})
 
-	t.Run("Configured", func(t *testing.T) {
-		sentrygo.CurrentHub().BindClient(nil) // Reset the hub
-
-		_ = Init("https://examplePublicKey@o0.ingest.sentry.io/0")
-
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("Recover should re-panic after handling the error")
-			}
-		}()
-		defer Recover(sentrygo.CurrentHub())
+	wrapper, err = New("https://examplePublicKey@o0.ingest.sentry.io/0")
+	require.NoError(t, err)
+	assert.Panics(t, func() {
+		defer wrapper.Recover()
 		panic("test panic")
 	})
 }
 
-func TestFork(t *testing.T) {
-	t.Run("Not Configured", func(t *testing.T) {
-		sentrygo.CurrentHub().BindClient(nil) // Reset the hub
+func TestWrapper_Fork(t *testing.T) {
+	t.Parallel()
 
-		hub := Fork("test-scope")
-		assert.NotNil(t, hub, "Fork should return a hub even if Sentry is not configured")
-	})
+	wrapper, err := New("")
+	require.NoError(t, err)
 
-	t.Run("Configured", func(t *testing.T) {
-		sentrygo.CurrentHub().BindClient(nil) // Reset the hub
+	forked := wrapper.Fork("test-scope")
+	assert.Equal(t, wrapper, forked)
 
-		_ = Init("https://examplePublicKey@o0.ingest.sentry.io/0")
-		hub := Fork("test-scope")
-		assert.NotNil(t, hub, "Fork should return a valid hub when Sentry is configured")
-	})
+	wrapper, err = New("https://examplePublicKey@o0.ingest.sentry.io/0")
+	require.NoError(t, err)
+
+	forked = wrapper.Fork("test-scope")
+	assert.NotEqual(t, wrapper, forked)
+	assert.True(t, forked.IsConfigured())
 }
 
-func TestIsConfigured(t *testing.T) {
-	t.Run("Not Configured", func(t *testing.T) {
-		sentrygo.CurrentHub().BindClient(nil) // Reset the hub
-		assert.False(t, IsConfigured(), "IsConfigured should return false when Sentry is not initialized")
-	})
+func TestWrapper_IsConfigured(t *testing.T) {
+	t.Parallel()
 
-	t.Run("Configured", func(t *testing.T) {
-		sentrygo.CurrentHub().BindClient(nil) // Reset the hub
+	wrapper, err := New("")
+	require.NoError(t, err)
+	assert.False(t, wrapper.IsConfigured())
 
-		_ = Init("https://examplePublicKey@o0.ingest.sentry.io/0")
-
-		assert.True(t, IsConfigured(), "IsConfigured should return true when Sentry is initialized")
-	})
+	wrapper, err = New("https://examplePublicKey@o0.ingest.sentry.io/0")
+	require.NoError(t, err)
+	assert.True(t, wrapper.IsConfigured())
 }

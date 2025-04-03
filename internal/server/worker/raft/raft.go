@@ -20,7 +20,6 @@ import (
 	hclogzerolog "github.com/weastur/hclog-zerolog"
 	apiClient "github.com/weastur/maf/internal/server/client"
 	"github.com/weastur/maf/internal/utils/logging"
-	sentryUtils "github.com/weastur/maf/internal/utils/sentry"
 )
 
 const (
@@ -34,6 +33,10 @@ const (
 )
 
 type LeadershipChangesCh chan bool
+
+type Sentry interface {
+	Recover()
+}
 
 type Config struct {
 	Addr               string
@@ -60,9 +63,10 @@ type Raft struct {
 	raftInstance              *hraft.Raft
 	initCompleted             atomic.Bool
 	leadershipChangesChannels []LeadershipChangesCh
+	sentry                    Sentry
 }
 
-func New(config *Config) *Raft {
+func New(config *Config, sentry Sentry) *Raft {
 	log.Trace().Msg("Configuring raft worker")
 
 	return &Raft{
@@ -71,6 +75,7 @@ func New(config *Config) *Raft {
 		logger:                    log.With().Str(logging.ComponentCtxKey, "raft").Logger(),
 		hlogger:                   hclogzerolog.New(log.With().Str(logging.ComponentCtxKey, "hraft").Logger()),
 		leadershipChangesChannels: make([]LeadershipChangesCh, 0),
+		sentry:                    sentry,
 	}
 }
 
@@ -249,7 +254,7 @@ func (r *Raft) Run(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer sentryUtils.Recover(sentryUtils.Fork("fiber"))
+		defer r.sentry.Recover()
 
 		r.init()
 

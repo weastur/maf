@@ -5,23 +5,30 @@ import (
 	"os"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	sentryzerolog "github.com/getsentry/sentry-go/zerolog"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	utils "github.com/weastur/maf/internal/utils"
-	sentryUtils "github.com/weastur/maf/internal/utils/sentry"
+	sentryWrapper "github.com/weastur/maf/internal/utils/sentry"
 )
 
 const ComponentCtxKey = "component"
 
-func Init(level string, pretty bool) error {
+type Sentry interface {
+	IsConfigured() bool
+	Fork(scopeTag string) *sentryWrapper.Wrapper
+	GetHub() *sentry.Hub
+}
+
+func Init(level string, pretty bool, sentry Sentry) error {
 	consoleWriter := zerolog.ConsoleWriter{Out: os.Stderr}
 
-	if sentryUtils.IsConfigured() {
+	if sentry.IsConfigured() {
 		var multiLevelWriter zerolog.LevelWriter
 
 		sentryWriter, err := sentryzerolog.NewWithHub(
-			sentryUtils.Fork("zerolog"),
+			sentry.Fork("zerolog").GetHub(),
 			sentryzerolog.Options{
 				Levels:          []zerolog.Level{zerolog.ErrorLevel, zerolog.FatalLevel, zerolog.PanicLevel},
 				WithBreadcrumbs: true,

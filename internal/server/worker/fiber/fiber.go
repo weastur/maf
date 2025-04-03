@@ -12,7 +12,6 @@ import (
 	"github.com/weastur/maf/internal/utils"
 	httpUtils "github.com/weastur/maf/internal/utils/http"
 	"github.com/weastur/maf/internal/utils/logging"
-	sentryUtils "github.com/weastur/maf/internal/utils/sentry"
 )
 
 const LeaderAPIAddrKey = "leaderAPIAddr"
@@ -36,15 +35,20 @@ type Config struct {
 	ShutdownTimeout time.Duration
 }
 
+type Sentry interface {
+	Recover()
+}
+
 type Fiber struct {
 	config              *Config
 	app                 *fiber.App
 	co                  Consensus
 	logger              zerolog.Logger
 	leadershipChangesCh raft.LeadershipChangesCh
+	sentry              Sentry
 }
 
-func New(config *Config, co Consensus) *Fiber {
+func New(config *Config, co Consensus, sentry Sentry) *Fiber {
 	log.Trace().Msg("Configuring fiber worker")
 
 	f := &Fiber{
@@ -52,6 +56,7 @@ func New(config *Config, co Consensus) *Fiber {
 		co:                  co,
 		logger:              log.With().Str(logging.ComponentCtxKey, "fiber").Logger(),
 		leadershipChangesCh: make(raft.LeadershipChangesCh, 1),
+		sentry:              sentry,
 	}
 
 	f.app = fiber.New(
@@ -126,7 +131,7 @@ func (f *Fiber) Run(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer sentryUtils.Recover(sentryUtils.Fork("fiber"))
+		defer f.sentry.Recover()
 
 		watcherDone := make(chan struct{})
 		go f.WatchLeadershipChanges(watcherDone)

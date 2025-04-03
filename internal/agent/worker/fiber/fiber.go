@@ -11,11 +11,14 @@ import (
 	"github.com/weastur/maf/internal/utils"
 	httpUtils "github.com/weastur/maf/internal/utils/http"
 	"github.com/weastur/maf/internal/utils/logging"
-	sentryUtils "github.com/weastur/maf/internal/utils/sentry"
 )
 
 type API interface {
 	Init(topRouter fiber.Router, logger zerolog.Logger)
+}
+
+type Sentry interface {
+	Recover()
 }
 
 type Config struct {
@@ -33,14 +36,16 @@ type Fiber struct {
 	config *Config
 	app    *fiber.App
 	logger zerolog.Logger
+	sentry Sentry
 }
 
-func New(config *Config) *Fiber {
+func New(config *Config, sentry Sentry) *Fiber {
 	log.Trace().Msg("Configuring fiber worker")
 
 	f := &Fiber{
 		config: config,
 		logger: log.With().Str(logging.ComponentCtxKey, "fiber").Logger(),
+		sentry: sentry,
 	}
 
 	f.app = fiber.New(
@@ -89,7 +94,7 @@ func (f *Fiber) Run(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer sentryUtils.Recover(sentryUtils.Fork("fiber"))
+		defer f.sentry.Recover()
 
 		if err := httpUtils.Listen(
 			f.app, f.logger, f.config.Addr, f.config.CertFile, f.config.KeyFile, f.config.ClientCertFile,

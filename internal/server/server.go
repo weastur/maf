@@ -5,14 +5,14 @@ import (
 	"slices"
 	"sync"
 
-	sentry "github.com/getsentry/sentry-go"
+	"github.com/getsentry/sentry-go"
 	"github.com/rs/zerolog/log"
 
 	"github.com/weastur/maf/internal/server/worker/fiber"
 	"github.com/weastur/maf/internal/server/worker/raft"
 
 	loggingUtils "github.com/weastur/maf/internal/utils/logging"
-	sentryUtils "github.com/weastur/maf/internal/utils/sentry"
+	sentryWrapper "github.com/weastur/maf/internal/utils/sentry"
 
 	SYS "syscall"
 
@@ -22,6 +22,14 @@ import (
 type Worker interface {
 	Run(wg *sync.WaitGroup)
 	Stop()
+}
+
+type Sentry interface {
+	Flush()
+	Recover()
+	IsConfigured() bool
+	GetHub() *sentry.Hub
+	Fork(scopeTag string) *sentryWrapper.Wrapper
 }
 
 type Config struct {
@@ -34,6 +42,7 @@ type Server struct {
 	fiberConfig *fiber.Config
 	raftConfig  *raft.Config
 	config      *Config
+	sentry      Sentry
 }
 
 var (
@@ -58,17 +67,20 @@ func Get(
 }
 
 func (s *Server) Run() error {
-	if err := sentryUtils.Init(s.config.SentryDSN); err != nil {
+	var err error
+
+	s.sentry, err = sentryWrapper.New(s.config.SentryDSN)
+	if err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
-	defer sentryUtils.Recover(sentry.CurrentHub())
+	defer s.sentry.Recover()
 
-	if err := loggingUtils.Init(s.config.LogLevel, s.config.LogPretty); err != nil {
+	if err := loggingUtils.Init(s.config.LogLevel, s.config.LogPretty, s.sentry); err != nil {
 		return fmt.Errorf("failed to run server: %w", err)
 	}
 
-	raftWorker := raft.New(s.raftConfig)
-	fiberWorker := fiber.New(s.fiberConfig, raftWorker)
+	raftWorker := raft.New(s.raftConfig, s.sentry.Fork("raft"))
+	fiberWorker := fiber.New(s.fiberConfig, raftWorker, s.sentry.Fork("fiber"))
 	workers := []Worker{raftWorker, fiberWorker}
 
 	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
@@ -87,7 +99,7 @@ func (s *Server) Run() error {
 			worker.Stop()
 		}
 
-		sentryUtils.Flush()
+		s.sentry.Flush()
 
 		log.Trace().Msg("Waiting for all workers to stop")
 		wg.Wait()

@@ -8,29 +8,46 @@ import (
 	utils "github.com/weastur/maf/internal/utils"
 )
 
-func Init(dsn string) error {
+type Wrapper struct {
+	Hub *sentry.Hub
+}
+
+func New(dsn string) (*Wrapper, error) {
 	if dsn == "" {
-		return nil
+		return &Wrapper{}, nil
 	}
 
-	err := sentry.Init(sentry.ClientOptions{
+	hub := sentry.NewHub(nil, sentry.NewScope())
+	client, err := sentry.NewClient(sentry.ClientOptions{
 		Dsn:              dsn,
 		Debug:            false,
 		AttachStacktrace: true,
 	})
+
 	if err != nil {
-		return fmt.Errorf("failed to initialize sentry: %w", err)
+		return nil, fmt.Errorf("failed to initialize sentry: %w", err)
 	}
 
-	sentry.ConfigureScope(func(scope *sentry.Scope) {
+	hub.BindClient(client)
+	hub.ConfigureScope(func(scope *sentry.Scope) {
 		scope.SetTag(utils.SentryScopeTag, "main")
 	})
 
-	return nil
+	return &Wrapper{Hub: hub}, nil
 }
 
-func Flush() {
-	if !IsConfigured() {
+func (w *Wrapper) GetHub() *sentry.Hub {
+	if !w.IsConfigured() {
+		log.Trace().Msg("Sentry is not configured, skipping getting hub")
+
+		return nil
+	}
+
+	return w.Hub
+}
+
+func (w *Wrapper) Flush() {
+	if !w.IsConfigured() {
 		log.Trace().Msg("Sentry is not configured, skipping flushing")
 
 		return
@@ -38,11 +55,11 @@ func Flush() {
 
 	log.Trace().Msg("Flushing sentry")
 
-	sentry.Flush(utils.SentryFlushTimeout)
+	w.Hub.Flush(utils.SentryFlushTimeout)
 }
 
-func Recover(hub *sentry.Hub) {
-	if !IsConfigured() {
+func (w *Wrapper) Recover() {
+	if !w.IsConfigured() {
 		log.Trace().Msg("Sentry is not configured, skipping recovery")
 
 		return
@@ -53,8 +70,8 @@ func Recover(hub *sentry.Hub) {
 	log.Trace().Msg("Recovering from panic to send event to sentry (if enabled)")
 
 	if err != nil {
-		hub.Recover(err)
-		Flush()
+		w.Hub.Recover(err)
+		w.Flush()
 
 		log.Trace().Msg("Repanic from panic to die")
 
@@ -62,22 +79,22 @@ func Recover(hub *sentry.Hub) {
 	}
 }
 
-func Fork(scopeTag string) *sentry.Hub {
-	if !IsConfigured() {
+func (w *Wrapper) Fork(scopeTag string) *Wrapper {
+	if !w.IsConfigured() {
 		log.Trace().Msg("Sentry is not configured, skipping fork")
 
 		// As soon as sentry is not configured, we don't need to multiply hubs
-		return sentry.CurrentHub()
+		return w
 	}
 
-	localHub := sentry.CurrentHub().Clone()
+	localHub := w.Hub.Clone()
 	localHub.ConfigureScope(func(scope *sentry.Scope) {
 		scope.SetTag(utils.SentryScopeTag, scopeTag)
 	})
 
-	return localHub
+	return &Wrapper{Hub: localHub}
 }
 
-func IsConfigured() bool {
-	return sentry.CurrentHub().Client() != nil
+func (w *Wrapper) IsConfigured() bool {
+	return w.Hub != nil
 }
