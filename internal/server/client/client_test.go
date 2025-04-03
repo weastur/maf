@@ -47,19 +47,31 @@ func TestNew(t *testing.T) {
 func TestNewWithTLS(t *testing.T) {
 	t.Parallel()
 
-	client := NewWithTLS("http://localhost", "server.crt", true)
+	client := NewWithTLS("http://localhost", "testdata/tls/server.cert.pem", true)
+	roots := client.rclient.TLSClientConfig().RootCAs
 
 	assert.Equal(t, "http://localhost", client.Host)
 	assert.NotNil(t, client.rclient)
+	assert.NotEmpty(t, roots)
 }
 
 func TestNewWithMutualTLS(t *testing.T) {
 	t.Parallel()
 
-	client := NewWithMutualTLS("http://localhost", "client.crt", "client.key", "server.crt", true)
+	client := NewWithMutualTLS(
+		"http://localhost",
+		"testdata/tls/client.cert.pem",
+		"testdata/tls/client.key.pem",
+		"testdata/tls/server.cert.pem",
+		true,
+	)
+	roots := client.rclient.TLSClientConfig().RootCAs
+	certs := client.rclient.TLSClientConfig().Certificates
 
 	assert.Equal(t, "http://localhost", client.Host)
 	assert.NotNil(t, client.rclient)
+	assert.NotEmpty(t, roots)
+	assert.NotEmpty(t, certs)
 }
 
 func TestNewWithAutoTLS(t *testing.T) {
@@ -73,7 +85,6 @@ func TestNewWithAutoTLS(t *testing.T) {
 		assert.Equal(t, "http://localhost", client.Host)
 		assert.Equal(t, "root", client.AuthToken)
 		assert.NotNil(t, client.rclient)
-		assert.Contains(t, client.urlPrefix, "/api/v1alpha")
 	})
 
 	t.Run("EmptyConfig", func(t *testing.T) {
@@ -84,29 +95,34 @@ func TestNewWithAutoTLS(t *testing.T) {
 		assert.Equal(t, "http://localhost", client.Host)
 		assert.Equal(t, "root", client.AuthToken)
 		assert.NotNil(t, client.rclient)
-		assert.Contains(t, client.urlPrefix, "/api/v1alpha")
 	})
 
 	t.Run("ServerCertOnly", func(t *testing.T) {
 		t.Parallel()
 
-		client := NewWithAutoTLS("http://localhost", &TLSConfig{ServerCertFile: "server.crt"}, true)
+		client := NewWithAutoTLS("http://localhost", &TLSConfig{ServerCertFile: "testdata/tls/server.cert.pem"}, true)
+		roots := client.rclient.TLSClientConfig().RootCAs
 
 		assert.Equal(t, "http://localhost", client.Host)
 		assert.NotNil(t, client.rclient)
+		assert.NotEmpty(t, roots)
 	})
 
 	t.Run("MutualTLS", func(t *testing.T) {
 		t.Parallel()
 
 		client := NewWithAutoTLS("http://localhost", &TLSConfig{
-			CertFile:       "client.crt",
-			KeyFile:        "client.key",
-			ServerCertFile: "server.crt",
+			CertFile:       "testdata/tls/client.cert.pem",
+			KeyFile:        "testdata/tls/client.key.pem",
+			ServerCertFile: "testdata/tls/server.cert.pem",
 		}, true)
+		roots := client.rclient.TLSClientConfig().RootCAs
+		certs := client.rclient.TLSClientConfig().Certificates
 
 		assert.Equal(t, "http://localhost", client.Host)
 		assert.NotNil(t, client.rclient)
+		assert.NotEmpty(t, roots)
+		assert.NotEmpty(t, certs)
 	})
 }
 
