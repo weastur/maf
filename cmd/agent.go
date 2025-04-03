@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/weastur/maf/internal/agent"
 	"github.com/weastur/maf/internal/config"
@@ -37,10 +36,9 @@ It is designed to run on the same host as the MySQL instance.`,
 		}
 
 		agent := agent.Get(agentConfig, fiberConfig)
+		cobra.CheckErr(agent.Init())
 
-		if err := agent.Run(); err != nil {
-			log.Fatal().Err(err).Msg("agent failed")
-		}
+		agent.Run()
 	},
 }
 

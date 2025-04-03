@@ -31,6 +31,10 @@ type Sentry interface {
 	Fork(scopeTag string) *sentryWrapper.Wrapper
 }
 
+type Death interface {
+	WaitForDeathWithFunc(f func())
+}
+
 type Config struct {
 	LogLevel  string
 	LogPretty bool
@@ -41,6 +45,9 @@ type Agent struct {
 	config      *Config
 	fiberConfig *fiber.Config
 	sentry      Sentry
+	workers     []Worker
+	death       Death
+	wg          sync.WaitGroup
 }
 
 var (
@@ -56,49 +63,53 @@ func Get(
 		instance = &Agent{
 			config:      config,
 			fiberConfig: fiberConfig,
+			death:       DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM),
+			wg:          sync.WaitGroup{},
 		}
 	})
 
 	return instance
 }
 
-func (a *Agent) Run() error {
+func (a *Agent) onDeath() {
+	log.Trace().Msg("Death callback called")
+
+	slices.Reverse(a.workers)
+
+	for _, worker := range a.workers {
+		worker.Stop()
+	}
+
+	a.sentry.Flush()
+
+	log.Trace().Msg("Waiting for all workers to stop")
+	a.wg.Wait()
+}
+
+func (a *Agent) Init() error {
 	var err error
 
 	a.sentry, err = sentryWrapper.New(a.config.SentryDSN)
 	if err != nil {
-		return fmt.Errorf("failed to run server: %w", err)
+		return fmt.Errorf("failed to run agent: %w", err)
 	}
-	defer a.sentry.Recover()
 
 	if err := loggingUtils.Init(a.config.LogLevel, a.config.LogPretty, a.sentry); err != nil {
 		return fmt.Errorf("failed to run agent: %w", err)
 	}
 
 	fiberWorker := fiber.New(a.fiberConfig, a.sentry.Fork("fiber"))
-	workers := []Worker{fiberWorker}
-
-	death := DEATH.NewDeath(SYS.SIGINT, SYS.SIGTERM)
-	wg := sync.WaitGroup{}
-
-	for _, worker := range workers {
-		worker.Run(&wg)
-	}
-
-	death.WaitForDeathWithFunc(func() {
-		log.Trace().Msg("Death callback called")
-
-		slices.Reverse(workers)
-
-		for _, worker := range workers {
-			worker.Stop()
-		}
-
-		a.sentry.Flush()
-
-		log.Trace().Msg("Waiting for all goroutines to finish")
-		wg.Wait()
-	})
+	a.workers = []Worker{fiberWorker}
 
 	return nil
+}
+
+func (a *Agent) Run() {
+	defer a.sentry.Recover()
+
+	for _, worker := range a.workers {
+		worker.Run(&a.wg)
+	}
+
+	a.death.WaitForDeathWithFunc(a.onDeath)
 }

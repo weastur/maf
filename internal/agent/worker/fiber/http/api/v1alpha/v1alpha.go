@@ -2,6 +2,7 @@ package v1alpha
 
 import (
 	"context"
+	"os"
 	"sync"
 
 	"github.com/gofiber/contrib/swagger"
@@ -16,6 +17,8 @@ type APIV1Alpha struct {
 	prefix  string
 	version string
 }
+
+const swaggerFilePath = "./internal/agent/worker/fiber/http/api/v1alpha/swagger.json"
 
 var (
 	instance *APIV1Alpha
@@ -57,13 +60,15 @@ func Get() *APIV1Alpha {
 func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger) {
 	router := httpUtils.APIVersionGroup(topRouter, api.version)
 
-	router.Use(swagger.New(swagger.Config{
-		Title:    "MySQL auto failover agent API, version" + api.version,
-		BasePath: httpUtils.APIPrefix + api.prefix,
-		FilePath: "./internal/agent/worker/fiber/http/api/v1alpha/swagger.json",
-		Path:     "docs",
-		CacheAge: 0,
-	}))
+	if _, err := os.Stat(swaggerFilePath); !os.IsNotExist(err) {
+		router.Use(swagger.New(swagger.Config{
+			Title:    "MySQL auto failover agent API, version" + api.version,
+			BasePath: httpUtils.APIPrefix + api.prefix,
+			FilePath: swaggerFilePath,
+			Path:     "docs",
+			CacheAge: 0,
+		}))
+	}
 
 	router.Use(func(c *fiber.Ctx) error {
 		ctx := context.WithValue(context.Background(), apiUtils.APIInstanceContextKey, api)
