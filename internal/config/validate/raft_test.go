@@ -4,49 +4,51 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestRaft_Validate(t *testing.T) {
+func TestRaftValidate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name          string
-		setupViper    func(*viper.Viper)
+		config        map[string]any
 		expectedError error
 	}{
 		{
-			name: "missing mandatory fields",
-			setupViper: func(_ *viper.Viper) {
+			name:   "missing mandatory fields",
+			config: map[string]any{
 				// Do not set any required fields
 			},
 			expectedError: ErrRaftMissingMandatory,
 		},
 		{
 			name: "missing raft-data-dir when devmode is false",
-			setupViper: func(v *viper.Viper) {
-				v.Set("server.raft.peers", "peer1,peer2")
-				v.Set("server.raft.node_id", "node1")
-				v.Set("server.raft.devmode", false)
+			config: map[string]any{
+				"server.raft.peers":   "peer1,peer2",
+				"server.raft.node_id": "node1",
+				"server.raft.devmode": false,
 				// Do not set server.raft.datadir
 			},
 			expectedError: ErrRaftStorage,
 		},
 		{
 			name: "valid configuration with devmode true",
-			setupViper: func(v *viper.Viper) {
-				v.Set("server.raft.peers", "peer1,peer2")
-				v.Set("server.raft.node_id", "node1")
-				v.Set("server.raft.devmode", true)
+			config: map[string]any{
+				"server.raft.peers":   "peer1,peer2",
+				"server.raft.node_id": "node1",
+				"server.raft.devmode": true,
 				// server.raft.datadir is not required in devmode
 			},
 			expectedError: nil,
 		},
 		{
 			name: "valid configuration with devmode false",
-			setupViper: func(v *viper.Viper) {
-				v.Set("server.raft.peers", "peer1,peer2")
-				v.Set("server.raft.node_id", "node1")
-				v.Set("server.raft.devmode", false)
-				v.Set("server.raft.datadir", "/data/raft")
+			config: map[string]any{
+				"server.raft.peers":   "peer1,peer2",
+				"server.raft.node_id": "node1",
+				"server.raft.devmode": false,
+				"server.raft.datadir": "/data/raft",
 			},
 			expectedError: nil,
 		},
@@ -54,13 +56,16 @@ func TestRaft_Validate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			viperInstance := viper.New()
-			tt.setupViper(viperInstance)
+			t.Parallel()
+
+			v := viper.New()
+			for key, value := range tt.config {
+				v.Set(key, value)
+			}
 
 			raft := NewRaft()
-			err := raft.Validate(viperInstance)
-
-			assert.ErrorIs(t, tt.expectedError, err)
+			err := raft.Validate(v)
+			require.ErrorIs(t, err, tt.expectedError)
 		})
 	}
 }
