@@ -18,12 +18,12 @@ func New(dsn string) (*Wrapper, error) {
 	}
 
 	hub := sentry.NewHub(nil, sentry.NewScope())
+
 	client, err := sentry.NewClient(sentry.ClientOptions{
 		Dsn:              dsn,
 		Debug:            false,
 		AttachStacktrace: true,
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize sentry: %w", err)
 	}

@@ -33,6 +33,27 @@ tasks:
       - coverage.txt
       - coverage.html
 
+  fmt:
+    desc: Format the code
+    cmds:
+      - golangci-lint fmt
+    sources:
+      - ./**/*.go
+
+  lint:
+    desc: Run linters
+    cmds:
+      - golangci-lint run
+    sources:
+      - ./**/*.go
+
+  lint-autofix:
+    desc: Run linters with autofix (if possible)
+    cmds:
+      - golangci-lint run --fix
+    sources:
+      - ./**/*.go
+
   test-with-race:
     desc: Run tests
     cmds:
