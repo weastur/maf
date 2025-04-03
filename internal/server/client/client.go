@@ -221,12 +221,7 @@ func (c *Client) RaftKVGet(key string) (string, bool, error) {
 		return "", false, err
 	}
 
-	kvData, err := c.parseRaftKVGetResponse(wrappedRes)
-	if err != nil {
-		c.logger.Error().Err(err).Msg("Failed to parse KV get response")
-
-		return "", false, ErrUnknownResponseFormat
-	}
+	kvData, _ := c.parseRaftKVGetResponse(wrappedRes)
 
 	return kvData.Value, kvData.Exist, nil
 }

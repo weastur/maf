@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -14,23 +15,38 @@ import (
 	"resty.dev/v3"
 )
 
+type mockMarshalError struct{}
+
+func (mockMarshalError) MarshalJSON() ([]byte, error) {
+	return nil, errors.New("some error")
+}
+
 func TestMain(m *testing.M) {
-	zerolog.SetGlobalLevel(zerolog.Disabled)
+	zerolog.SetGlobalLevel(zerolog.TraceLevel)
 	log.Logger = log.Output(zerolog.Nop())
 
 	os.Exit(m.Run())
 }
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	client := New("http://localhost", false)
 
 	assert.Equal(t, "http://localhost", client.Host)
 	assert.Equal(t, "root", client.AuthToken)
 	assert.NotNil(t, client.rclient)
+	assert.Equal(t, "X-Auth-Token", client.rclient.HeaderAuthorizationKey())
+	assert.Empty(t, client.rclient.AuthScheme())
+	assert.Equal(t, "root", client.rclient.AuthToken())
+	assert.Contains(t, client.rclient.Header().Get("User-Agent"), "maf/")
+	assert.Contains(t, client.rclient.ContentDecompresserKeys(), "br")
 	assert.Contains(t, client.urlPrefix, "/api/v1alpha")
 }
 
 func TestNewWithTLS(t *testing.T) {
+	t.Parallel()
+
 	client := NewWithTLS("http://localhost", "server.crt", true)
 
 	assert.Equal(t, "http://localhost", client.Host)
@@ -38,6 +54,8 @@ func TestNewWithTLS(t *testing.T) {
 }
 
 func TestNewWithMutualTLS(t *testing.T) {
+	t.Parallel()
+
 	client := NewWithMutualTLS("http://localhost", "client.crt", "client.key", "server.crt", true)
 
 	assert.Equal(t, "http://localhost", client.Host)
@@ -45,7 +63,11 @@ func TestNewWithMutualTLS(t *testing.T) {
 }
 
 func TestNewWithAutoTLS(t *testing.T) {
+	t.Parallel()
+
 	t.Run("NoConfig", func(t *testing.T) {
+		t.Parallel()
+
 		client := NewWithAutoTLS("http://localhost", nil, true)
 
 		assert.Equal(t, "http://localhost", client.Host)
@@ -55,6 +77,8 @@ func TestNewWithAutoTLS(t *testing.T) {
 	})
 
 	t.Run("EmptyConfig", func(t *testing.T) {
+		t.Parallel()
+
 		client := NewWithAutoTLS("http://localhost", &TLSConfig{}, true)
 
 		assert.Equal(t, "http://localhost", client.Host)
@@ -64,6 +88,8 @@ func TestNewWithAutoTLS(t *testing.T) {
 	})
 
 	t.Run("ServerCertOnly", func(t *testing.T) {
+		t.Parallel()
+
 		client := NewWithAutoTLS("http://localhost", &TLSConfig{ServerCertFile: "server.crt"}, true)
 
 		assert.Equal(t, "http://localhost", client.Host)
@@ -71,6 +97,8 @@ func TestNewWithAutoTLS(t *testing.T) {
 	})
 
 	t.Run("MutualTLS", func(t *testing.T) {
+		t.Parallel()
+
 		client := NewWithAutoTLS("http://localhost", &TLSConfig{
 			CertFile:       "client.crt",
 			KeyFile:        "client.key",
@@ -83,6 +111,8 @@ func TestNewWithAutoTLS(t *testing.T) {
 }
 
 func TestClose(t *testing.T) {
+	t.Parallel()
+
 	client := &Client{
 		rclient: resty.New(),
 		logger:  zerolog.Nop(),
@@ -94,11 +124,15 @@ func TestClose(t *testing.T) {
 }
 
 func TestParseRaftKVGetResponse(t *testing.T) {
+	t.Parallel()
+
 	client := &Client{
 		logger: zerolog.Nop(),
 	}
 
 	t.Run("ValidResponse", func(t *testing.T) {
+		t.Parallel()
+
 		input := map[string]any{
 			"Key":   "test-key",
 			"Value": "test-value",
@@ -117,6 +151,8 @@ func TestParseRaftKVGetResponse(t *testing.T) {
 	})
 
 	t.Run("InvalidResponseFormat", func(t *testing.T) {
+		t.Parallel()
+
 		input := "[]"
 
 		result, err := client.parseRaftKVGetResponse(input)
@@ -125,6 +161,8 @@ func TestParseRaftKVGetResponse(t *testing.T) {
 	})
 
 	t.Run("EmptyResponse", func(t *testing.T) {
+		t.Parallel()
+
 		input := map[string]any{}
 
 		result, err := client.parseRaftKVGetResponse(input)
@@ -136,7 +174,19 @@ func TestParseRaftKVGetResponse(t *testing.T) {
 	})
 
 	t.Run("NotAJSON", func(t *testing.T) {
-		input := []byte("{not-a-json")
+		t.Parallel()
+
+		input := []byte("{invalid-json")
+
+		result, err := client.parseRaftKVGetResponse(input)
+		require.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("MarhalError", func(t *testing.T) {
+		t.Parallel()
+
+		input := mockMarshalError{}
 
 		result, err := client.parseRaftKVGetResponse(input)
 		require.Error(t, err)
@@ -145,30 +195,40 @@ func TestParseRaftKVGetResponse(t *testing.T) {
 }
 
 func TestMakeURL(t *testing.T) {
+	t.Parallel()
+
 	client := &Client{
 		urlPrefix: "http://localhost/api/v1alpha",
 		logger:    zerolog.Nop(),
 	}
 
 	t.Run("SingleElement", func(t *testing.T) {
+		t.Parallel()
+
 		result := client.makeURL("raft/join")
 		expected := "http://localhost/api/v1alpha/raft/join"
 		assert.Equal(t, expected, result)
 	})
 
 	t.Run("MultipleElements", func(t *testing.T) {
+		t.Parallel()
+
 		result := client.makeURL("raft", "kv", "key1")
 		expected := "http://localhost/api/v1alpha/raft/kv/key1"
 		assert.Equal(t, expected, result)
 	})
 
 	t.Run("EmptyElements", func(t *testing.T) {
+		t.Parallel()
+
 		result := client.makeURL()
 		expected := "http://localhost/api/v1alpha"
 		assert.Equal(t, expected, result)
 	})
 
 	t.Run("TrailingSlash", func(t *testing.T) {
+		t.Parallel()
+
 		clientWithSlash := &Client{
 			urlPrefix: "http://localhost/api/v1alpha/",
 			logger:    zerolog.Nop(),
@@ -179,6 +239,8 @@ func TestMakeURL(t *testing.T) {
 	})
 
 	t.Run("InvalidURLPrefix", func(t *testing.T) {
+		t.Parallel()
+
 		clientInvalid := &Client{
 			urlPrefix: "http://[::1]:invalid",
 			logger:    zerolog.Nop(),
@@ -191,7 +253,11 @@ func TestMakeURL(t *testing.T) {
 }
 
 func TestRaftJoin(t *testing.T) {
+	t.Parallel()
+
 	t.Run("SuccessfulJoin", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/api/v1alpha/raft/join", r.URL.Path)
 			assert.Equal(t, http.MethodPost, r.Method)
@@ -214,6 +280,8 @@ func TestRaftJoin(t *testing.T) {
 	})
 
 	t.Run("APIError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -228,6 +296,8 @@ func TestRaftJoin(t *testing.T) {
 	})
 
 	t.Run("ServerError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}))
@@ -240,6 +310,8 @@ func TestRaftJoin(t *testing.T) {
 	})
 
 	t.Run("InvalidResponseFormat", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -253,6 +325,8 @@ func TestRaftJoin(t *testing.T) {
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -266,6 +340,8 @@ func TestRaftJoin(t *testing.T) {
 	})
 
 	t.Run("RequestFailure", func(t *testing.T) {
+		t.Parallel()
+
 		client := New("http://invalid-url", false)
 		err := client.RaftJoin("server-1", "127.0.0.1:8080")
 		require.Error(t, err)
@@ -274,7 +350,11 @@ func TestRaftJoin(t *testing.T) {
 }
 
 func TestRaftForget(t *testing.T) {
+	t.Parallel()
+
 	t.Run("SuccessfulForget", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/api/v1alpha/raft/forget", r.URL.Path)
 			assert.Equal(t, http.MethodPost, r.Method)
@@ -296,6 +376,8 @@ func TestRaftForget(t *testing.T) {
 	})
 
 	t.Run("APIError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -310,6 +392,8 @@ func TestRaftForget(t *testing.T) {
 	})
 
 	t.Run("ServerError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}))
@@ -322,6 +406,8 @@ func TestRaftForget(t *testing.T) {
 	})
 
 	t.Run("InvalidResponseFormat", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -335,6 +421,8 @@ func TestRaftForget(t *testing.T) {
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -348,6 +436,8 @@ func TestRaftForget(t *testing.T) {
 	})
 
 	t.Run("RequestFailure", func(t *testing.T) {
+		t.Parallel()
+
 		client := New("http://invalid-url", false)
 		err := client.RaftForget("server-1")
 		require.Error(t, err)
@@ -356,7 +446,11 @@ func TestRaftForget(t *testing.T) {
 }
 
 func TestRaftKVGet(t *testing.T) {
+	t.Parallel()
+
 	t.Run("SuccessfulGet", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/api/v1alpha/raft/kv/test-key", r.URL.Path)
 			assert.Equal(t, http.MethodGet, r.Method)
@@ -382,6 +476,8 @@ func TestRaftKVGet(t *testing.T) {
 	})
 
 	t.Run("KeyDoesNotExist", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -404,6 +500,8 @@ func TestRaftKVGet(t *testing.T) {
 	})
 
 	t.Run("APIError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -423,6 +521,8 @@ func TestRaftKVGet(t *testing.T) {
 	})
 
 	t.Run("ServerError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}))
@@ -436,6 +536,8 @@ func TestRaftKVGet(t *testing.T) {
 	})
 
 	t.Run("InvalidResponseFormat", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -451,6 +553,8 @@ func TestRaftKVGet(t *testing.T) {
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -466,6 +570,8 @@ func TestRaftKVGet(t *testing.T) {
 	})
 
 	t.Run("RequestFailure", func(t *testing.T) {
+		t.Parallel()
+
 		client := New("http://invalid-url", false)
 		value, exist, err := client.RaftKVGet("test-key")
 		require.Error(t, err)
@@ -476,7 +582,11 @@ func TestRaftKVGet(t *testing.T) {
 }
 
 func TestRaftKVSet(t *testing.T) {
+	t.Parallel()
+
 	t.Run("SuccessfulSet", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/api/v1alpha/raft/kv", r.URL.Path)
 			assert.Equal(t, http.MethodPost, r.Method)
@@ -499,6 +609,8 @@ func TestRaftKVSet(t *testing.T) {
 	})
 
 	t.Run("APIError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -513,6 +625,8 @@ func TestRaftKVSet(t *testing.T) {
 	})
 
 	t.Run("ServerError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}))
@@ -525,6 +639,8 @@ func TestRaftKVSet(t *testing.T) {
 	})
 
 	t.Run("InvalidResponseFormat", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -538,6 +654,8 @@ func TestRaftKVSet(t *testing.T) {
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -551,6 +669,8 @@ func TestRaftKVSet(t *testing.T) {
 	})
 
 	t.Run("RequestFailure", func(t *testing.T) {
+		t.Parallel()
+
 		client := New("http://invalid-url", false)
 		err := client.RaftKVSet("test-key", "test-value")
 		require.Error(t, err)
@@ -559,7 +679,11 @@ func TestRaftKVSet(t *testing.T) {
 }
 
 func TestRaftKVDelete(t *testing.T) {
+	t.Parallel()
+
 	t.Run("SuccessfulDelete", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/api/v1alpha/raft/kv/test-key", r.URL.Path)
 			assert.Equal(t, http.MethodDelete, r.Method)
@@ -576,6 +700,8 @@ func TestRaftKVDelete(t *testing.T) {
 	})
 
 	t.Run("APIError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -590,6 +716,8 @@ func TestRaftKVDelete(t *testing.T) {
 	})
 
 	t.Run("ServerError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}))
@@ -601,6 +729,8 @@ func TestRaftKVDelete(t *testing.T) {
 	})
 
 	t.Run("InvalidResponseFormat", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -614,6 +744,8 @@ func TestRaftKVDelete(t *testing.T) {
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -627,6 +759,8 @@ func TestRaftKVDelete(t *testing.T) {
 	})
 
 	t.Run("RequestFailure", func(t *testing.T) {
+		t.Parallel()
+
 		client := New("http://invalid-url", false)
 		err := client.RaftKVDelete("test-key")
 		require.Error(t, err)
@@ -635,7 +769,11 @@ func TestRaftKVDelete(t *testing.T) {
 }
 
 func TestRaftInfo(t *testing.T) {
+	t.Parallel()
+
 	t.Run("SuccessfulInfo", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/api/v1alpha/raft/info", r.URL.Path)
 			assert.Equal(t, http.MethodGet, r.Method)
@@ -668,6 +806,8 @@ func TestRaftInfo(t *testing.T) {
 	})
 
 	t.Run("APIError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -686,6 +826,8 @@ func TestRaftInfo(t *testing.T) {
 	})
 
 	t.Run("ServerError", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		}))
@@ -698,6 +840,8 @@ func TestRaftInfo(t *testing.T) {
 	})
 
 	t.Run("InvalidResponseFormat", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -712,6 +856,8 @@ func TestRaftInfo(t *testing.T) {
 	})
 
 	t.Run("InvalidJSON", func(t *testing.T) {
+		t.Parallel()
+
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
@@ -726,6 +872,8 @@ func TestRaftInfo(t *testing.T) {
 	})
 
 	t.Run("RequestFailure", func(t *testing.T) {
+		t.Parallel()
+
 		client := New("http://invalid-url", false)
 		data, err := client.RaftInfo(false)
 		require.Error(t, err)
