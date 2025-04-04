@@ -2,7 +2,7 @@ package v1alpha
 
 import (
 	"context"
-	"os"
+	"embed"
 	"sync"
 
 	"github.com/gofiber/contrib/swagger"
@@ -16,7 +16,6 @@ import (
 
 const (
 	consensusInstanceContextKey = apiUtils.UserContextKey("consensusInstance")
-	swaggerFilePath             = "./internal/server/worker/fiber/http/api/v1alpha/swagger.json"
 )
 
 type Consensus interface {
@@ -38,6 +37,9 @@ type APIV1Alpha struct {
 	version   string
 	validator Validator
 }
+
+//go:embed swagger.json
+var swaggerJSON embed.FS
 
 var (
 	instance *APIV1Alpha
@@ -81,15 +83,15 @@ func Get() *APIV1Alpha {
 // @externalDocs.url https://github.com/weastur/maf/wiki
 func (api *APIV1Alpha) Init(topRouter fiber.Router, logger zerolog.Logger, co Consensus) {
 	router := httpUtils.APIVersionGroup(topRouter, api.version)
-	if _, err := os.Stat(swaggerFilePath); !os.IsNotExist(err) {
-		router.Use(swagger.New(swagger.Config{
-			Title:    "MySQL auto failover server API, version" + api.version,
-			BasePath: httpUtils.APIPrefix + api.prefix,
-			FilePath: swaggerFilePath,
-			Path:     "docs",
-			CacheAge: 0,
-		}))
-	}
+
+	swaggerContent, _ := swaggerJSON.ReadFile("swagger.json")
+	router.Use(swagger.New(swagger.Config{
+		Title:       "MySQL auto failover server API, version" + api.version,
+		BasePath:    httpUtils.APIPrefix + api.prefix,
+		FileContent: swaggerContent,
+		Path:        "docs",
+		CacheAge:    0,
+	}))
 
 	router.Use(func(c *fiber.Ctx) error {
 		ctx := context.WithValue(context.Background(), apiUtils.APIInstanceContextKey, api)
