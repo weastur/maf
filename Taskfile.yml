@@ -102,12 +102,31 @@ tasks:
       - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOPATH)/bin {{.GOLANGCI_LINT_VERSION}}
     silent: true
 
-  clean:
-    desc: Clean the project
+  clean:windows:
+    internal: true
     cmds:
-      - go clean -cache -testcache
+      - powershell -Command "try { Remove-Item -Force maf.exe -ErrorAction Stop } catch [System.Management.Automation.ItemNotFoundException] { exit 0 }"
+      - powershell -Command "try { Remove-Item -Force coverage.txt -ErrorAction Stop } catch [System.Management.Automation.ItemNotFoundException] { exit 0 }"
+      - powershell -Command "try { Remove-Item -Force coverage.html -ErrorAction Stop } catch [System.Management.Automation.ItemNotFoundException] { exit 0 }"
+      - powershell -Command "try { Remove-Item -Force -Recurse dist -ErrorAction Stop } catch [System.Management.Automation.ItemNotFoundException] { exit 0 }"
+    platforms: [windows]
+    silent: true
+
+  clean:unix:
+    internal: true
+    cmds:
       - rm -f maf{{exeExt}}
       - rm -f coverage.txt
       - rm -f coverage.html
       - rm -rf dist/
+    platforms: [linux, darwin]
+    silent: true
+
+  clean:
+    desc: Clean the project
+    deps:
+      - clean:windows
+      - clean:unix
+    cmds:
+      - go clean -cache -testcache
     silent: true
