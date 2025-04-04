@@ -48,6 +48,25 @@ type Config struct {
 	ServerAPITLSConfig *apiClient.TLSConfig
 }
 
+type HRaft interface {
+	State() hraft.RaftState
+	BootstrapCluster(configuration hraft.Configuration) hraft.Future
+	LeadershipTransfer() hraft.Future
+	Shutdown() hraft.Future
+	GetConfiguration() hraft.ConfigurationFuture
+	RemoveServer(id hraft.ServerID, prevIndex uint64, timeout time.Duration) hraft.IndexFuture
+	AddVoter(id hraft.ServerID, address hraft.ServerAddress, prevIndex uint64, timeout time.Duration) hraft.IndexFuture
+	LeaderWithID() (hraft.ServerAddress, hraft.ServerID)
+	Stats() map[string]string
+	Apply(cmd []byte, timeout time.Duration) hraft.ApplyFuture
+	LeaderCh() <-chan bool
+}
+
+type APIClient interface {
+	RaftJoin(nodeID, addr string) error
+	Close() error
+}
+
 type Raft struct {
 	config                    *Config
 	hrconfig                  *hraft.Config
@@ -60,10 +79,11 @@ type Raft struct {
 	stableStore               hraft.StableStore
 	fsm                       hraft.FSM
 	storage                   Storage
-	raftInstance              *hraft.Raft
+	raftInstance              HRaft
 	initCompleted             atomic.Bool
 	leadershipChangesChannels []LeadershipChangesCh
 	sentry                    Sentry
+	getAPIClient              func(string) APIClient
 }
 
 func New(config *Config, sentry Sentry) *Raft {
@@ -76,6 +96,9 @@ func New(config *Config, sentry Sentry) *Raft {
 		hlogger:                   hclogzerolog.New(log.With().Str(logging.ComponentCtxKey, "hraft").Logger()),
 		leadershipChangesChannels: make([]LeadershipChangesCh, 0),
 		sentry:                    sentry,
+		getAPIClient: func(peer string) APIClient {
+			return apiClient.NewWithAutoTLS(peer, config.ServerAPITLSConfig, true)
+		},
 	}
 }
 
@@ -151,7 +174,7 @@ func (r *Raft) retryJoin() {
 				continue
 			}
 
-			api := apiClient.NewWithAutoTLS(peer, r.config.ServerAPITLSConfig, true)
+			api := r.getAPIClient(peer)
 			if err := api.RaftJoin(r.config.NodeID, r.config.Addr); err != nil {
 				r.logger.Warn().Err(err).Msgf("Failed to join peer %s", peer)
 				api.Close()
@@ -412,7 +435,7 @@ func (r *Raft) applyCommand(op OpType, key, value string) error {
 	if err != nil {
 		r.logger.Error().Err(err).Msg("Failed to marshal command")
 
-		return nil
+		return fmt.Errorf("failed to marshal command: %w", err)
 	}
 
 	applyFuture := r.raftInstance.Apply(data, cmdTimeout)

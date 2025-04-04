@@ -62,6 +62,8 @@ linters:
       allow-cuddle-with-calls:
         - Done
         - Add
+    interfacebloat:
+      max: 15
   exclusions:
     generated: lax
     presets:

@@ -1,6 +1,13 @@
 package raft
 
+import (
+	"encoding/json"
+	"errors"
+)
+
 type OpType int
+
+var ErrInvalidOpType = errors.New("invalid operation type")
 
 const (
 	OpSet = iota
@@ -27,4 +34,14 @@ func makeCommand(op OpType, key, value string) *Command {
 		Key:   key,
 		Value: value,
 	}
+}
+
+func (c *Command) MarshalJSON() ([]byte, error) {
+	if c.Op < OpSet || c.Op > OpDelete {
+		return nil, ErrInvalidOpType
+	}
+
+	type Alias Command
+
+	return json.Marshal((*Alias)(c))
 }
