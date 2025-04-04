@@ -1598,6 +1598,7 @@ func TestRetryJoin(t *testing.T) {
 		assert.False(t, raft.initCompleted.Load(), "expected initCompleted to remain false for invalid URL")
 	})
 }
+
 func TestForget(t *testing.T) {
 	t.Parallel()
 
@@ -1659,6 +1660,7 @@ func TestForget(t *testing.T) {
 		mockIndexFuture.AssertExpectations(t)
 	})
 }
+
 func TestJoin(t *testing.T) {
 	t.Parallel()
 
@@ -1674,7 +1676,13 @@ func TestJoin(t *testing.T) {
 			Servers: []hraft.Server{},
 		})
 		mockRaft.On("GetConfiguration").Return(mockConfigFuture)
-		mockRaft.On("AddVoter", hraft.ServerID("node2"), hraft.ServerAddress("127.0.0.1:8081"), uint64(0), time.Duration(0)).Return(mockIndexFuture)
+		mockRaft.On(
+			"AddVoter",
+			hraft.ServerID("node2"),
+			hraft.ServerAddress("127.0.0.1:8081"),
+			uint64(0),
+			time.Duration(0),
+		).Return(mockIndexFuture)
 		mockIndexFuture.On("Error").Return(nil)
 		mockRaft.On("State").Return(hraft.Leader)
 
@@ -1746,7 +1754,13 @@ func TestJoin(t *testing.T) {
 		mockRaft.On("GetConfiguration").Return(mockConfigFuture)
 		mockRaft.On("RemoveServer", hraft.ServerID("node2"), uint64(0), time.Duration(0)).Return(mockIndexFuture)
 		mockIndexFuture.On("Error").Return(nil)
-		mockRaft.On("AddVoter", hraft.ServerID("node2"), hraft.ServerAddress("127.0.0.1:8081"), uint64(0), time.Duration(0)).Return(mockIndexFuture)
+		mockRaft.On(
+			"AddVoter",
+			hraft.ServerID("node2"),
+			hraft.ServerAddress("127.0.0.1:8081"),
+			uint64(0),
+			time.Duration(0),
+		).Return(mockIndexFuture)
 		mockRaft.On("State").Return(hraft.Leader)
 
 		raft := &Raft{
@@ -1859,7 +1873,13 @@ func TestJoin(t *testing.T) {
 			Servers: []hraft.Server{},
 		})
 		mockRaft.On("GetConfiguration").Return(mockConfigFuture)
-		mockRaft.On("AddVoter", hraft.ServerID("node2"), hraft.ServerAddress("127.0.0.1:8081"), uint64(0), time.Duration(0)).Return(mockIndexFuture)
+		mockRaft.On(
+			"AddVoter",
+			hraft.ServerID("node2"),
+			hraft.ServerAddress("127.0.0.1:8081"),
+			uint64(0),
+			time.Duration(0),
+		).Return(mockIndexFuture)
 		mockIndexFuture.On("Error").Return(errors.New("add voter error"))
 		mockRaft.On("State").Return(hraft.Leader)
 
