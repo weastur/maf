@@ -99,8 +99,8 @@ github.com/gofiber/contrib/fibersentry v1.0.8 h1:97HdfzDg0BMnC0pcFKYYR56ReaDgog9
 github.com/gofiber/contrib/fibersentry v1.0.8/go.mod h1:gEyrvmVDLB6XpWEpvps6K2u7A1H1SWaD+hPS9KQMw6g=
 github.com/gofiber/contrib/fiberzerolog v1.0.3 h1:Z97hA5bNfThtZjEYG12g9YcT8I/cmCikNgmE4uzFk0U=
 github.com/gofiber/contrib/fiberzerolog v1.0.3/go.mod h1:0MD+NNFy0nZwiSo4dSVW7WwWVzOyuATNXwhJwgOP8uM=
-github.com/gofiber/contrib/swagger v1.2.0 h1:+tm7mBLFfUxZASQyf1zkvRkAZRZGmnIT+E0Vvj7BZo4=
-github.com/gofiber/contrib/swagger v1.2.0/go.mod h1:NRtN6G1RkdpgwFifq4nID/5cdxv410RDH9rUr9fhiqU=
+github.com/gofiber/contrib/swagger v1.2.1 h1:sA4L39Lt82YO/7pG7ev4s6YKnZ+WIzmWuDIVS+GgrN8=
+github.com/gofiber/contrib/swagger v1.2.1/go.mod h1:zlZljpjIz1VhKR25+Inxl7WaOkgyM10nITUFXn6sV5A=
 github.com/gofiber/fiber/v2 v2.52.6 h1:Rfp+ILPiYSvvVuIPvxrBns+HJp8qGLDnLJawAu27XVI=
 github.com/gofiber/fiber/v2 v2.52.6/go.mod h1:YEcBbO/FB+5M1IZNBP9FO3J9281zgPAreiI1oqg8nDw=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
