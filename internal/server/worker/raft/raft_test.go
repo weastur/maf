@@ -20,7 +20,7 @@ import (
 	sentryWrapper "github.com/weastur/maf/internal/utils/sentry"
 )
 
-const invalidDir = "/invalid/path"
+var invalidDir = string([]byte{0})
 
 type MockSentry struct {
 	mock.Mock
@@ -717,10 +717,13 @@ func TestInitStore(t *testing.T) {
 
 		assert.NotNil(t, raft.logStore, "expected logStore to be initialized")
 		assert.NotNil(t, raft.stableStore, "expected stableStore to be initialized")
-		_, isBoltDB := raft.logStore.(*raftboltdb.BoltStore)
+		logStore, isBoltDB := raft.logStore.(*raftboltdb.BoltStore)
 		assert.True(t, isBoltDB, "expected logStore to be a BoltDB store")
-		_, isBoltDB = raft.stableStore.(*raftboltdb.BoltStore)
+		stableStore, isBoltDB := raft.stableStore.(*raftboltdb.BoltStore)
 		assert.True(t, isBoltDB, "expected stableStore to be a BoltDB store")
+		raft.Stop()
+		logStore.Close()
+		stableStore.Close()
 	})
 
 	t.Run("DevmodeDisabledWithInvalidDatadir", func(t *testing.T) {
