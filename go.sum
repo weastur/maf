@@ -95,8 +95,8 @@ github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/me
 github.com/go-viper/mapstructure/v2 v2.2.1 h1:ZAaOCxANMuZx5RCeg0mBdEZk7DZasvvZIxtHqx8aGss=
 github.com/go-viper/mapstructure/v2 v2.2.1/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
-github.com/gofiber/contrib/fibersentry v1.0.7 h1:5jtdBv1SGgvZjUly5+GhGI1K6fPr/Es6Ps/RBAbwfBU=
-github.com/gofiber/contrib/fibersentry v1.0.7/go.mod h1:RLKZGpdvBZZf0XKPDFbphwfdhlFKyR3EmwO765tWl6k=
+github.com/gofiber/contrib/fibersentry v1.0.8 h1:97HdfzDg0BMnC0pcFKYYR56ReaDgog9k6tIbUQe4eJc=
+github.com/gofiber/contrib/fibersentry v1.0.8/go.mod h1:gEyrvmVDLB6XpWEpvps6K2u7A1H1SWaD+hPS9KQMw6g=
 github.com/gofiber/contrib/fiberzerolog v1.0.3 h1:Z97hA5bNfThtZjEYG12g9YcT8I/cmCikNgmE4uzFk0U=
 github.com/gofiber/contrib/fiberzerolog v1.0.3/go.mod h1:0MD+NNFy0nZwiSo4dSVW7WwWVzOyuATNXwhJwgOP8uM=
 github.com/gofiber/contrib/swagger v1.2.0 h1:+tm7mBLFfUxZASQyf1zkvRkAZRZGmnIT+E0Vvj7BZo4=
