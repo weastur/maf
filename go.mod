@@ -9,10 +9,9 @@ require (
 	github.com/getsentry/sentry-go/zerolog v0.31.1
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/gofiber/contrib/fibersentry v1.0.7
-	github.com/gofiber/contrib/fiberzerolog v1.0.2
+	github.com/gofiber/contrib/fiberzerolog v1.0.3
 	github.com/gofiber/contrib/swagger v1.2.0
 	github.com/gofiber/fiber/v2 v2.52.6
-	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/raft v1.7.3
 	github.com/hashicorp/raft-boltdb/v2 v2.3.1
@@ -50,6 +49,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-metrics v0.5.4 // indirect
