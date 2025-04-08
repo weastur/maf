@@ -84,6 +84,7 @@ linters:
           - funlen
           - errchkjson
           - forcetypeassert
+          - errcheck
 formatters:
   enable:
     - gofmt
