@@ -84,7 +84,7 @@ func New(config *Config, co Consensus, sentry Sentry) *Fiber {
 
 	v1alphaConsensus, ok := f.co.(v1alpha.Consensus)
 	if !ok {
-		f.logger.Fatal().Msg("Consensus does not implement v1alpha interface")
+		panic("Consensus does not implement v1alpha interface")
 	}
 
 	v1alpha.Get().Init(api, f.logger, v1alphaConsensus)
@@ -118,7 +118,7 @@ func (f *Fiber) WatchLeadershipChanges(done <-chan struct{}) {
 
 			if isLeader {
 				if err := f.co.Set(LeaderAPIAddrKey, f.config.Advertise); err != nil {
-					f.logger.Fatal().Err(err).Msg("failed to set leader API address, this should not happen")
+					panic("failed to set leader API address, this should not happen")
 				}
 			}
 		}
