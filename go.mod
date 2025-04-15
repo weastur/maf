@@ -6,7 +6,7 @@ require (
 	github.com/VictoriaMetrics/metrics v1.35.2
 	github.com/andybalholm/brotli v1.1.1
 	github.com/getsentry/sentry-go v0.32.0
-	github.com/getsentry/sentry-go/zerolog v0.31.1
+	github.com/getsentry/sentry-go/zerolog v0.32.0
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/gofiber/contrib/fibersentry v1.0.8
 	github.com/gofiber/contrib/fiberzerolog v1.0.3
